@@ -14,6 +14,9 @@ public class QuestToastOverlay {
     private static final ResourceLocation COMPLETED_TEXTURE =
             new ResourceLocation(DragonLegacyQuestToastMod.MODID, "textures/gui/quest_completed.png");
 
+    private static final ResourceLocation UPDATED_TEXTURE =
+            new ResourceLocation(DragonLegacyQuestToastMod.MODID, "textures/gui/quest_updated.png");
+
     public static final IGuiOverlay OVERLAY = (gui, guiGraphics, partialTick, screenWidth, screenHeight) -> {
         Minecraft mc = Minecraft.getInstance();
 
@@ -31,9 +34,14 @@ public class QuestToastOverlay {
         int height = ClientQuestToastManager.getHeight();
         float alpha = ClientQuestToastManager.getAlpha();
 
-        ResourceLocation texture = ClientQuestToastManager.isCompleted()
-                ? COMPLETED_TEXTURE
-                : ACCEPTED_TEXTURE;
+        ResourceLocation texture;
+        if (ClientQuestToastManager.isUpdated()) {
+            texture = UPDATED_TEXTURE;
+        } else if (ClientQuestToastManager.isCompleted()) {
+            texture = COMPLETED_TEXTURE;
+        } else {
+            texture = ACCEPTED_TEXTURE;
+        }
 
         RenderSystem.enableBlend();
         RenderSystem.setShaderColor(1f, 1f, 1f, alpha);
