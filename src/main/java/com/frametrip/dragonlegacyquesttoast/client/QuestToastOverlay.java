@@ -27,31 +27,13 @@ public class QuestToastOverlay {
 
         int x = ClientQuestToastManager.getX();
         int y = ClientQuestToastManager.getY();
-        int width = 160;
-        int height = 40;
+        int width = 128;
+        int height = 32;
 
         ResourceLocation texture = ClientQuestToastManager.isCompleted() ? COMPLETED_TEXTURE : ACCEPTED_TEXTURE;
 
         RenderSystem.enableBlend();
         guiGraphics.blit(texture, x, y, 0, 0, width, height, width, height);
-
-        guiGraphics.drawString(
-                mc.font,
-                ClientQuestToastManager.getHeaderText(),
-                x + 12,
-                y + 10,
-                0xF3E3BC,
-                false
-        );
-
-        guiGraphics.drawString(
-                mc.font,
-                ClientQuestToastManager.getQuestTitle(),
-                x + 12,
-                y + 23,
-                0xFFFFFF,
-                false
-        );
 
         ClientQuestToastManager.tick();
     };
