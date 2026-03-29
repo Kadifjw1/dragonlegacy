@@ -25,12 +25,12 @@ public class ClientQuestToastManager {
     public static class ToastConfigData {
         public int x = 8;
         public int y = 8;
-        public int width = 160;
-        public int height = 40;
+        public int width = 64;
+        public int height = 16;
         public int fadeInTicks = 8;
         public int stayTicks = 124;
         public int fadeOutTicks = 8;
-        public int startOffsetX = -180;
+        public int startOffsetX = -80;
     }
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
@@ -41,15 +41,14 @@ public class ClientQuestToastManager {
     private static ToastEntry currentToast = null;
     private static int age = 0;
 
-    // ========= НАСТРОЙКИ =========
     private static int x = 8;
     private static int y = 8;
-    private static int width = 160;
-    private static int height = 40;
+    private static int width = 64;
+    private static int height = 16;
     private static int fadeInTicks = 8;
     private static int stayTicks = 124;
     private static int fadeOutTicks = 8;
-    private static int startOffsetX = -180;
+    private static int startOffsetX = -80;
 
     static {
         loadConfig();
@@ -87,12 +86,12 @@ public class ClientQuestToastManager {
     public static void resetConfig() {
         x = 8;
         y = 8;
-        width = 160;
-        height = 40;
+        width = 64;
+        height = 16;
         fadeInTicks = 8;
         stayTicks = 124;
         fadeOutTicks = 8;
-        startOffsetX = -180;
+        startOffsetX = -80;
 
         saveConfig();
     }
@@ -128,6 +127,14 @@ public class ClientQuestToastManager {
 
     public static boolean isCompleted() {
         return currentToast != null && "completed".equals(currentToast.type);
+    }
+
+    public static boolean isUpdated() {
+        return currentToast != null && "updated".equals(currentToast.type);
+    }
+
+    public static String getToastType() {
+        return currentToast == null ? "" : currentToast.type;
     }
 
     public static String getQuestTitle() {
