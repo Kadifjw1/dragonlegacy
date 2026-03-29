@@ -8,9 +8,9 @@ public class ClientQuestToastManager {
     private static final int TOTAL_TICKS = 140;
     private static final int MOVE_TICKS = 8;
 
-    private static final int START_X = -180;
-    private static final int END_X = 8;
-    private static final int Y = 8;
+    private static final int START_X = -140;
+    private static final int END_X = 6;
+    private static final int Y = 6;
 
     public static void show(String type, String questTitle) {
         currentType = type;
