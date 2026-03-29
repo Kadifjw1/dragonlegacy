@@ -1,5 +1,6 @@
 package com.frametrip.dragonlegacyquesttoast;
 
+import com.frametrip.dragonlegacyquesttoast.client.NpcDialogueOverlay;
 import com.frametrip.dragonlegacyquesttoast.client.QuestToastOverlay;
 import com.frametrip.dragonlegacyquesttoast.command.ModCommands;
 import com.frametrip.dragonlegacyquesttoast.network.ModNetwork;
@@ -29,6 +30,7 @@ public class DragonLegacyQuestToastMod {
 
     private void registerOverlays(RegisterGuiOverlaysEvent event) {
         event.registerAboveAll("quest_toast_overlay", QuestToastOverlay.OVERLAY);
+        event.registerAboveAll("npc_dialogue_overlay", NpcDialogueOverlay.OVERLAY);
     }
 
     private void registerCommands(RegisterCommandsEvent event) {
