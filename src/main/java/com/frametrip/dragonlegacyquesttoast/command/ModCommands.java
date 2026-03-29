@@ -1,6 +1,7 @@
 package com.frametrip.dragonlegacyquesttoast.command;
 
 import com.frametrip.dragonlegacyquesttoast.network.ModNetwork;
+import com.frametrip.dragonlegacyquesttoast.network.NpcDialoguePacket;
 import com.frametrip.dragonlegacyquesttoast.network.QuestToastConfigPacket;
 import com.frametrip.dragonlegacyquesttoast.network.QuestToastPacket;
 import com.mojang.brigadier.CommandDispatcher;
@@ -90,6 +91,26 @@ public class ModCommands {
 
                                                                                                             return 1;
                                                                                                         })))))))))))
+        );
+
+        dispatcher.register(
+                Commands.literal("dlnpcsay")
+                        .requires(source -> source.hasPermission(2))
+                        .then(Commands.argument("player", EntityArgument.player())
+                                .then(Commands.argument("npcName", StringArgumentType.word())
+                                        .then(Commands.argument("text", StringArgumentType.greedyString())
+                                                .executes(ctx -> {
+                                                    ServerPlayer player = EntityArgument.getPlayer(ctx, "player");
+                                                    String npcName = StringArgumentType.getString(ctx, "npcName");
+                                                    String text = StringArgumentType.getString(ctx, "text");
+
+                                                    ModNetwork.CHANNEL.send(
+                                                            PacketDistributor.PLAYER.with(() -> player),
+                                                            new NpcDialoguePacket(npcName, text)
+                                                    );
+
+                                                    return 1;
+                                                }))))
         );
     }
 }
