@@ -23,8 +23,8 @@ public class ModCommands {
                                             ServerPlayer player = EntityArgument.getPlayer(ctx, "player");
                                             String type = StringArgumentType.getString(ctx, "type");
 
-                                            if (!"accepted".equals(type) && !"completed".equals(type)) {
-                                                ctx.getSource().sendFailure(net.minecraft.network.chat.Component.literal("Type must be accepted or completed"));
+                                            if (!"accepted".equals(type) && !"completed".equals(type) && !"updated".equals(type)) {
+                                                ctx.getSource().sendFailure(net.minecraft.network.chat.Component.literal("Type must be accepted, completed or updated"));
                                                 return 0;
                                             }
 
