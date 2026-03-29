@@ -5,7 +5,7 @@ public class ClientQuestToastManager {
     private static String currentQuestTitle = null;
 
     private static int age = 0;
-    private static final int TOTAL_TICKS = 36;
+    private static final int TOTAL_TICKS = 140;
     private static final int MOVE_TICKS = 8;
 
     private static final int START_X = -180;
