@@ -25,5 +25,13 @@ public class ModNetwork {
                 QuestToastPacket::decode,
                 QuestToastPacket::handle
         );
+
+        CHANNEL.registerMessage(
+                packetId++,
+                QuestToastConfigPacket.class,
+                QuestToastConfigPacket::encode,
+                QuestToastConfigPacket::decode,
+                QuestToastConfigPacket::handle
+        );
     }
 }
