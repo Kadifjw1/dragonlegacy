@@ -38,8 +38,8 @@ public class NpcDialogueOverlay {
         guiGraphics.drawString(
                 mc.font,
                 ClientNpcDialogueManager.getNpcName(),
-                x + 12,
-                y + 10,
+                x + ClientNpcDialogueManager.getNameXOffset(),
+                y + ClientNpcDialogueManager.getNameYOffset(),
                 0xCFA8FF,
                 false
         );
@@ -50,8 +50,8 @@ public class NpcDialogueOverlay {
             guiGraphics.drawString(
                     mc.font,
                     lines.get(i),
-                    x + 12,
-                    y + 22 + (i * 10),
+                    x + ClientNpcDialogueManager.getTextXOffset(),
+                    y + ClientNpcDialogueManager.getTextYOffset() + (i * ClientNpcDialogueManager.getTextLineHeight()),
                     0xFFFFFF,
                     false
             );
