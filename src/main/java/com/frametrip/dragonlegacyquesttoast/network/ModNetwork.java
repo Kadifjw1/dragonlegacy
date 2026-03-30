@@ -41,5 +41,13 @@ public class ModNetwork {
                 NpcDialoguePacket::decode,
                 NpcDialoguePacket::handle
         );
+
+        CHANNEL.registerMessage(
+                packetId++,
+                NpcDialogueConfigPacket.class,
+                NpcDialogueConfigPacket::encode,
+                NpcDialogueConfigPacket::decode,
+                NpcDialogueConfigPacket::handle
+        );
     }
 }
