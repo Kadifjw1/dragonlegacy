@@ -138,22 +138,27 @@ public class ModCommands {
                         .then(
                                 Commands.argument("player", EntityArgument.player())
                                         .then(
-                                                Commands.argument("npcName", StringArgumentType.word())
-                                                        .then(
-                                                                Commands.argument("text", StringArgumentType.greedyString())
-                                                                        .executes(ctx -> {
-                                                                            ServerPlayer player = EntityArgument.getPlayer(ctx, "player");
-                                                                            String npcName = StringArgumentType.getString(ctx, "npcName");
-                                                                            String text = StringArgumentType.getString(ctx, "text");
+                                                Commands.argument("payload", StringArgumentType.greedyString())
+                                                        .executes(ctx -> {
+                                                            ServerPlayer player = EntityArgument.getPlayer(ctx, "player");
+                                                            String payload = StringArgumentType.getString(ctx, "payload");
 
-                                                                            ModNetwork.CHANNEL.send(
-                                                                                    PacketDistributor.PLAYER.with(() -> player),
-                                                                                    new NpcDialoguePacket(npcName, text)
-                                                                            );
+                                                            String npcName = "[NPC]";
+                                                            String text = payload;
 
-                                                                            return 1;
-                                                                        })
-                                                        )
+                                                            int sep = payload.indexOf("||");
+                                                            if (sep >= 0) {
+                                                                npcName = payload.substring(0, sep).trim();
+                                                                text = payload.substring(sep + 2).trim();
+                                                            }
+
+                                                            ModNetwork.CHANNEL.send(
+                                                                    PacketDistributor.PLAYER.with(() -> player),
+                                                                    new NpcDialoguePacket(npcName, text)
+                                                            );
+
+                                                            return 1;
+                                                        })
                                         )
                         )
         );
@@ -234,7 +239,7 @@ public class ModCommands {
 
                                                                                                                                                                                                                                                                                             return 1;
                                                                                                                                                                                                                                                                                         })
-                                                                                                                                                                                                        )
+                                                                                                                                                                                                                                                                        )
                                                                                                                                                                                                                                                         )
                                                                                                                                                                                                                                         )
                                                                                                                                                                                                                         )
