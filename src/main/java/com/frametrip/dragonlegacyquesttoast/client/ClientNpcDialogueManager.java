@@ -9,7 +9,9 @@ import java.io.Reader;
 import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.List;
 
 public class ClientNpcDialogueManager {
@@ -37,8 +39,20 @@ public class ClientNpcDialogueManager {
         public int textLineHeight = 10;
     }
 
+    private static class DialogueEntry {
+        public final String npcName;
+        public final String text;
+
+        public DialogueEntry(String npcName, String text) {
+            this.npcName = npcName;
+            this.text = text;
+        }
+    }
+
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Path CONFIG_PATH = FMLPaths.CONFIGDIR.get().resolve("dragonlegacyquesttoast-dialogue-client.json");
+
+    private static final Deque<DialogueEntry> QUEUE = new ArrayDeque<>();
 
     private static String npcName = "";
     private static String text = "";
@@ -71,8 +85,32 @@ public class ClientNpcDialogueManager {
     }
 
     public static void show(String newNpcName, String newText) {
-        npcName = newNpcName == null ? "" : newNpcName;
-        text = newText == null ? "" : newText;
+        List<String> pages = splitIntoPages(newText);
+
+        if (pages.isEmpty()) {
+            QUEUE.addLast(new DialogueEntry(newNpcName == null ? "" : newNpcName, ""));
+        } else {
+            for (String page : pages) {
+                QUEUE.addLast(new DialogueEntry(newNpcName == null ? "" : newNpcName, page));
+            }
+        }
+
+        if (!isActive()) {
+            popNext();
+        }
+    }
+
+    private static void popNext() {
+        DialogueEntry next = QUEUE.pollFirst();
+        if (next == null) {
+            npcName = "";
+            text = "";
+            age = 0;
+            return;
+        }
+
+        npcName = next.npcName;
+        text = next.text;
         age = 0;
     }
 
@@ -147,18 +185,28 @@ public class ClientNpcDialogueManager {
     }
 
     public static void tick() {
-        if (!isActive()) return;
+        if (!isActive()) {
+            if (!QUEUE.isEmpty()) {
+                popNext();
+            }
+            return;
+        }
 
         age++;
+
         if (age >= getTotalTicks()) {
-            npcName = "";
-            text = "";
-            age = 0;
+            if (!QUEUE.isEmpty()) {
+                popNext();
+            } else {
+                npcName = "";
+                text = "";
+                age = 0;
+            }
         }
     }
 
     public static boolean isActive() {
-        return text != null && !text.isEmpty() && age < getTotalTicks();
+        return text != null && !text.isEmpty();
     }
 
     public static int getTotalTicks() {
@@ -245,7 +293,7 @@ public class ClientNpcDialogueManager {
         return calculated;
     }
 
-    public static List<String> wrapTextByWidth(String input, int maxPixelWidth, int maxLines) {
+    public static List<String> wrapTextByWidth(String input, int maxPixelWidth) {
         List<String> result = new ArrayList<>();
         if (input == null || input.isEmpty()) return result;
 
@@ -268,24 +316,11 @@ public class ClientNpcDialogueManager {
                     result.add(current);
                 }
                 current = word;
-
-                if (result.size() >= maxLines) break;
             }
         }
 
-        if (!current.isEmpty() && result.size() < maxLines) {
+        if (!current.isEmpty()) {
             result.add(current);
-        }
-
-        if (result.size() == maxLines) {
-            int last = result.size() - 1;
-            String line = result.get(last);
-
-            while (!line.isEmpty() && mc.font.width(line + "…") > maxPixelWidth) {
-                line = line.substring(0, line.length() - 1);
-            }
-
-            result.set(last, line + "…");
         }
 
         return result;
@@ -294,7 +329,46 @@ public class ClientNpcDialogueManager {
     public static List<String> getWrappedText() {
         int innerWidth = maxWidth - leftPadding - rightPadding;
         if (innerWidth < 20) innerWidth = 20;
-        return wrapTextByWidth(text, innerWidth, textMaxLines);
+
+        List<String> lines = wrapTextByWidth(text, innerWidth);
+        if (lines.size() <= textMaxLines) return lines;
+
+        return new ArrayList<>(lines.subList(0, textMaxLines));
+    }
+
+    private static List<String> splitIntoPages(String fullText) {
+        List<String> pages = new ArrayList<>();
+
+        if (fullText == null || fullText.trim().isEmpty()) {
+            return pages;
+        }
+
+        int innerWidth = maxWidth - leftPadding - rightPadding;
+        if (innerWidth < 20) innerWidth = 20;
+
+        List<String> allLines = wrapTextByWidth(fullText, innerWidth);
+        if (allLines.isEmpty()) return pages;
+
+        StringBuilder currentPage = new StringBuilder();
+        int lineCount = 0;
+
+        for (String line : allLines) {
+            if (lineCount > 0) currentPage.append(" ");
+            currentPage.append(line);
+            lineCount++;
+
+            if (lineCount >= textMaxLines) {
+                pages.add(currentPage.toString());
+                currentPage = new StringBuilder();
+                lineCount = 0;
+            }
+        }
+
+        if (currentPage.length() > 0) {
+            pages.add(currentPage.toString());
+        }
+
+        return pages;
     }
 
     private static float easeOutCubic(float t) {
