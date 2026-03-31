@@ -24,10 +24,10 @@ public class NpcDialogueOverlay {
             return;
         }
 
-        int x = ClientNpcDialogueManager.getX();
-        int y = ClientNpcDialogueManager.getY(screenHeight);
         int width = ClientNpcDialogueManager.getWidth();
         int height = ClientNpcDialogueManager.getHeight();
+        int x = ClientNpcDialogueManager.getX(screenWidth);
+        int y = ClientNpcDialogueManager.getY(screenHeight);
         float alpha = ClientNpcDialogueManager.getAlpha();
 
         RenderSystem.enableBlend();
@@ -38,8 +38,8 @@ public class NpcDialogueOverlay {
         guiGraphics.drawString(
                 mc.font,
                 ClientNpcDialogueManager.getNpcName(),
-                x + ClientNpcDialogueManager.getNameXOffset(),
-                y + ClientNpcDialogueManager.getNameYOffset(),
+                x + ClientNpcDialogueManager.getNameX(),
+                y + ClientNpcDialogueManager.getNameY(),
                 0xCFA8FF,
                 false
         );
@@ -50,8 +50,8 @@ public class NpcDialogueOverlay {
             guiGraphics.drawString(
                     mc.font,
                     lines.get(i),
-                    x + ClientNpcDialogueManager.getTextXOffset(),
-                    y + ClientNpcDialogueManager.getTextYOffset() + (i * ClientNpcDialogueManager.getTextLineHeight()),
+                    x + ClientNpcDialogueManager.getTextX(),
+                    y + ClientNpcDialogueManager.getTextY() + (i * ClientNpcDialogueManager.getTextLineHeight()),
                     0xFFFFFF,
                     false
             );
