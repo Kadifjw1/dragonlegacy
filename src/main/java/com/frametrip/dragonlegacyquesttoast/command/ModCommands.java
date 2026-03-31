@@ -165,109 +165,109 @@ public class ModCommands {
     }
 
     private static void registerNpcSayConfigCommand(CommandDispatcher<CommandSourceStack> dispatcher) {
-    dispatcher.register(
-            Commands.literal("dlnpcsayconfig")
-                    .requires(source -> source.hasPermission(2))
-                    .then(
-                            Commands.argument("player", EntityArgument.player())
-                                    .then(
-                                            Commands.literal("reset")
-                                                    .executes(ctx -> {
-                                                        ServerPlayer player = EntityArgument.getPlayer(ctx, "player");
+        dispatcher.register(
+                Commands.literal("dlnpcsayconfig")
+                        .requires(source -> source.hasPermission(2))
+                        .then(
+                                Commands.argument("player", EntityArgument.player())
+                                        .then(
+                                                Commands.literal("reset")
+                                                        .executes(ctx -> {
+                                                            ServerPlayer player = EntityArgument.getPlayer(ctx, "player");
 
-                                                        ModNetwork.CHANNEL.send(
-                                                                PacketDistributor.PLAYER.with(() -> player),
-                                                                new NpcDialogueConfigPacket(
-                                                                        true,
-                                                                        0, 0, 0, 0, 0, 0, 0, 0,
-                                                                        0, 0, 0, 0, 0, 0, 0, 0
-                                                                )
-                                                        );
-
-                                                        return 1;
-                                                    })
-                                    )
-                                    .then(
-                                            Commands.literal("set")
-                                                    .then(
-                                                            Commands.argument("x", IntegerArgumentType.integer())
-                                                                    .then(
-                                                                            Commands.argument("yOffsetFromBottom", IntegerArgumentType.integer())
-                                                                                    .then(
-                                                                                            Commands.argument("minWidth", IntegerArgumentType.integer(1))
-                                                                                                    .then(
-                                                                                                            Commands.argument("maxWidth", IntegerArgumentType.integer(1))
-                                                                                                                    .then(
-                                                                                                                            Commands.argument("minHeight", IntegerArgumentType.integer(1))
-                                                                                                                                    .then(
-                                                                                                                                            Commands.argument("fadeIn", IntegerArgumentType.integer(1))
-                                                                                                                                                    .then(
-                                                                                                                                                            Commands.argument("stay", IntegerArgumentType.integer(1))
-                                                                                                                                                                    .then(
-                                                                                                                                                                            Commands.argument("fadeOut", IntegerArgumentType.integer(1))
-                                                                                                                                                                                    .then(
-                                                                                                                                                                                            Commands.argument("textMaxLines", IntegerArgumentType.integer(1))
-                                                                                                                                                                                                    .then(
-                                                                                                                                                                                                            Commands.argument("leftPadding", IntegerArgumentType.integer(0))
-                                                                                                                                                                                                                    .then(
-                                                                                                                                                                                                                            Commands.argument("rightPadding", IntegerArgumentType.integer(0))
-                                                                                                                                                                                                                                    .then(
-                                                                                                                                                                                                                                            Commands.argument("topPadding", IntegerArgumentType.integer(0))
-                                                                                                                                                                                                                                                    .then(
-                                                                                                                                                                                                                                                            Commands.argument("bottomPadding", IntegerArgumentType.integer(0))
-                                                                                                                                                                                                                                                                    .then(
-                                                                                                                                                                                                                                                                            Commands.argument("nameYOffset", IntegerArgumentType.integer())
-                                                                                                                                                                                                                                                                                    .then(
-                                                                                                                                                                                                                                                                                            Commands.argument("textYOffset", IntegerArgumentType.integer())
-                                                                                                                                                                                                                                                                                                    .then(
-                                                                                                                                                                                                                                                                                                            Commands.argument("textLineHeight", IntegerArgumentType.integer(1))
-                                                                                                                                                                                                                                                                                                                    .executes(ctx -> {
-                                                                                                                                                                                                                                                                                                                        ServerPlayer player = EntityArgument.getPlayer(ctx, "player");
-
-                                                                                                                                                                                                                                                                                                                        ModNetwork.CHANNEL.send(
-                                                                                                                                                                                                                                                                                                                                PacketDistributor.PLAYER.with(() -> player),
-                                                                                                                                                                                                                                                                                                                                new NpcDialogueConfigPacket(
-                                                                                                                                                                                                                                                                                                                                        false,
-                                                                                                                                                                                                                                                                                                                                        IntegerArgumentType.getInteger(ctx, "x"),
-                                                                                                                                                                                                                                                                                                                                        IntegerArgumentType.getInteger(ctx, "yOffsetFromBottom"),
-                                                                                                                                                                                                                                                                                                                                        IntegerArgumentType.getInteger(ctx, "minWidth"),
-                                                                                                                                                                                                                                                                                                                                        IntegerArgumentType.getInteger(ctx, "maxWidth"),
-                                                                                                                                                                                                                                                                                                                                        IntegerArgumentType.getInteger(ctx, "minHeight"),
-                                                                                                                                                                                                                                                                                                                                        IntegerArgumentType.getInteger(ctx, "fadeIn"),
-                                                                                                                                                                                                                                                                                                                                        IntegerArgumentType.getInteger(ctx, "stay"),
-                                                                                                                                                                                                                                                                                                                                        IntegerArgumentType.getInteger(ctx, "fadeOut"),
-                                                                                                                                                                                                                                                                                                                                        IntegerArgumentType.getInteger(ctx, "textMaxLines"),
-                                                                                                                                                                                                                                                                                                                                        IntegerArgumentType.getInteger(ctx, "leftPadding"),
-                                                                                                                                                                                                                                                                                                                                        IntegerArgumentType.getInteger(ctx, "rightPadding"),
-                                                                                                                                                                                                                                                                                                                                        IntegerArgumentType.getInteger(ctx, "topPadding"),
-                                                                                                                                                                                                                                                                                                                                        IntegerArgumentType.getInteger(ctx, "bottomPadding"),
-                                                                                                                                                                                                                                                                                                                                        IntegerArgumentType.getInteger(ctx, "nameYOffset"),
-                                                                                                                                                                                                                                                                                                                                        IntegerArgumentType.getInteger(ctx, "textYOffset"),
-                                                                                                                                                                                                                                                                                                                                        IntegerArgumentType.getInteger(ctx, "textLineHeight")
-                                                                                                                                                                                                                                                                                                                                )
-                                                                                                                                                                                                                                                                                                                        );
-
-                                                                                                                                                                                                                                                                                                                        return 1;
-                                                                                                                                                                                                                                                                                                                    })
-                                                                                                                                                                                                                                                                                                    )
-                                                                                                                                                                                                                                                                                    )
-                                                                                                                                                                                                                                                                            )
-                                                                                                                                                                                                                                                                    )
-                                                                                                                                                                                                                                                    )
-                                                                                                                                                                                                                                    )
-                                                                                                                                                                                                                    )
-                                                                                                                                                                                                    )
-                                                                                                                                                                                    )
-                                                                                                                                                                    )
-                                                                                                                                                    )
-                                                                                                                                    )
-                                                                                                                    )
-                                                                                                    )
-                                                                                    )
+                                                            ModNetwork.CHANNEL.send(
+                                                                    PacketDistributor.PLAYER.with(() -> player),
+                                                                    new NpcDialogueConfigPacket(
+                                                                            true,
+                                                                            0, 0, 0, 0, 0, 0, 0, 0,
+                                                                            0, 0, 0, 0, 0, 0, 0, 0
                                                                     )
-                                                    )
-                                    )
-                    )
-    );
-}
+                                                            );
+
+                                                            return 1;
+                                                        })
+                                        )
+                                        .then(
+                                                Commands.literal("set")
+                                                        .then(
+                                                                Commands.argument("x", IntegerArgumentType.integer())
+                                                                        .then(
+                                                                                Commands.argument("yOffsetFromBottom", IntegerArgumentType.integer())
+                                                                                        .then(
+                                                                                                Commands.argument("minWidth", IntegerArgumentType.integer(1))
+                                                                                                        .then(
+                                                                                                                Commands.argument("maxWidth", IntegerArgumentType.integer(1))
+                                                                                                                        .then(
+                                                                                                                                Commands.argument("minHeight", IntegerArgumentType.integer(1))
+                                                                                                                                        .then(
+                                                                                                                                                Commands.argument("fadeIn", IntegerArgumentType.integer(1))
+                                                                                                                                                        .then(
+                                                                                                                                                                Commands.argument("stay", IntegerArgumentType.integer(1))
+                                                                                                                                                                        .then(
+                                                                                                                                                                                Commands.argument("fadeOut", IntegerArgumentType.integer(1))
+                                                                                                                                                                                        .then(
+                                                                                                                                                                                                Commands.argument("textMaxLines", IntegerArgumentType.integer(1))
+                                                                                                                                                                                                        .then(
+                                                                                                                                                                                                                Commands.argument("leftPadding", IntegerArgumentType.integer(0))
+                                                                                                                                                                                                                        .then(
+                                                                                                                                                                                                                                Commands.argument("rightPadding", IntegerArgumentType.integer(0))
+                                                                                                                                                                                                                                        .then(
+                                                                                                                                                                                                                                                Commands.argument("topPadding", IntegerArgumentType.integer(0))
+                                                                                                                                                                                                                                                        .then(
+                                                                                                                                                                                                                                                                Commands.argument("bottomPadding", IntegerArgumentType.integer(0))
+                                                                                                                                                                                                                                                                        .then(
+                                                                                                                                                                                                                                                                                Commands.argument("nameYOffset", IntegerArgumentType.integer())
+                                                                                                                                                                                                                                                                                        .then(
+                                                                                                                                                                                                                                                                                                Commands.argument("textYOffset", IntegerArgumentType.integer())
+                                                                                                                                                                                                                                                                                                        .then(
+                                                                                                                                                                                                                                                                                                                Commands.argument("textLineHeight", IntegerArgumentType.integer(1))
+                                                                                                                                                                                                                                                                                                                        .executes(ctx -> {
+                                                                                                                                                                                                                                                                                                                            ServerPlayer player = EntityArgument.getPlayer(ctx, "player");
+
+                                                                                                                                                                                                                                                                                                                            ModNetwork.CHANNEL.send(
+                                                                                                                                                                                                                                                                                                                                    PacketDistributor.PLAYER.with(() -> player),
+                                                                                                                                                                                                                                                                                                                                    new NpcDialogueConfigPacket(
+                                                                                                                                                                                                                                                                                                                                            false,
+                                                                                                                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "x"),
+                                                                                                                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "yOffsetFromBottom"),
+                                                                                                                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "minWidth"),
+                                                                                                                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "maxWidth"),
+                                                                                                                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "minHeight"),
+                                                                                                                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "fadeIn"),
+                                                                                                                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "stay"),
+                                                                                                                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "fadeOut"),
+                                                                                                                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "textMaxLines"),
+                                                                                                                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "leftPadding"),
+                                                                                                                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "rightPadding"),
+                                                                                                                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "topPadding"),
+                                                                                                                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "bottomPadding"),
+                                                                                                                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "nameYOffset"),
+                                                                                                                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "textYOffset"),
+                                                                                                                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "textLineHeight")
+                                                                                                                                                                                                                                                                                                                                    )
+                                                                                                                                                                                                                                                                                                                            );
+
+                                                                                                                                                                                                                                                                                                                            return 1;
+                                                                                                                                                                                                                                                                                                                        })
+                                                                                                                                                                                                                                                                                                        )
+                                                                                                                                                                                                                                                                                        )
+                                                                                                                                                                                                                                                                                )
+                                                                                                                                                                                                                                                                        )
+                                                                                                                                                                                                                                                        )
+                                                                                                                                                                                                                                        )
+                                                                                                                                                                                                                        )
+                                                                                                                                                                                                        )
+                                                                                                                                                                                        )
+                                                                                                                                                                        )
+                                                                                                                                                        )
+                                                                                                                                        )
+                                                                                                                        )
+                                                                                                        )
+                                                                                        )
+                                                                        )
+                                                        )
+                                        )
+                        )
+        );
+    }
 }
