@@ -14,7 +14,7 @@ import java.util.List;
 
 public class ClientNpcDialogueManager {
     public static class DialogueConfigData {
-        public int x = 32;
+        public int x = -1;
         public int yOffsetFromBottom = 56;
 
         public int minWidth = 120;
@@ -44,7 +44,7 @@ public class ClientNpcDialogueManager {
     private static String text = "";
     private static int age = 0;
 
-    private static int x = 32;
+    private static int x = -1;
     private static int yOffsetFromBottom = 56;
 
     private static int minWidth = 120;
@@ -121,7 +121,7 @@ public class ClientNpcDialogueManager {
     }
 
     public static void resetConfig() {
-        x = 32;
+        x = -1;
         yOffsetFromBottom = 56;
 
         minWidth = 120;
@@ -299,7 +299,7 @@ public class ClientNpcDialogueManager {
 
     private static float easeOutCubic(float t) {
         t = clamp01(t);
-        return 1f - (float)Math.pow(1f - t, 3);
+        return 1f - (float) Math.pow(1f - t, 3);
     }
 
     private static float easeInCubic(float t) {
