@@ -10,16 +10,18 @@ public class NpcDialogueConfigPacket {
     private final boolean reset;
     private final int x;
     private final int yOffsetFromBottom;
-    private final int width;
-    private final int height;
+    private final int minWidth;
+    private final int maxWidth;
+    private final int minHeight;
     private final int fadeInTicks;
     private final int stayTicks;
     private final int fadeOutTicks;
-    private final int textMaxCharsPerLine;
     private final int textMaxLines;
-    private final int nameXOffset;
+    private final int leftPadding;
+    private final int rightPadding;
+    private final int topPadding;
+    private final int bottomPadding;
     private final int nameYOffset;
-    private final int textXOffset;
     private final int textYOffset;
     private final int textLineHeight;
 
@@ -27,32 +29,36 @@ public class NpcDialogueConfigPacket {
             boolean reset,
             int x,
             int yOffsetFromBottom,
-            int width,
-            int height,
+            int minWidth,
+            int maxWidth,
+            int minHeight,
             int fadeInTicks,
             int stayTicks,
             int fadeOutTicks,
-            int textMaxCharsPerLine,
             int textMaxLines,
-            int nameXOffset,
+            int leftPadding,
+            int rightPadding,
+            int topPadding,
+            int bottomPadding,
             int nameYOffset,
-            int textXOffset,
             int textYOffset,
             int textLineHeight
     ) {
         this.reset = reset;
         this.x = x;
         this.yOffsetFromBottom = yOffsetFromBottom;
-        this.width = width;
-        this.height = height;
+        this.minWidth = minWidth;
+        this.maxWidth = maxWidth;
+        this.minHeight = minHeight;
         this.fadeInTicks = fadeInTicks;
         this.stayTicks = stayTicks;
         this.fadeOutTicks = fadeOutTicks;
-        this.textMaxCharsPerLine = textMaxCharsPerLine;
         this.textMaxLines = textMaxLines;
-        this.nameXOffset = nameXOffset;
+        this.leftPadding = leftPadding;
+        this.rightPadding = rightPadding;
+        this.topPadding = topPadding;
+        this.bottomPadding = bottomPadding;
         this.nameYOffset = nameYOffset;
-        this.textXOffset = textXOffset;
         this.textYOffset = textYOffset;
         this.textLineHeight = textLineHeight;
     }
@@ -61,16 +67,18 @@ public class NpcDialogueConfigPacket {
         buf.writeBoolean(msg.reset);
         buf.writeInt(msg.x);
         buf.writeInt(msg.yOffsetFromBottom);
-        buf.writeInt(msg.width);
-        buf.writeInt(msg.height);
+        buf.writeInt(msg.minWidth);
+        buf.writeInt(msg.maxWidth);
+        buf.writeInt(msg.minHeight);
         buf.writeInt(msg.fadeInTicks);
         buf.writeInt(msg.stayTicks);
         buf.writeInt(msg.fadeOutTicks);
-        buf.writeInt(msg.textMaxCharsPerLine);
         buf.writeInt(msg.textMaxLines);
-        buf.writeInt(msg.nameXOffset);
+        buf.writeInt(msg.leftPadding);
+        buf.writeInt(msg.rightPadding);
+        buf.writeInt(msg.topPadding);
+        buf.writeInt(msg.bottomPadding);
         buf.writeInt(msg.nameYOffset);
-        buf.writeInt(msg.textXOffset);
         buf.writeInt(msg.textYOffset);
         buf.writeInt(msg.textLineHeight);
     }
@@ -78,6 +86,8 @@ public class NpcDialogueConfigPacket {
     public static NpcDialogueConfigPacket decode(FriendlyByteBuf buf) {
         return new NpcDialogueConfigPacket(
                 buf.readBoolean(),
+                buf.readInt(),
+                buf.readInt(),
                 buf.readInt(),
                 buf.readInt(),
                 buf.readInt(),
@@ -104,19 +114,21 @@ public class NpcDialogueConfigPacket {
                 ClientNpcDialogueManager.applyConfig(
                         msg.x,
                         msg.yOffsetFromBottom,
-                        msg.width,
-                        msg.height,
+                        msg.minWidth,
+                        msg.maxWidth,
+                        msg.minHeight,
                         msg.fadeInTicks,
                         msg.stayTicks,
                         msg.fadeOutTicks
                 );
 
                 ClientNpcDialogueManager.applyTextLayoutConfig(
-                        msg.textMaxCharsPerLine,
                         msg.textMaxLines,
-                        msg.nameXOffset,
+                        msg.leftPadding,
+                        msg.rightPadding,
+                        msg.topPadding,
+                        msg.bottomPadding,
                         msg.nameYOffset,
-                        msg.textXOffset,
                         msg.textYOffset,
                         msg.textLineHeight
                 );
