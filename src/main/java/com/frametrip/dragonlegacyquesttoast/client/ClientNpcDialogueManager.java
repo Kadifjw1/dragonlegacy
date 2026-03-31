@@ -2,6 +2,7 @@ package com.frametrip.dragonlegacyquesttoast.client;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import net.minecraft.client.Minecraft;
 import net.minecraftforge.fml.loading.FMLPaths;
 
 import java.io.Reader;
@@ -15,17 +16,24 @@ public class ClientNpcDialogueManager {
     public static class DialogueConfigData {
         public int x = 32;
         public int yOffsetFromBottom = 56;
-        public int width = 256;
-        public int height = 48;
+
+        public int minWidth = 120;
+        public int maxWidth = 280;
+        public int minHeight = 34;
+
         public int fadeInTicks = 6;
         public int stayTicks = 80;
         public int fadeOutTicks = 6;
-        public int textMaxCharsPerLine = 34;
+
         public int textMaxLines = 2;
-        public int nameXOffset = 12;
-        public int nameYOffset = 10;
-        public int textXOffset = 12;
-        public int textYOffset = 22;
+
+        public int leftPadding = 12;
+        public int rightPadding = 12;
+        public int topPadding = 8;
+        public int bottomPadding = 8;
+
+        public int nameYOffset = 0;
+        public int textYOffset = 14;
         public int textLineHeight = 10;
     }
 
@@ -38,19 +46,24 @@ public class ClientNpcDialogueManager {
 
     private static int x = 32;
     private static int yOffsetFromBottom = 56;
-    private static int width = 256;
-    private static int height = 48;
+
+    private static int minWidth = 120;
+    private static int maxWidth = 280;
+    private static int minHeight = 34;
+
     private static int fadeInTicks = 6;
     private static int stayTicks = 80;
     private static int fadeOutTicks = 6;
 
-    private static int textMaxCharsPerLine = 34;
     private static int textMaxLines = 2;
 
-    private static int nameXOffset = 12;
-    private static int nameYOffset = 10;
-    private static int textXOffset = 12;
-    private static int textYOffset = 22;
+    private static int leftPadding = 12;
+    private static int rightPadding = 12;
+    private static int topPadding = 8;
+    private static int bottomPadding = 8;
+
+    private static int nameYOffset = 0;
+    private static int textYOffset = 14;
     private static int textLineHeight = 10;
 
     static {
@@ -66,16 +79,18 @@ public class ClientNpcDialogueManager {
     public static void applyConfig(
             int newX,
             int newYOffsetFromBottom,
-            int newWidth,
-            int newHeight,
+            int newMinWidth,
+            int newMaxWidth,
+            int newMinHeight,
             int newFadeInTicks,
             int newStayTicks,
             int newFadeOutTicks
     ) {
         x = newX;
         yOffsetFromBottom = newYOffsetFromBottom;
-        width = Math.max(1, newWidth);
-        height = Math.max(1, newHeight);
+        minWidth = Math.max(1, newMinWidth);
+        maxWidth = Math.max(minWidth, newMaxWidth);
+        minHeight = Math.max(1, newMinHeight);
         fadeInTicks = Math.max(1, newFadeInTicks);
         stayTicks = Math.max(1, newStayTicks);
         fadeOutTicks = Math.max(1, newFadeOutTicks);
@@ -84,19 +99,21 @@ public class ClientNpcDialogueManager {
     }
 
     public static void applyTextLayoutConfig(
-            int newTextMaxCharsPerLine,
             int newTextMaxLines,
-            int newNameXOffset,
+            int newLeftPadding,
+            int newRightPadding,
+            int newTopPadding,
+            int newBottomPadding,
             int newNameYOffset,
-            int newTextXOffset,
             int newTextYOffset,
             int newTextLineHeight
     ) {
-        textMaxCharsPerLine = Math.max(1, newTextMaxCharsPerLine);
         textMaxLines = Math.max(1, newTextMaxLines);
-        nameXOffset = newNameXOffset;
+        leftPadding = Math.max(0, newLeftPadding);
+        rightPadding = Math.max(0, newRightPadding);
+        topPadding = Math.max(0, newTopPadding);
+        bottomPadding = Math.max(0, newBottomPadding);
         nameYOffset = newNameYOffset;
-        textXOffset = newTextXOffset;
         textYOffset = newTextYOffset;
         textLineHeight = Math.max(1, newTextLineHeight);
 
@@ -106,18 +123,24 @@ public class ClientNpcDialogueManager {
     public static void resetConfig() {
         x = 32;
         yOffsetFromBottom = 56;
-        width = 256;
-        height = 48;
+
+        minWidth = 120;
+        maxWidth = 280;
+        minHeight = 34;
+
         fadeInTicks = 6;
         stayTicks = 80;
         fadeOutTicks = 6;
 
-        textMaxCharsPerLine = 34;
         textMaxLines = 2;
-        nameXOffset = 12;
-        nameYOffset = 10;
-        textXOffset = 12;
-        textYOffset = 22;
+
+        leftPadding = 12;
+        rightPadding = 12;
+        topPadding = 8;
+        bottomPadding = 8;
+
+        nameYOffset = 0;
+        textYOffset = 14;
         textLineHeight = 10;
 
         saveConfig();
@@ -159,49 +182,78 @@ public class ClientNpcDialogueManager {
         return 1f;
     }
 
-    public static int getX() {
-        return x;
+    public static int getX(int screenWidth) {
+        if (x >= 0) return x;
+        return (screenWidth - getWidth()) / 2;
     }
 
     public static int getY(int screenHeight) {
         return screenHeight - yOffsetFromBottom;
     }
 
-    public static int getWidth() {
-        return width;
-    }
-
-    public static int getHeight() {
-        return height;
-    }
-
     public static String getNpcName() {
         return npcName;
     }
 
-    public static int getNameXOffset() {
-        return nameXOffset;
+    public static int getNameX() {
+        return leftPadding;
     }
 
-    public static int getNameYOffset() {
-        return nameYOffset;
+    public static int getNameY() {
+        return topPadding + nameYOffset;
     }
 
-    public static int getTextXOffset() {
-        return textXOffset;
+    public static int getTextX() {
+        return leftPadding;
     }
 
-    public static int getTextYOffset() {
-        return textYOffset;
+    public static int getTextY() {
+        return topPadding + textYOffset;
     }
 
     public static int getTextLineHeight() {
         return textLineHeight;
     }
 
-    public static List<String> wrapText(String input, int maxCharsPerLine, int maxLines) {
+    public static int getWidth() {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc == null || mc.font == null) return minWidth;
+
+        int longest = mc.font.width(npcName);
+
+        List<String> lines = getWrappedText();
+        for (String line : lines) {
+            longest = Math.max(longest, mc.font.width(line));
+        }
+
+        int calculated = leftPadding + longest + rightPadding;
+
+        if (calculated < minWidth) calculated = minWidth;
+        if (calculated > maxWidth) calculated = maxWidth;
+
+        return calculated;
+    }
+
+    public static int getHeight() {
+        int textLines = getWrappedText().size();
+        if (textLines <= 0) textLines = 1;
+
+        int contentBottom = getTextY() + (textLines * textLineHeight);
+        int calculated = contentBottom + bottomPadding;
+
+        if (calculated < minHeight) calculated = minHeight;
+        return calculated;
+    }
+
+    public static List<String> wrapTextByWidth(String input, int maxPixelWidth, int maxLines) {
         List<String> result = new ArrayList<>();
         if (input == null || input.isEmpty()) return result;
+
+        Minecraft mc = Minecraft.getInstance();
+        if (mc == null || mc.font == null) {
+            result.add(input);
+            return result;
+        }
 
         String[] words = input.trim().split("\\s+");
         String current = "";
@@ -209,9 +261,8 @@ public class ClientNpcDialogueManager {
         for (String word : words) {
             String test = current.isEmpty() ? word : current + " " + word;
 
-            if (test.length() <= maxCharsPerLine) {
-                current = test
-;
+            if (mc.font.width(test) <= maxPixelWidth) {
+                current = test;
             } else {
                 if (!current.isEmpty()) {
                     result.add(current);
@@ -229,16 +280,21 @@ public class ClientNpcDialogueManager {
         if (result.size() == maxLines) {
             int last = result.size() - 1;
             String line = result.get(last);
-            if (line.length() > maxCharsPerLine - 1) {
-                result.set(last, line.substring(0, maxCharsPerLine - 1) + "…");
+
+            while (!line.isEmpty() && mc.font.width(line + "…") > maxPixelWidth) {
+                line = line.substring(0, line.length() - 1);
             }
+
+            result.set(last, line + "…");
         }
 
         return result;
     }
 
     public static List<String> getWrappedText() {
-        return wrapText(text, textMaxCharsPerLine, textMaxLines);
+        int innerWidth = maxWidth - leftPadding - rightPadding;
+        if (innerWidth < 20) innerWidth = 20;
+        return wrapTextByWidth(text, innerWidth, textMaxLines);
     }
 
     private static float easeOutCubic(float t) {
@@ -274,17 +330,23 @@ public class ClientNpcDialogueManager {
 
                 x = data.x;
                 yOffsetFromBottom = data.yOffsetFromBottom;
-                width = Math.max(1, data.width);
-                height = Math.max(1, data.height);
+
+                minWidth = Math.max(1, data.minWidth);
+                maxWidth = Math.max(minWidth, data.maxWidth);
+                minHeight = Math.max(1, data.minHeight);
+
                 fadeInTicks = Math.max(1, data.fadeInTicks);
                 stayTicks = Math.max(1, data.stayTicks);
                 fadeOutTicks = Math.max(1, data.fadeOutTicks);
 
-                textMaxCharsPerLine = Math.max(1, data.textMaxCharsPerLine);
                 textMaxLines = Math.max(1, data.textMaxLines);
-                nameXOffset = data.nameXOffset;
+
+                leftPadding = Math.max(0, data.leftPadding);
+                rightPadding = Math.max(0, data.rightPadding);
+                topPadding = Math.max(0, data.topPadding);
+                bottomPadding = Math.max(0, data.bottomPadding);
+
                 nameYOffset = data.nameYOffset;
-                textXOffset = data.textXOffset;
                 textYOffset = data.textYOffset;
                 textLineHeight = Math.max(1, data.textLineHeight);
             }
@@ -296,19 +358,26 @@ public class ClientNpcDialogueManager {
     private static void saveConfig() {
         try {
             DialogueConfigData data = new DialogueConfigData();
+
             data.x = x;
             data.yOffsetFromBottom = yOffsetFromBottom;
-            data.width = width;
-            data.height = height;
+
+            data.minWidth = minWidth;
+            data.maxWidth = maxWidth;
+            data.minHeight = minHeight;
+
             data.fadeInTicks = fadeInTicks;
             data.stayTicks = stayTicks;
             data.fadeOutTicks = fadeOutTicks;
 
-            data.textMaxCharsPerLine = textMaxCharsPerLine;
             data.textMaxLines = textMaxLines;
-            data.nameXOffset = nameXOffset;
+
+            data.leftPadding = leftPadding;
+            data.rightPadding = rightPadding;
+            data.topPadding = topPadding;
+            data.bottomPadding = bottomPadding;
+
             data.nameYOffset = nameYOffset;
-            data.textXOffset = textXOffset;
             data.textYOffset = textYOffset;
             data.textLineHeight = textLineHeight;
 
