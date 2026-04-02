@@ -73,5 +73,13 @@ public class ModNetwork {
                 AwakeningCenterConfigPacket::decode,
                 AwakeningCenterConfigPacket::handle
         );
+
+        CHANNEL.registerMessage(
+                packetId++,
+                AwakeningPathsConfigPacket.class,
+                AwakeningPathsConfigPacket::encode,
+                AwakeningPathsConfigPacket::decode,
+                AwakeningPathsConfigPacket::handle
+        );
     }
 }
