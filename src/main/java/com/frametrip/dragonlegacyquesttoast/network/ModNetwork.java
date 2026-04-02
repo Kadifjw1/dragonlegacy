@@ -65,5 +65,13 @@ public class ModNetwork {
                 AwakeningBackgroundConfigPacket::decode,
                 AwakeningBackgroundConfigPacket::handle
         );
+
+        CHANNEL.registerMessage(
+                packetId++,
+                AwakeningCenterConfigPacket.class,
+                AwakeningCenterConfigPacket::encode,
+                AwakeningCenterConfigPacket::decode,
+                AwakeningCenterConfigPacket::handle
+        );
     }
 }
