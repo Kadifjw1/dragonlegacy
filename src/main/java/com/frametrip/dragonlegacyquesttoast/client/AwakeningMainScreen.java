@@ -21,6 +21,9 @@ public class AwakeningMainScreen extends Screen {
     private static final ResourceLocation PATH_FRAME_TEXTURE =
             new ResourceLocation(DragonLegacyQuestToastMod.MODID, "textures/gui/awakening_path_frame_48x48.png");
 
+    private static final ResourceLocation PATH_FRAME_ACTIVE_TEXTURE =
+            new ResourceLocation(DragonLegacyQuestToastMod.MODID, "textures/gui/awakening_path_frame_active_48x48.png");
+
     private static final ResourceLocation FIRE_ICON_TEXTURE =
             new ResourceLocation(DragonLegacyQuestToastMod.MODID, "textures/gui/path_fire_icon_32x32.png");
 
@@ -32,6 +35,8 @@ public class AwakeningMainScreen extends Screen {
 
     private static final ResourceLocation VOID_ICON_TEXTURE =
             new ResourceLocation(DragonLegacyQuestToastMod.MODID, "textures/gui/path_void_icon_32x32.png");
+
+    private AwakeningPathType hoveredPath = null;
 
     public AwakeningMainScreen() {
         super(Component.literal("Круг Пробуждения"));
@@ -56,6 +61,8 @@ public class AwakeningMainScreen extends Screen {
         int bgWidth = ClientAwakeningScreenState.getBgWidth();
         int bgHeight = ClientAwakeningScreenState.getBgHeight();
 
+        hoveredPath = getPathAt(mouseX, mouseY);
+
         RenderSystem.enableBlend();
         guiGraphics.blit(BG_TEXTURE, bgX, bgY, 0, 0, bgWidth, bgHeight, bgWidth, bgHeight);
 
@@ -71,35 +78,45 @@ public class AwakeningMainScreen extends Screen {
         renderPathNode(guiGraphics,
                 bgX + ClientAwakeningScreenState.getFireX(),
                 bgY + ClientAwakeningScreenState.getFireY(),
-                PATH_FRAME_TEXTURE,
-                FIRE_ICON_TEXTURE);
+                FIRE_ICON_TEXTURE,
+                hoveredPath == AwakeningPathType.FIRE);
 
         renderPathNode(guiGraphics,
                 bgX + ClientAwakeningScreenState.getIceX(),
                 bgY + ClientAwakeningScreenState.getIceY(),
-                PATH_FRAME_TEXTURE,
-                ICE_ICON_TEXTURE);
+                ICE_ICON_TEXTURE,
+                hoveredPath == AwakeningPathType.ICE);
 
         renderPathNode(guiGraphics,
                 bgX + ClientAwakeningScreenState.getStormX(),
                 bgY + ClientAwakeningScreenState.getStormY(),
-                PATH_FRAME_TEXTURE,
-                STORM_ICON_TEXTURE);
+                STORM_ICON_TEXTURE,
+                hoveredPath == AwakeningPathType.STORM);
 
         renderPathNode(guiGraphics,
                 bgX + ClientAwakeningScreenState.getVoidX(),
                 bgY + ClientAwakeningScreenState.getVoidY(),
-                PATH_FRAME_TEXTURE,
-                VOID_ICON_TEXTURE);
+                VOID_ICON_TEXTURE,
+                hoveredPath == AwakeningPathType.VOID);
+
+        if (hoveredPath != null) {
+            guiGraphics.drawCenteredString(this.font, hoveredPath.getTitle(), this.width / 2, bgY + 8, 0xE6D7B5);
+        }
 
         super.render(guiGraphics, mouseX, mouseY, partialTick);
     }
 
-    private void renderPathNode(GuiGraphics guiGraphics, int x, int y, ResourceLocation frameTexture, ResourceLocation iconTexture) {
+    private void renderPathNode(GuiGraphics guiGraphics, int x, int y, ResourceLocation iconTexture, boolean hovered) {
         int frameSize = ClientAwakeningScreenState.getPathFrameSize();
         int iconSize = ClientAwakeningScreenState.getPathIconSize();
 
-        guiGraphics.blit(frameTexture, x, y, 0, 0, frameSize, frameSize, frameSize, frameSize);
+        guiGraphics.blit(
+                hovered ? PATH_FRAME_ACTIVE_TEXTURE : PATH_FRAME_TEXTURE,
+                x, y,
+                0, 0,
+                frameSize, frameSize,
+                frameSize, frameSize
+        );
 
         int iconX = x + (frameSize - iconSize) / 2;
         int iconY = y + (frameSize - iconSize) / 2;
@@ -151,5 +168,46 @@ public class AwakeningMainScreen extends Screen {
         entity.setXRot(oldXRot);
         entity.yHeadRotO = oldYHeadRotO;
         entity.yHeadRot = oldYHeadRot;
+    }
+
+    private AwakeningPathType getPathAt(double mouseX, double mouseY) {
+        int bgX = ClientAwakeningScreenState.getBgX();
+        int bgY = ClientAwakeningScreenState.getBgY();
+        int size = ClientAwakeningScreenState.getPathFrameSize();
+
+        if (isInside(mouseX, mouseY, bgX + ClientAwakeningScreenState.getFireX(), bgY + ClientAwakeningScreenState.getFireY(), size, size)) {
+            return AwakeningPathType.FIRE;
+        }
+
+        if (isInside(mouseX, mouseY, bgX + ClientAwakeningScreenState.getIceX(), bgY + ClientAwakeningScreenState.getIceY(), size, size)) {
+            return AwakeningPathType.ICE;
+        }
+
+        if (isInside(mouseX, mouseY, bgX + ClientAwakeningScreenState.getStormX(), bgY + ClientAwakeningScreenState.getStormY(), size, size)) {
+            return AwakeningPathType.STORM;
+        }
+
+        if (isInside(mouseX, mouseY, bgX + ClientAwakeningScreenState.getVoidX(), bgY + ClientAwakeningScreenState.getVoidY(), size, size)) {
+            return AwakeningPathType.VOID;
+        }
+
+        return null;
+    }
+
+    private boolean isInside(double mouseX, double mouseY, int x, int y, int width, int height) {
+        return mouseX >= x && mouseX < x + width && mouseY >= y && mouseY < y + height;
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        AwakeningPathType clickedPath = getPathAt(mouseX, mouseY);
+        if (clickedPath != null) {
+            if (this.minecraft != null) {
+                this.minecraft.setScreen(new AwakeningPathDetailScreen(this, clickedPath));
+            }
+            return true;
+        }
+
+        return super.mouseClicked(mouseX, mouseY, button);
     }
 }
