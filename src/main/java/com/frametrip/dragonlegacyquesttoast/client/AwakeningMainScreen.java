@@ -18,6 +18,21 @@ public class AwakeningMainScreen extends Screen {
     private static final ResourceLocation CENTER_FRAME_TEXTURE =
             new ResourceLocation(DragonLegacyQuestToastMod.MODID, "textures/gui/awakening_center_frame_96x96.png");
 
+    private static final ResourceLocation PATH_FRAME_TEXTURE =
+            new ResourceLocation(DragonLegacyQuestToastMod.MODID, "textures/gui/awakening_path_frame_48x48.png");
+
+    private static final ResourceLocation FIRE_ICON_TEXTURE =
+            new ResourceLocation(DragonLegacyQuestToastMod.MODID, "textures/gui/path_fire_icon_32x32.png");
+
+    private static final ResourceLocation ICE_ICON_TEXTURE =
+            new ResourceLocation(DragonLegacyQuestToastMod.MODID, "textures/gui/path_ice_icon_32x32.png");
+
+    private static final ResourceLocation STORM_ICON_TEXTURE =
+            new ResourceLocation(DragonLegacyQuestToastMod.MODID, "textures/gui/path_storm_icon_32x32.png");
+
+    private static final ResourceLocation VOID_ICON_TEXTURE =
+            new ResourceLocation(DragonLegacyQuestToastMod.MODID, "textures/gui/path_void_icon_32x32.png");
+
     public AwakeningMainScreen() {
         super(Component.literal("Круг Пробуждения"));
     }
@@ -53,7 +68,43 @@ public class AwakeningMainScreen extends Screen {
 
         renderPlayerInCenter(guiGraphics, frameX, frameY, frameW, frameH, mouseX, mouseY);
 
+        renderPathNode(guiGraphics,
+                bgX + ClientAwakeningScreenState.getFireX(),
+                bgY + ClientAwakeningScreenState.getFireY(),
+                PATH_FRAME_TEXTURE,
+                FIRE_ICON_TEXTURE);
+
+        renderPathNode(guiGraphics,
+                bgX + ClientAwakeningScreenState.getIceX(),
+                bgY + ClientAwakeningScreenState.getIceY(),
+                PATH_FRAME_TEXTURE,
+                ICE_ICON_TEXTURE);
+
+        renderPathNode(guiGraphics,
+                bgX + ClientAwakeningScreenState.getStormX(),
+                bgY + ClientAwakeningScreenState.getStormY(),
+                PATH_FRAME_TEXTURE,
+                STORM_ICON_TEXTURE);
+
+        renderPathNode(guiGraphics,
+                bgX + ClientAwakeningScreenState.getVoidX(),
+                bgY + ClientAwakeningScreenState.getVoidY(),
+                PATH_FRAME_TEXTURE,
+                VOID_ICON_TEXTURE);
+
         super.render(guiGraphics, mouseX, mouseY, partialTick);
+    }
+
+    private void renderPathNode(GuiGraphics guiGraphics, int x, int y, ResourceLocation frameTexture, ResourceLocation iconTexture) {
+        int frameSize = ClientAwakeningScreenState.getPathFrameSize();
+        int iconSize = ClientAwakeningScreenState.getPathIconSize();
+
+        guiGraphics.blit(frameTexture, x, y, 0, 0, frameSize, frameSize, frameSize, frameSize);
+
+        int iconX = x + (frameSize - iconSize) / 2;
+        int iconY = y + (frameSize - iconSize) / 2;
+
+        guiGraphics.blit(iconTexture, iconX, iconY, 0, 0, iconSize, iconSize, iconSize, iconSize);
     }
 
     private void renderPlayerInCenter(GuiGraphics guiGraphics, int frameX, int frameY, int frameW, int frameH, int mouseX, int mouseY) {
