@@ -2,6 +2,7 @@ package com.frametrip.dragonlegacyquesttoast.command;
 
 import com.frametrip.dragonlegacyquesttoast.network.AwakeningBackgroundConfigPacket;
 import com.frametrip.dragonlegacyquesttoast.network.AwakeningCenterConfigPacket;
+import com.frametrip.dragonlegacyquesttoast.network.AwakeningPathsConfigPacket;
 import com.frametrip.dragonlegacyquesttoast.network.ModNetwork;
 import com.frametrip.dragonlegacyquesttoast.network.NpcDialogueConfigPacket;
 import com.frametrip.dragonlegacyquesttoast.network.NpcDialoguePacket;
@@ -27,6 +28,7 @@ public class ModCommands {
         registerAwakeningOpenCommand(dispatcher);
         registerAwakeningBackgroundCommand(dispatcher);
         registerAwakeningCenterCommand(dispatcher);
+        registerAwakeningPathsCommand(dispatcher);
     }
 
     private static void registerQuestToastCommand(CommandDispatcher<CommandSourceStack> dispatcher) {
@@ -370,6 +372,86 @@ public class ModCommands {
                                                                                                                                                                             return 1;
                                                                                                                                                                         })
                                                                                                                                                         )
+                                                                                                                                        )
+                                                                                                                        )
+                                                                                                        )
+                                                                                        )
+                                                                        )
+                                                        )
+                                        )
+                        )
+        );
+    }
+
+    private static void registerAwakeningPathsCommand(CommandDispatcher<CommandSourceStack> dispatcher) {
+        dispatcher.register(
+                Commands.literal("dlawakeningpaths")
+                        .requires(source -> source.hasPermission(2))
+                        .then(
+                                Commands.literal("reset")
+                                        .then(
+                                                Commands.argument("player", EntityArgument.player())
+                                                        .executes(ctx -> {
+                                                            ServerPlayer player = EntityArgument.getPlayer(ctx, "player");
+
+                                                            ModNetwork.CHANNEL.send(
+                                                                    PacketDistributor.PLAYER.with(() -> player),
+                                                                    new AwakeningPathsConfigPacket(true, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+                                                            );
+                                                            return 1;
+                                                        })
+                                        )
+                        )
+                        .then(
+                                Commands.literal("set")
+                                        .then(
+                                                Commands.argument("player", EntityArgument.player())
+                                                        .then(
+                                                                Commands.argument("pathFrameSize", IntegerArgumentType.integer(1))
+                                                                        .then(
+                                                                                Commands.argument("pathIconSize", IntegerArgumentType.integer(1))
+                                                                                        .then(
+                                                                                                Commands.argument("fireX", IntegerArgumentType.integer())
+                                                                                                        .then(
+                                                                                                                Commands.argument("fireY", IntegerArgumentType.integer())
+                                                                                                                        .then(
+                                                                                                                                Commands.argument("iceX", IntegerArgumentType.integer())
+                                                                                                                                        .then(
+                                                                                                                                                Commands.argument("iceY", IntegerArgumentType.integer())
+                                                                                                                                                        .then(
+                                                                                                                                                                Commands.argument("stormX", IntegerArgumentType.integer())
+                                                                                                                                                                        .then(
+                                                                                                                                                                                Commands.argument("stormY", IntegerArgumentType.integer())
+                                                                                                                                                                                        .then(
+                                                                                                                                                                                                Commands.argument("voidX", IntegerArgumentType.integer())
+                                                                                                                                                                                                        .then(
+                                                                                                                                                                                                                Commands.argument("voidY", IntegerArgumentType.integer())
+                                                                                                                                                                                                                        .executes(ctx -> {
+                                                                                                                                                                                                                            ServerPlayer player = EntityArgument.getPlayer(ctx, "player");
+
+                                                                                                                                                                                                                            ModNetwork.CHANNEL.send(
+                                                                                                                                                                                                                                    PacketDistributor.PLAYER.with(() -> player),
+                                                                                                                                                                                                                                    new AwakeningPathsConfigPacket(
+                                                                                                                                                                                                                                            false,
+                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "pathFrameSize"),
+                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "pathIconSize"),
+                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "fireX"),
+                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "fireY"),
+                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "iceX"),
+                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "iceY"),
+                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "stormX"),
+                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "stormY"),
+                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "voidX"),
+                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "voidY")
+                                                                                                                                                                                                                                    )
+                                                                                                                                                                                                                            );
+                                                                                                                                                                                                                            return 1;
+                                                                                                                                                                                                                        })
+                                                                                                                                                                                                        )
+                                                                                                                                                                                        )
+                                                                                                                                                                        )
+                                                                                                                                                        )
+                                                                                                                                                )
                                                                                                                                         )
                                                                                                                         )
                                                                                                         )
