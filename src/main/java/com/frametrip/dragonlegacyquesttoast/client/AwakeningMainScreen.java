@@ -8,6 +8,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
 import org.joml.Quaternionf;
 
@@ -18,23 +19,25 @@ public class AwakeningMainScreen extends Screen {
     private static final ResourceLocation CENTER_FRAME_TEXTURE =
             new ResourceLocation(DragonLegacyQuestToastMod.MODID, "textures/gui/awakening_center_frame_96x96.png");
 
-    private static final ResourceLocation PATH_FRAME_TEXTURE =
-            new ResourceLocation(DragonLegacyQuestToastMod.MODID, "textures/gui/awakening_path_frame_48x48.png");
+    private static final ResourceLocation FIRE_SEAL_TEXTURE =
+            new ResourceLocation(DragonLegacyQuestToastMod.MODID, "textures/gui/path_fire_seal_48x48.png");
+    private static final ResourceLocation FIRE_SEAL_ACTIVE_TEXTURE =
+            new ResourceLocation(DragonLegacyQuestToastMod.MODID, "textures/gui/path_fire_seal_active_48x48.png");
 
-    private static final ResourceLocation PATH_FRAME_ACTIVE_TEXTURE =
-            new ResourceLocation(DragonLegacyQuestToastMod.MODID, "textures/gui/awakening_path_frame_active_48x48.png");
+    private static final ResourceLocation ICE_SEAL_TEXTURE =
+            new ResourceLocation(DragonLegacyQuestToastMod.MODID, "textures/gui/path_ice_seal_48x48.png");
+    private static final ResourceLocation ICE_SEAL_ACTIVE_TEXTURE =
+            new ResourceLocation(DragonLegacyQuestToastMod.MODID, "textures/gui/path_ice_seal_active_48x48.png");
 
-    private static final ResourceLocation FIRE_ICON_TEXTURE =
-            new ResourceLocation(DragonLegacyQuestToastMod.MODID, "textures/gui/path_fire_icon_32x32.png");
+    private static final ResourceLocation STORM_SEAL_TEXTURE =
+            new ResourceLocation(DragonLegacyQuestToastMod.MODID, "textures/gui/path_storm_seal_48x48.png");
+    private static final ResourceLocation STORM_SEAL_ACTIVE_TEXTURE =
+            new ResourceLocation(DragonLegacyQuestToastMod.MODID, "textures/gui/path_storm_seal_active_48x48.png");
 
-    private static final ResourceLocation ICE_ICON_TEXTURE =
-            new ResourceLocation(DragonLegacyQuestToastMod.MODID, "textures/gui/path_ice_icon_32x32.png");
-
-    private static final ResourceLocation STORM_ICON_TEXTURE =
-            new ResourceLocation(DragonLegacyQuestToastMod.MODID, "textures/gui/path_storm_icon_32x32.png");
-
-    private static final ResourceLocation VOID_ICON_TEXTURE =
-            new ResourceLocation(DragonLegacyQuestToastMod.MODID, "textures/gui/path_void_icon_32x32.png");
+    private static final ResourceLocation VOID_SEAL_TEXTURE =
+            new ResourceLocation(DragonLegacyQuestToastMod.MODID, "textures/gui/path_void_seal_48x48.png");
+    private static final ResourceLocation VOID_SEAL_ACTIVE_TEXTURE =
+            new ResourceLocation(DragonLegacyQuestToastMod.MODID, "textures/gui/path_void_seal_active_48x48.png");
 
     private AwakeningPathType hoveredPath = null;
 
@@ -75,29 +78,45 @@ public class AwakeningMainScreen extends Screen {
 
         renderPlayerInCenter(guiGraphics, frameX, frameY, frameW, frameH, mouseX, mouseY);
 
-        renderPathNode(guiGraphics,
+        renderPathSeal(
+                guiGraphics,
                 bgX + ClientAwakeningScreenState.getFireX(),
                 bgY + ClientAwakeningScreenState.getFireY(),
-                FIRE_ICON_TEXTURE,
-                hoveredPath == AwakeningPathType.FIRE);
+                FIRE_SEAL_TEXTURE,
+                FIRE_SEAL_ACTIVE_TEXTURE,
+                AwakeningPathType.FIRE,
+                hoveredPath == AwakeningPathType.FIRE
+        );
 
-        renderPathNode(guiGraphics,
+        renderPathSeal(
+                guiGraphics,
                 bgX + ClientAwakeningScreenState.getIceX(),
                 bgY + ClientAwakeningScreenState.getIceY(),
-                ICE_ICON_TEXTURE,
-                hoveredPath == AwakeningPathType.ICE);
+                ICE_SEAL_TEXTURE,
+                ICE_SEAL_ACTIVE_TEXTURE,
+                AwakeningPathType.ICE,
+                hoveredPath == AwakeningPathType.ICE
+        );
 
-        renderPathNode(guiGraphics,
+        renderPathSeal(
+                guiGraphics,
                 bgX + ClientAwakeningScreenState.getStormX(),
                 bgY + ClientAwakeningScreenState.getStormY(),
-                STORM_ICON_TEXTURE,
-                hoveredPath == AwakeningPathType.STORM);
+                STORM_SEAL_TEXTURE,
+                STORM_SEAL_ACTIVE_TEXTURE,
+                AwakeningPathType.STORM,
+                hoveredPath == AwakeningPathType.STORM
+        );
 
-        renderPathNode(guiGraphics,
+        renderPathSeal(
+                guiGraphics,
                 bgX + ClientAwakeningScreenState.getVoidX(),
                 bgY + ClientAwakeningScreenState.getVoidY(),
-                VOID_ICON_TEXTURE,
-                hoveredPath == AwakeningPathType.VOID);
+                VOID_SEAL_TEXTURE,
+                VOID_SEAL_ACTIVE_TEXTURE,
+                AwakeningPathType.VOID,
+                hoveredPath == AwakeningPathType.VOID
+        );
 
         if (hoveredPath != null) {
             guiGraphics.drawCenteredString(this.font, hoveredPath.getTitle(), this.width / 2, bgY + 8, 0xE6D7B5);
@@ -106,22 +125,100 @@ public class AwakeningMainScreen extends Screen {
         super.render(guiGraphics, mouseX, mouseY, partialTick);
     }
 
-    private void renderPathNode(GuiGraphics guiGraphics, int x, int y, ResourceLocation iconTexture, boolean hovered) {
-        int frameSize = ClientAwakeningScreenState.getPathFrameSize();
-        int iconSize = ClientAwakeningScreenState.getPathIconSize();
+    private void renderPathSeal(
+            GuiGraphics guiGraphics,
+            int x,
+            int y,
+            ResourceLocation normalTexture,
+            ResourceLocation activeTexture,
+            AwakeningPathType pathType,
+            boolean hovered
+    ) {
+        int size = ClientAwakeningScreenState.getPathFrameSize();
 
         guiGraphics.blit(
-                hovered ? PATH_FRAME_ACTIVE_TEXTURE : PATH_FRAME_TEXTURE,
+                hovered ? activeTexture : normalTexture,
                 x, y,
                 0, 0,
-                frameSize, frameSize,
-                frameSize, frameSize
+                size, size,
+                size, size
         );
 
-        int iconX = x + (frameSize - iconSize) / 2;
-        int iconY = y + (frameSize - iconSize) / 2;
+        if (hovered) {
+            renderPathParticles(guiGraphics, x, y, size, pathType);
+        }
+    }
 
-        guiGraphics.blit(iconTexture, iconX, iconY, 0, 0, iconSize, iconSize, iconSize, iconSize);
+    private void renderPathParticles(GuiGraphics guiGraphics, int x, int y, int size, AwakeningPathType pathType) {
+        float time = (this.minecraft != null && this.minecraft.level != null)
+                ? (this.minecraft.level.getGameTime() + this.minecraft.getFrameTime())
+                : 0.0F;
+
+        int centerX = x + size / 2;
+        int centerY = y + size / 2;
+        float radius = size / 2.0F + 4.0F;
+
+        int particleColor = getParticleColor(pathType);
+
+        for (int i = 0; i < 8; i++) {
+            float angle = (time * 0.08F) + (i * ((float) Math.PI * 2.0F / 8.0F));
+
+            int px = centerX + Math.round(Mth.cos(angle) * radius);
+            int py = centerY + Math.round(Mth.sin(angle) * radius);
+
+            int pSize = (i % 2 == 0) ? 2 : 1;
+            guiGraphics.fill(px, py, px + pSize, py + pSize, particleColor);
+        }
+
+        switch (pathType) {
+            case FIRE -> renderFireParticles(guiGraphics, centerX, centerY, time);
+            case ICE -> renderIceParticles(guiGraphics, centerX, centerY, time);
+            case STORM -> renderStormParticles(guiGraphics, centerX, centerY, time);
+            case VOID -> renderVoidParticles(guiGraphics, centerX, centerY, time);
+        }
+    }
+
+    private void renderFireParticles(GuiGraphics guiGraphics, int centerX, int centerY, float time) {
+        for (int i = 0; i < 5; i++) {
+            int px = centerX - 8 + (i * 4);
+            int py = centerY + 10 - ((int) ((time + i * 3) % 10));
+            guiGraphics.fill(px, py, px + 1, py + 2, 0xFFFFA040);
+        }
+    }
+
+    private void renderIceParticles(GuiGraphics guiGraphics, int centerX, int centerY, float time) {
+        for (int i = 0; i < 6; i++) {
+            int px = centerX - 10 + (i * 4);
+            int py = centerY - 10 + (int) ((time + i * 2) % 8);
+            guiGraphics.fill(px, py, px + 1, py + 1, 0xFFBFEFFF);
+        }
+    }
+
+    private void renderStormParticles(GuiGraphics guiGraphics, int centerX, int centerY, float time) {
+        int blink = ((int) time / 3) % 2;
+        if (blink == 0) {
+            guiGraphics.fill(centerX - 12, centerY - 6, centerX - 4, centerY - 5, 0xFF8CB8FF);
+            guiGraphics.fill(centerX + 4, centerY + 4, centerX + 12, centerY + 5, 0xFFB08CFF);
+            guiGraphics.fill(centerX + 8, centerY - 10, centerX + 9, centerY - 2, 0xFFD0D8FF);
+        }
+    }
+
+    private void renderVoidParticles(GuiGraphics guiGraphics, int centerX, int centerY, float time) {
+        for (int i = 0; i < 5; i++) {
+            float angle = -(time * 0.05F) - (i * ((float) Math.PI * 2.0F / 5.0F));
+            int px = centerX + Math.round(Mth.cos(angle) * 14.0F);
+            int py = centerY + Math.round(Mth.sin(angle) * 14.0F);
+            guiGraphics.fill(px, py, px + 2, py + 2, 0xCC6E4C9B);
+        }
+    }
+
+    private int getParticleColor(AwakeningPathType pathType) {
+        return switch (pathType) {
+            case FIRE -> 0xFFFFA040;
+            case ICE -> 0xFFBFEFFF;
+            case STORM -> 0xFF9DB8FF;
+            case VOID -> 0xCC7B52B3;
+        };
     }
 
     private void renderPlayerInCenter(GuiGraphics guiGraphics, int frameX, int frameY, int frameW, int frameH, int mouseX, int mouseY) {
