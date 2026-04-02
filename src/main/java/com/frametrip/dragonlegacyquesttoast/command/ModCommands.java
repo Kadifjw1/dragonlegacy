@@ -12,6 +12,7 @@ import com.frametrip.dragonlegacyquesttoast.network.QuestToastPacket;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.builder.ArgumentBuilder;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
@@ -69,7 +70,6 @@ public class ModCommands {
                                                 Commands.literal("reset")
                                                         .executes(ctx -> {
                                                             ServerPlayer player = EntityArgument.getPlayer(ctx, "player");
-
                                                             ModNetwork.CHANNEL.send(
                                                                     PacketDistributor.PLAYER.with(() -> player),
                                                                     new QuestToastConfigPacket(true, 0, 0, 0, 0, 0, 0, 0, 0)
@@ -97,7 +97,6 @@ public class ModCommands {
                                                                                                                                                                                 Commands.argument("startOffsetX", IntegerArgumentType.integer())
                                                                                                                                                                                         .executes(ctx -> {
                                                                                                                                                                                             ServerPlayer player = EntityArgument.getPlayer(ctx, "player");
-
                                                                                                                                                                                             ModNetwork.CHANNEL.send(
                                                                                                                                                                                                     PacketDistributor.PLAYER.with(() -> player),
                                                                                                                                                                                                     new QuestToastConfigPacket(
@@ -160,92 +159,65 @@ public class ModCommands {
     }
 
     private static void registerNpcSayConfigCommand(CommandDispatcher<CommandSourceStack> dispatcher) {
-        dispatcher.register(
-                Commands.literal("dlnpcsayconfig")
-                        .requires(source -> source.hasPermission(2))
+        ArgumentBuilder<CommandSourceStack, ?> setChain =
+                Commands.argument("x", IntegerArgumentType.integer())
                         .then(
-                                Commands.argument("player", EntityArgument.player())
+                                Commands.argument("yOffsetFromBottom", IntegerArgumentType.integer())
                                         .then(
-                                                Commands.literal("reset")
-                                                        .executes(ctx -> {
-                                                            ServerPlayer player = EntityArgument.getPlayer(ctx, "player");
-
-                                                            ModNetwork.CHANNEL.send(
-                                                                    PacketDistributor.PLAYER.with(() -> player),
-                                                                    new NpcDialogueConfigPacket(
-                                                                            true,
-                                                                            0, 0, 0, 0, 0, 0, 0, 0,
-                                                                            0, 0, 0, 0, 0, 0, 0, 0
-                                                                    )
-                                                            );
-                                                            return 1;
-                                                        })
-                                        )
-                                        .then(
-                                                Commands.literal("set")
+                                                Commands.argument("minWidth", IntegerArgumentType.integer(1))
                                                         .then(
-                                                                Commands.argument("x", IntegerArgumentType.integer())
+                                                                Commands.argument("maxWidth", IntegerArgumentType.integer(1))
                                                                         .then(
-                                                                                Commands.argument("yOffsetFromBottom", IntegerArgumentType.integer())
+                                                                                Commands.argument("minHeight", IntegerArgumentType.integer(1))
                                                                                         .then(
-                                                                                                Commands.argument("minWidth", IntegerArgumentType.integer(1))
+                                                                                                Commands.argument("fadeIn", IntegerArgumentType.integer(1))
                                                                                                         .then(
-                                                                                                                Commands.argument("maxWidth", IntegerArgumentType.integer(1))
+                                                                                                                Commands.argument("stay", IntegerArgumentType.integer(1))
                                                                                                                         .then(
-                                                                                                                                Commands.argument("minHeight", IntegerArgumentType.integer(1))
+                                                                                                                                Commands.argument("fadeOut", IntegerArgumentType.integer(1))
                                                                                                                                         .then(
-                                                                                                                                                Commands.argument("fadeIn", IntegerArgumentType.integer(1))
+                                                                                                                                                Commands.argument("textMaxLines", IntegerArgumentType.integer(1))
                                                                                                                                                         .then(
-                                                                                                                                                                Commands.argument("stay", IntegerArgumentType.integer(1))
+                                                                                                                                                                Commands.argument("leftPadding", IntegerArgumentType.integer(0))
                                                                                                                                                                         .then(
-                                                                                                                                                                                Commands.argument("fadeOut", IntegerArgumentType.integer(1))
+                                                                                                                                                                                Commands.argument("rightPadding", IntegerArgumentType.integer(0))
                                                                                                                                                                                         .then(
-                                                                                                                                                                                                Commands.argument("textMaxLines", IntegerArgumentType.integer(1))
+                                                                                                                                                                                                Commands.argument("topPadding", IntegerArgumentType.integer(0))
                                                                                                                                                                                                         .then(
-                                                                                                                                                                                                                Commands.argument("leftPadding", IntegerArgumentType.integer(0))
+                                                                                                                                                                                                                Commands.argument("bottomPadding", IntegerArgumentType.integer(0))
                                                                                                                                                                                                                         .then(
-                                                                                                                                                                                                                                Commands.argument("rightPadding", IntegerArgumentType.integer(0))
+                                                                                                                                                                                                                                Commands.argument("nameYOffset", IntegerArgumentType.integer())
                                                                                                                                                                                                                                         .then(
-                                                                                                                                                                                                                                                Commands.argument("topPadding", IntegerArgumentType.integer(0))
+                                                                                                                                                                                                                                                Commands.argument("textYOffset", IntegerArgumentType.integer())
                                                                                                                                                                                                                                                         .then(
-                                                                                                                                                                                                                                                                Commands.argument("bottomPadding", IntegerArgumentType.integer(0))
-                                                                                                                                                                                                                                                                        .then(
-                                                                                                                                                                                                                                                                                Commands.argument("nameYOffset", IntegerArgumentType.integer())
-                                                                                                                                                                                                                                                                                        .then(
-                                                                                                                                                                                                                                                                                                Commands.argument("textYOffset", IntegerArgumentType.integer())
-                                                                                                                                                                                                                                                                                                        .then(
-                                                                                                                                                                                                                                                                                                                Commands.argument("textLineHeight", IntegerArgumentType.integer(1))
-                                                                                                                                                                                                                                                                                                                        .executes(ctx -> {
-                                                                                                                                                                                                                                                                                                                            ServerPlayer player = EntityArgument.getPlayer(ctx, "player");
+                                                                                                                                                                                                                                                                Commands.argument("textLineHeight", IntegerArgumentType.integer(1))
+                                                                                                                                                                                                                                                                        .executes(ctx -> {
+                                                                                                                                                                                                                                                                            ServerPlayer player = EntityArgument.getPlayer(ctx, "player");
 
-                                                                                                                                                                                                                                                                                                                            ModNetwork.CHANNEL.send(
-                                                                                                                                                                                                                                                                                                                                    PacketDistributor.PLAYER.with(() -> player),
-                                                                                                                                                                                                                                                                                                                                    new NpcDialogueConfigPacket(
-                                                                                                                                                                                                                                                                                                                                            false,
-                                                                                                                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "x"),
-                                                                                                                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "yOffsetFromBottom"),
-                                                                                                                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "minWidth"),
-                                                                                                                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "maxWidth"),
-                                                                                                                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "minHeight"),
-                                                                                                                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "fadeIn"),
-                                                                                                                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "stay"),
-                                                                                                                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "fadeOut"),
-                                                                                                                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "textMaxLines"),
-                                                                                                                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "leftPadding"),
-                                                                                                                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "rightPadding"),
-                                                                                                                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "topPadding"),
-                                                                                                                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "bottomPadding"),
-                                                                                                                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "nameYOffset"),
-                                                                                                                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "textYOffset"),
-                                                                                                                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "textLineHeight")
-                                                                                                                                                                                                                                                                                                                                    )
-                                                                                                                                                                                                                                                                                                                            );
-                                                                                                                                                                                                                                                                                                                            return 1;
-                                                                                                                                                                                                                                                                                                                        })
-                                                                                                                                                                                                                                                                                                        )
-                                                                                                                                                                                                                                                                                        )
-                                                                                                                                                                                                                                                                                )
-                                                                                                                                                                                                                                                                        )
+                                                                                                                                                                                                                                                                            ModNetwork.CHANNEL.send(
+                                                                                                                                                                                                                                                                                    PacketDistributor.PLAYER.with(() -> player),
+                                                                                                                                                                                                                                                                                    new NpcDialogueConfigPacket(
+                                                                                                                                                                                                                                                                                            false,
+                                                                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "x"),
+                                                                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "yOffsetFromBottom"),
+                                                                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "minWidth"),
+                                                                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "maxWidth"),
+                                                                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "minHeight"),
+                                                                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "fadeIn"),
+                                                                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "stay"),
+                                                                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "fadeOut"),
+                                                                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "textMaxLines"),
+                                                                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "leftPadding"),
+                                                                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "rightPadding"),
+                                                                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "topPadding"),
+                                                                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "bottomPadding"),
+                                                                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "nameYOffset"),
+                                                                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "textYOffset"),
+                                                                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "textLineHeight")
+                                                                                                                                                                                                                                                                                    )
+                                                                                                                                                                                                                                                                            );
+                                                                                                                                                                                                                                                                            return 1;
+                                                                                                                                                                                                                                                                        })
                                                                                                                                                                                                                                                         )
                                                                                                                                                                                                                                         )
                                                                                                                                                                                                                         )
@@ -260,6 +232,29 @@ public class ModCommands {
                                                                         )
                                                         )
                                         )
+                        );
+
+        dispatcher.register(
+                Commands.literal("dlnpcsayconfig")
+                        .requires(source -> source.hasPermission(2))
+                        .then(
+                                Commands.argument("player", EntityArgument.player())
+                                        .then(
+                                                Commands.literal("reset")
+                                                        .executes(ctx -> {
+                                                            ServerPlayer player = EntityArgument.getPlayer(ctx, "player");
+                                                            ModNetwork.CHANNEL.send(
+                                                                    PacketDistributor.PLAYER.with(() -> player),
+                                                                    new NpcDialogueConfigPacket(
+                                                                            true,
+                                                                            0, 0, 0, 0, 0, 0, 0, 0,
+                                                                            0, 0, 0, 0, 0, 0, 0, 0
+                                                                    )
+                                                            );
+                                                            return 1;
+                                                        })
+                                        )
+                                        .then(Commands.literal("set").then(setChain))
                         )
         );
     }
@@ -274,7 +269,6 @@ public class ModCommands {
                                                 Commands.argument("player", EntityArgument.player())
                                                         .executes(ctx -> {
                                                             ServerPlayer player = EntityArgument.getPlayer(ctx, "player");
-
                                                             ModNetwork.CHANNEL.send(
                                                                     PacketDistributor.PLAYER.with(() -> player),
                                                                     new OpenAwakeningScreenPacket()
@@ -296,7 +290,6 @@ public class ModCommands {
                                                 Commands.argument("player", EntityArgument.player())
                                                         .executes(ctx -> {
                                                             ServerPlayer player = EntityArgument.getPlayer(ctx, "player");
-
                                                             ModNetwork.CHANNEL.send(
                                                                     PacketDistributor.PLAYER.with(() -> player),
                                                                     new AwakeningBackgroundConfigPacket(true, 0, 0, 0, 0)
@@ -319,7 +312,6 @@ public class ModCommands {
                                                                                                                 Commands.argument("height", IntegerArgumentType.integer(1))
                                                                                                                         .executes(ctx -> {
                                                                                                                             ServerPlayer player = EntityArgument.getPlayer(ctx, "player");
-
                                                                                                                             ModNetwork.CHANNEL.send(
                                                                                                                                     PacketDistributor.PLAYER.with(() -> player),
                                                                                                                                     new AwakeningBackgroundConfigPacket(
@@ -351,7 +343,6 @@ public class ModCommands {
                                                 Commands.argument("player", EntityArgument.player())
                                                         .executes(ctx -> {
                                                             ServerPlayer player = EntityArgument.getPlayer(ctx, "player");
-
                                                             ModNetwork.CHANNEL.send(
                                                                     PacketDistributor.PLAYER.with(() -> player),
                                                                     new AwakeningCenterConfigPacket(true, 0, 0, 0, 0, 0, 0, 0.0F)
@@ -380,7 +371,6 @@ public class ModCommands {
                                                                                                                                                                 Commands.argument("playerScale", IntegerArgumentType.integer(1))
                                                                                                                                                                         .executes(ctx -> {
                                                                                                                                                                             ServerPlayer player = EntityArgument.getPlayer(ctx, "player");
-
                                                                                                                                                                             ModNetwork.CHANNEL.send(
                                                                                                                                                                                     PacketDistributor.PLAYER.with(() -> player),
                                                                                                                                                                                     new AwakeningCenterConfigPacket(
@@ -409,6 +399,57 @@ public class ModCommands {
     }
 
     private static void registerAwakeningPathsCommand(CommandDispatcher<CommandSourceStack> dispatcher) {
+        ArgumentBuilder<CommandSourceStack, ?> setChain =
+                Commands.argument("pathFrameSize", IntegerArgumentType.integer(1))
+                        .then(
+                                Commands.argument("pathIconSize", IntegerArgumentType.integer(1))
+                                        .then(
+                                                Commands.argument("fireX", IntegerArgumentType.integer())
+                                                        .then(
+                                                                Commands.argument("fireY", IntegerArgumentType.integer())
+                                                                        .then(
+                                                                                Commands.argument("iceX", IntegerArgumentType.integer())
+                                                                                        .then(
+                                                                                                Commands.argument("iceY", IntegerArgumentType.integer())
+                                                                                                        .then(
+                                                                                                                Commands.argument("stormX", IntegerArgumentType.integer())
+                                                                                                                        .then(
+                                                                                                                                Commands.argument("stormY", IntegerArgumentType.integer())
+                                                                                                                                        .then(
+                                                                                                                                                Commands.argument("voidX", IntegerArgumentType.integer())
+                                                                                                                                                        .then(
+                                                                                                                                                                Commands.argument("voidY", IntegerArgumentType.integer())
+                                                                                                                                                                        .executes(ctx -> {
+                                                                                                                                                                            ServerPlayer player = EntityArgument.getPlayer(ctx, "player");
+
+                                                                                                                                                                            ModNetwork.CHANNEL.send(
+                                                                                                                                                                                    PacketDistributor.PLAYER.with(() -> player),
+                                                                                                                                                                                    new AwakeningPathsConfigPacket(
+                                                                                                                                                                                            false,
+                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "pathFrameSize"),
+                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "pathIconSize"),
+                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "fireX"),
+                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "fireY"),
+                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "iceX"),
+                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "iceY"),
+                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "stormX"),
+                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "stormY"),
+                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "voidX"),
+                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "voidY")
+                                                                                                                                                                                    )
+                                                                                                                                                                            );
+                                                                                                                                                                            return 1;
+                                                                                                                                                                        })
+                                                                                                                                                        )
+                                                                                                                                        )
+                                                                                                                        )
+                                                                                                        )
+                                                                                        )
+                                                                        )
+                                                        )
+                                        )
+                        );
+
         dispatcher.register(
                 Commands.literal("dlawakeningpaths")
                         .requires(source -> source.hasPermission(2))
@@ -418,7 +459,6 @@ public class ModCommands {
                                                 Commands.argument("player", EntityArgument.player())
                                                         .executes(ctx -> {
                                                             ServerPlayer player = EntityArgument.getPlayer(ctx, "player");
-
                                                             ModNetwork.CHANNEL.send(
                                                                     PacketDistributor.PLAYER.with(() -> player),
                                                                     new AwakeningPathsConfigPacket(
@@ -438,58 +478,7 @@ public class ModCommands {
                                 Commands.literal("set")
                                         .then(
                                                 Commands.argument("player", EntityArgument.player())
-                                                        .then(
-                                                                Commands.argument("pathFrameSize", IntegerArgumentType.integer(1))
-                                                                        .then(
-                                                                                Commands.argument("pathIconSize", IntegerArgumentType.integer(1))
-                                                                                        .then(
-                                                                                                Commands.argument("fireX", IntegerArgumentType.integer())
-                                                                                                        .then(
-                                                                                                                Commands.argument("fireY", IntegerArgumentType.integer())
-                                                                                                                        .then(
-                                                                                                                                Commands.argument("iceX", IntegerArgumentType.integer())
-                                                                                                                                        .then(
-                                                                                                                                                Commands.argument("iceY", IntegerArgumentType.integer())
-                                                                                                                                                        .then(
-                                                                                                                                                                Commands.argument("stormX", IntegerArgumentType.integer())
-                                                                                                                                                                        .then(
-                                                                                                                                                                                Commands.argument("stormY", IntegerArgumentType.integer())
-                                                                                                                                                                                        .then(
-                                                                                                                                                                                                Commands.argument("voidX", IntegerArgumentType.integer())
-                                                                                                                                                                                                        .then(
-                                                                                                                                                                                                                Commands.argument("voidY", IntegerArgumentType.integer())
-                                                                                                                                                                                                                        .executes(ctx -> {
-                                                                                                                                                                                                                            ServerPlayer player = EntityArgument.getPlayer(ctx, "player");
-
-                                                                                                                                                                                                                            ModNetwork.CHANNEL.send(
-                                                                                                                                                                                                                                    PacketDistributor.PLAYER.with(() -> player),
-                                                                                                                                                                                                                                    new AwakeningPathsConfigPacket(
-                                                                                                                                                                                                                                            false,
-                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "pathFrameSize"),
-                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "pathIconSize"),
-                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "fireX"),
-                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "fireY"),
-                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "iceX"),
-                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "iceY"),
-                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "stormX"),
-                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "stormY"),
-                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "voidX"),
-                                                                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "voidY")
-                                                                                                                                                                                                                                    )
-                                                                                                                                                                                                                            );
-                                                                                                                                                                                                                            return 1;
-                                                                                                                                                                                                                        })
-                                                                                                                                                                                                        )
-                                                                                                                                                                                        )
-                                                                                                                                                                        )
-                                                                                                                                                        )
-                                                                                                                                                )
-                                                                                                                                        )
-                                                                                                                        )
-                                                                                                        )
-                                                                                        )
-                                                                        )
-                                                        )
+                                                        .then(setChain)
                                         )
                         )
         );
