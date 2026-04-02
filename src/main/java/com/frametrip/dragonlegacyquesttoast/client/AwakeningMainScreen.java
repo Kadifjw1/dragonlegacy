@@ -10,7 +10,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
 import org.joml.Quaternionf;
-import org.joml.Vector3f;
 
 public class AwakeningMainScreen extends Screen {
     private static final ResourceLocation BG_TEXTURE =
@@ -65,7 +64,7 @@ public class AwakeningMainScreen extends Screen {
 
         int modelX = frameX + (frameW / 2) + ClientAwakeningScreenState.getPlayerOffsetX();
         int modelY = frameY + frameH - 10 + ClientAwakeningScreenState.getPlayerOffsetY();
-        float scale = ClientAwakeningScreenState.getPlayerScale();
+        int scale = Math.round(ClientAwakeningScreenState.getPlayerScale());
 
         float angleX = (float) Math.atan((modelX - mouseX) / 40.0F);
         float angleY = (float) Math.atan((modelY - mouseY) / 40.0F);
@@ -88,10 +87,9 @@ public class AwakeningMainScreen extends Screen {
 
         InventoryScreen.renderEntityInInventory(
                 guiGraphics,
-                (float) modelX,
-                (float) modelY,
+                modelX,
+                modelY,
                 scale,
-                new Vector3f(0.0F, entity.getBbHeight() / 2.0F, 0.0F),
                 bodyRotation,
                 headRotation,
                 entity
