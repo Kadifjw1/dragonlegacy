@@ -24,6 +24,21 @@ public class ClientAwakeningScreenState {
         public int playerOffsetX = 0;
         public int playerOffsetY = 8;
         public float playerScale = 38.0F;
+
+        public int pathFrameSize = 48;
+        public int pathIconSize = 32;
+
+        public int fireX = 136;
+        public int fireY = 12;
+
+        public int iceX = 56;
+        public int iceY = 68;
+
+        public int stormX = 216;
+        public int stormY = 68;
+
+        public int voidX = 136;
+        public int voidY = 148;
     }
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
@@ -43,6 +58,21 @@ public class ClientAwakeningScreenState {
     private static int playerOffsetX = 0;
     private static int playerOffsetY = 8;
     private static float playerScale = 38.0F;
+
+    private static int pathFrameSize = 48;
+    private static int pathIconSize = 32;
+
+    private static int fireX = 136;
+    private static int fireY = 12;
+
+    private static int iceX = 56;
+    private static int iceY = 68;
+
+    private static int stormX = 216;
+    private static int stormY = 68;
+
+    private static int voidX = 136;
+    private static int voidY = 148;
 
     static {
         loadConfig();
@@ -87,6 +117,45 @@ public class ClientAwakeningScreenState {
         saveConfig();
     }
 
+    public static void applyPathsConfig(int newPathFrameSize, int newPathIconSize,
+                                        int newFireX, int newFireY,
+                                        int newIceX, int newIceY,
+                                        int newStormX, int newStormY,
+                                        int newVoidX, int newVoidY) {
+        pathFrameSize = Math.max(1, newPathFrameSize);
+        pathIconSize = Math.max(1, newPathIconSize);
+
+        fireX = newFireX;
+        fireY = newFireY;
+        iceX = newIceX;
+        iceY = newIceY;
+        stormX = newStormX;
+        stormY = newStormY;
+        voidX = newVoidX;
+        voidY = newVoidY;
+
+        saveConfig();
+    }
+
+    public static void resetPathsConfig() {
+        pathFrameSize = 48;
+        pathIconSize = 32;
+
+        fireX = 136;
+        fireY = 12;
+
+        iceX = 56;
+        iceY = 68;
+
+        stormX = 216;
+        stormY = 68;
+
+        voidX = 136;
+        voidY = 148;
+
+        saveConfig();
+    }
+
     public static int getBgX() { return bgX; }
     public static int getBgY() { return bgY; }
     public static int getBgWidth() { return bgWidth; }
@@ -100,6 +169,21 @@ public class ClientAwakeningScreenState {
     public static int getPlayerOffsetX() { return playerOffsetX; }
     public static int getPlayerOffsetY() { return playerOffsetY; }
     public static float getPlayerScale() { return playerScale; }
+
+    public static int getPathFrameSize() { return pathFrameSize; }
+    public static int getPathIconSize() { return pathIconSize; }
+
+    public static int getFireX() { return fireX; }
+    public static int getFireY() { return fireY; }
+
+    public static int getIceX() { return iceX; }
+    public static int getIceY() { return iceY; }
+
+    public static int getStormX() { return stormX; }
+    public static int getStormY() { return stormY; }
+
+    public static int getVoidX() { return voidX; }
+    public static int getVoidY() { return voidY; }
 
     private static void loadConfig() {
         try {
@@ -128,6 +212,21 @@ public class ClientAwakeningScreenState {
                 playerOffsetX = data.playerOffsetX;
                 playerOffsetY = data.playerOffsetY;
                 playerScale = Math.max(1.0F, data.playerScale);
+
+                pathFrameSize = Math.max(1, data.pathFrameSize);
+                pathIconSize = Math.max(1, data.pathIconSize);
+
+                fireX = data.fireX;
+                fireY = data.fireY;
+
+                iceX = data.iceX;
+                iceY = data.iceY;
+
+                stormX = data.stormX;
+                stormY = data.stormY;
+
+                voidX = data.voidX;
+                voidY = data.voidY;
             }
         } catch (Exception e) {
             System.out.println("[DragonLegacyQuestToast] Failed to load awakening screen config: " + e.getMessage());
@@ -151,6 +250,21 @@ public class ClientAwakeningScreenState {
             data.playerOffsetX = playerOffsetX;
             data.playerOffsetY = playerOffsetY;
             data.playerScale = playerScale;
+
+            data.pathFrameSize = pathFrameSize;
+            data.pathIconSize = pathIconSize;
+
+            data.fireX = fireX;
+            data.fireY = fireY;
+
+            data.iceX = iceX;
+            data.iceY = iceY;
+
+            data.stormX = stormX;
+            data.stormY = stormY;
+
+            data.voidX = voidX;
+            data.voidY = voidY;
 
             try (Writer writer = Files.newBufferedWriter(CONFIG_PATH)) {
                 GSON.toJson(data, writer);
