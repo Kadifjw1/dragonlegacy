@@ -49,5 +49,21 @@ public class ModNetwork {
                 NpcDialogueConfigPacket::decode,
                 NpcDialogueConfigPacket::handle
         );
+
+        CHANNEL.registerMessage(
+                packetId++,
+                OpenAwakeningScreenPacket.class,
+                OpenAwakeningScreenPacket::encode,
+                OpenAwakeningScreenPacket::decode,
+                OpenAwakeningScreenPacket::handle
+        );
+
+        CHANNEL.registerMessage(
+                packetId++,
+                AwakeningBackgroundConfigPacket.class,
+                AwakeningBackgroundConfigPacket::encode,
+                AwakeningBackgroundConfigPacket::decode,
+                AwakeningBackgroundConfigPacket::handle
+        );
     }
 }
