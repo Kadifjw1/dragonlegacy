@@ -1,8 +1,10 @@
 package com.frametrip.dragonlegacyquesttoast.command;
 
+import com.frametrip.dragonlegacyquesttoast.network.AwakeningBackgroundConfigPacket;
 import com.frametrip.dragonlegacyquesttoast.network.ModNetwork;
 import com.frametrip.dragonlegacyquesttoast.network.NpcDialogueConfigPacket;
 import com.frametrip.dragonlegacyquesttoast.network.NpcDialoguePacket;
+import com.frametrip.dragonlegacyquesttoast.network.OpenAwakeningScreenPacket;
 import com.frametrip.dragonlegacyquesttoast.network.QuestToastConfigPacket;
 import com.frametrip.dragonlegacyquesttoast.network.QuestToastPacket;
 import com.mojang.brigadier.CommandDispatcher;
@@ -21,6 +23,8 @@ public class ModCommands {
         registerQuestToastConfigCommand(dispatcher);
         registerNpcSayCommand(dispatcher);
         registerNpcSayConfigCommand(dispatcher);
+        registerAwakeningOpenCommand(dispatcher);
+        registerAwakeningBackgroundCommand(dispatcher);
     }
 
     private static void registerQuestToastCommand(CommandDispatcher<CommandSourceStack> dispatcher) {
@@ -225,6 +229,83 @@ public class ModCommands {
                                                                                 )
                                                                         )
                                                                 )
+                                                        )
+                                        )
+                        )
+        );
+    }
+
+    private static void registerAwakeningOpenCommand(CommandDispatcher<CommandSourceStack> dispatcher) {
+        dispatcher.register(
+                Commands.literal("dlawakening")
+                        .requires(source -> source.hasPermission(2))
+                        .then(
+                                Commands.literal("open")
+                                        .then(
+                                                Commands.argument("player", EntityArgument.player())
+                                                        .executes(ctx -> {
+                                                            ServerPlayer player = EntityArgument.getPlayer(ctx, "player");
+
+                                                            ModNetwork.CHANNEL.send(
+                                                                    PacketDistributor.PLAYER.with(() -> player),
+                                                                    new OpenAwakeningScreenPacket()
+                                                            );
+                                                            return 1;
+                                                        })
+                                        )
+                        )
+        );
+    }
+
+    private static void registerAwakeningBackgroundCommand(CommandDispatcher<CommandSourceStack> dispatcher) {
+        dispatcher.register(
+                Commands.literal("dlawakeningbg")
+                        .requires(source -> source.hasPermission(2))
+                        .then(
+                                Commands.literal("reset")
+                                        .then(
+                                                Commands.argument("player", EntityArgument.player())
+                                                        .executes(ctx -> {
+                                                            ServerPlayer player = EntityArgument.getPlayer(ctx, "player");
+
+                                                            ModNetwork.CHANNEL.send(
+                                                                    PacketDistributor.PLAYER.with(() -> player),
+                                                                    new AwakeningBackgroundConfigPacket(true, 0, 0, 0, 0)
+                                                            );
+                                                            return 1;
+                                                        })
+                                        )
+                        )
+                        .then(
+                                Commands.literal("set")
+                                        .then(
+                                                Commands.argument("player", EntityArgument.player())
+                                                        .then(
+                                                                Commands.argument("x", IntegerArgumentType.integer())
+                                                                        .then(
+                                                                                Commands.argument("y", IntegerArgumentType.integer())
+                                                                                        .then(
+                                                                                                Commands.argument("width", IntegerArgumentType.integer(1))
+                                                                                                        .then(
+                                                                                                                Commands.argument("height", IntegerArgumentType.integer(1))
+                                                                                                                        .executes(ctx -> {
+                                                                                                                            ServerPlayer player = EntityArgument.getPlayer(ctx, "player");
+
+                                                                                                                            ModNetwork.CHANNEL.send(
+                                                                                                                                    PacketDistributor.PLAYER.with(() -> player),
+                                                                                                                                    new AwakeningBackgroundConfigPacket(
+                                                                                                                                            false,
+                                                                                                                                            IntegerArgumentType.getInteger(ctx, "x"),
+                                                                                                                                            IntegerArgumentType.getInteger(ctx, "y"),
+                                                                                                                                            IntegerArgumentType.getInteger(ctx, "width"),
+                                                                                                                                            IntegerArgumentType.getInteger(ctx, "height")
+                                                                                                                                    )
+                                                                                                                            );
+                                                                                                                            return 1;
+                                                                                                                        })
+                                                                                                        )
+                                                                                        )
+                                                                        )
                                                         )
                                         )
                         )
