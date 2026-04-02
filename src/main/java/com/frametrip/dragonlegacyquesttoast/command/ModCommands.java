@@ -1,6 +1,7 @@
 package com.frametrip.dragonlegacyquesttoast.command;
 
 import com.frametrip.dragonlegacyquesttoast.network.AwakeningBackgroundConfigPacket;
+import com.frametrip.dragonlegacyquesttoast.network.AwakeningCenterConfigPacket;
 import com.frametrip.dragonlegacyquesttoast.network.ModNetwork;
 import com.frametrip.dragonlegacyquesttoast.network.NpcDialogueConfigPacket;
 import com.frametrip.dragonlegacyquesttoast.network.NpcDialoguePacket;
@@ -25,6 +26,7 @@ public class ModCommands {
         registerNpcSayConfigCommand(dispatcher);
         registerAwakeningOpenCommand(dispatcher);
         registerAwakeningBackgroundCommand(dispatcher);
+        registerAwakeningCenterCommand(dispatcher);
     }
 
     private static void registerQuestToastCommand(CommandDispatcher<CommandSourceStack> dispatcher) {
@@ -303,6 +305,73 @@ public class ModCommands {
                                                                                                                             );
                                                                                                                             return 1;
                                                                                                                         })
+                                                                                                        )
+                                                                                        )
+                                                                        )
+                                                        )
+                                        )
+                        )
+        );
+    }
+
+    private static void registerAwakeningCenterCommand(CommandDispatcher<CommandSourceStack> dispatcher) {
+        dispatcher.register(
+                Commands.literal("dlawakeningcenter")
+                        .requires(source -> source.hasPermission(2))
+                        .then(
+                                Commands.literal("reset")
+                                        .then(
+                                                Commands.argument("player", EntityArgument.player())
+                                                        .executes(ctx -> {
+                                                            ServerPlayer player = EntityArgument.getPlayer(ctx, "player");
+
+                                                            ModNetwork.CHANNEL.send(
+                                                                    PacketDistributor.PLAYER.with(() -> player),
+                                                                    new AwakeningCenterConfigPacket(true, 0, 0, 0, 0, 0, 0, 0.0F)
+                                                            );
+                                                            return 1;
+                                                        })
+                                        )
+                        )
+                        .then(
+                                Commands.literal("set")
+                                        .then(
+                                                Commands.argument("player", EntityArgument.player())
+                                                        .then(
+                                                                Commands.argument("frameX", IntegerArgumentType.integer())
+                                                                        .then(
+                                                                                Commands.argument("frameY", IntegerArgumentType.integer())
+                                                                                        .then(
+                                                                                                Commands.argument("frameWidth", IntegerArgumentType.integer(1))
+                                                                                                        .then(
+                                                                                                                Commands.argument("frameHeight", IntegerArgumentType.integer(1))
+                                                                                                                        .then(
+                                                                                                                                Commands.argument("playerOffsetX", IntegerArgumentType.integer())
+                                                                                                                                        .then(
+                                                                                                                                                Commands.argument("playerOffsetY", IntegerArgumentType.integer())
+                                                                                                                                                        .then(
+                                                                                                                                                                Commands.argument("playerScale", IntegerArgumentType.integer(1))
+                                                                                                                                                                        .executes(ctx -> {
+                                                                                                                                                                            ServerPlayer player = EntityArgument.getPlayer(ctx, "player");
+
+                                                                                                                                                                            ModNetwork.CHANNEL.send(
+                                                                                                                                                                                    PacketDistributor.PLAYER.with(() -> player),
+                                                                                                                                                                                    new AwakeningCenterConfigPacket(
+                                                                                                                                                                                            false,
+                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "frameX"),
+                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "frameY"),
+                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "frameWidth"),
+                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "frameHeight"),
+                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "playerOffsetX"),
+                                                                                                                                                                                            IntegerArgumentType.getInteger(ctx, "playerOffsetY"),
+                                                                                                                                                                                            (float) IntegerArgumentType.getInteger(ctx, "playerScale")
+                                                                                                                                                                                    )
+                                                                                                                                                                            );
+                                                                                                                                                                            return 1;
+                                                                                                                                                                        })
+                                                                                                                                                        )
+                                                                                                                                        )
+                                                                                                                        )
                                                                                                         )
                                                                                         )
                                                                         )
