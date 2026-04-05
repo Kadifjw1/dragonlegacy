@@ -4,11 +4,11 @@ import com.frametrip.dragonlegacyquesttoast.DragonLegacyQuestToastMod;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
 import org.joml.Quaternionf;
 
@@ -39,7 +39,57 @@ public class AwakeningMainScreen extends Screen {
     private static final ResourceLocation VOID_SEAL_ACTIVE_TEXTURE =
             new ResourceLocation(DragonLegacyQuestToastMod.MODID, "textures/gui/path_void_seal_active_48x48.png");
 
+    private enum EditTarget {
+        BACKGROUND("BG"),
+        CENTER("CENTER"),
+        PLAYER("PLAYER"),
+        FIRE("FIRE"),
+        ICE("ICE"),
+        STORM("STORM"),
+        VOID("VOID");
+
+        private final String label;
+
+        EditTarget(String label) {
+            this.label = label;
+        }
+
+        public String label() {
+            return label;
+        }
+
+        public EditTarget next() {
+            EditTarget[] values = values();
+            return values[(this.ordinal() + 1) % values.length];
+        }
+
+        public EditTarget prev() {
+            EditTarget[] values = values();
+            return values[(this.ordinal() - 1 + values.length) % values.length];
+        }
+    }
+
     private AwakeningPathType hoveredPath = null;
+
+    private boolean editMode = false;
+    private boolean previewMode = false;
+    private EditTarget selectedTarget = EditTarget.CENTER;
+
+    private Button editButton;
+    private Button previewButton;
+    private Button resetButton;
+    private Button targetPrevButton;
+    private Button targetNextButton;
+    private Button leftButton;
+    private Button rightButton;
+    private Button upButton;
+    private Button downButton;
+    private Button widthPlusButton;
+    private Button widthMinusButton;
+    private Button heightPlusButton;
+    private Button heightMinusButton;
+    private Button scalePlusButton;
+    private Button scaleMinusButton;
 
     public AwakeningMainScreen() {
         super(Component.literal("Круг Пробуждения"));
@@ -48,6 +98,118 @@ public class AwakeningMainScreen extends Screen {
     @Override
     protected void init() {
         super.init();
+        createEditorButtons();
+        refreshEditorButtons();
+    }
+
+    private void createEditorButtons() {
+        int panelX = 8;
+        int panelY = 8;
+        int bw = 42;
+        int bh = 20;
+
+        editButton = this.addRenderableWidget(
+                Button.builder(Component.literal("Ред"), b -> {
+                    editMode = !editMode;
+                    if (!editMode) {
+                        previewMode = false;
+                    }
+                    refreshEditorButtons();
+                }).bounds(panelX, panelY, bw, bh).build()
+        );
+
+        previewButton = this.addRenderableWidget(
+                Button.builder(Component.literal("Прев"), b -> {
+                    if (editMode) {
+                        previewMode = !previewMode;
+                        refreshEditorButtons();
+                    }
+                }).bounds(panelX + 46, panelY, bw, bh).build()
+        );
+
+        resetButton = this.addRenderableWidget(
+                Button.builder(Component.literal("Сброс"), b -> {
+                    resetSelectedTarget();
+                    refreshEditorButtons();
+                }).bounds(panelX + 92, panelY, 52, bh).build()
+        );
+
+        targetPrevButton = this.addRenderableWidget(
+                Button.builder(Component.literal("<"), b -> {
+                    selectedTarget = selectedTarget.prev();
+                    refreshEditorButtons();
+                }).bounds(panelX, panelY + 26, 20, bh).build()
+        );
+
+        targetNextButton = this.addRenderableWidget(
+                Button.builder(Component.literal(">"), b -> {
+                    selectedTarget = selectedTarget.next();
+                    refreshEditorButtons();
+                }).bounds(panelX + 124, panelY + 26, 20, bh).build()
+        );
+
+        leftButton = this.addRenderableWidget(
+                Button.builder(Component.literal("←"), b -> nudgeSelected(-1, 0)).bounds(panelX, panelY + 76, 20, 20).build()
+        );
+
+        rightButton = this.addRenderableWidget(
+                Button.builder(Component.literal("→"), b -> nudgeSelected(1, 0)).bounds(panelX + 48, panelY + 76, 20, 20).build()
+        );
+
+        upButton = this.addRenderableWidget(
+                Button.builder(Component.literal("↑"), b -> nudgeSelected(0, -1)).bounds(panelX + 24, panelY + 54, 20, 20).build()
+        );
+
+        downButton = this.addRenderableWidget(
+                Button.builder(Component.literal("↓"), b -> nudgeSelected(0, 1)).bounds(panelX + 24, panelY + 76, 20, 20).build()
+        );
+
+        widthPlusButton = this.addRenderableWidget(
+                Button.builder(Component.literal("W+"), b -> resizeSelected(1, 0)).bounds(panelX + 76, panelY + 54, 30, 20).build()
+        );
+
+        widthMinusButton = this.addRenderableWidget(
+                Button.builder(Component.literal("W-"), b -> resizeSelected(-1, 0)).bounds(panelX + 108, panelY + 54, 30, 20).build()
+        );
+
+        heightPlusButton = this.addRenderableWidget(
+                Button.builder(Component.literal("H+"), b -> resizeSelected(0, 1)).bounds(panelX + 76, panelY + 76, 30, 20).build()
+        );
+
+        heightMinusButton = this.addRenderableWidget(
+                Button.builder(Component.literal("H-"), b -> resizeSelected(0, -1)).bounds(panelX + 108, panelY + 76, 30, 20).build()
+        );
+
+        scalePlusButton = this.addRenderableWidget(
+                Button.builder(Component.literal("S+"), b -> scalePlayer(1)).bounds(panelX + 76, panelY + 102, 30, 20).build()
+        );
+
+        scaleMinusButton = this.addRenderableWidget(
+                Button.builder(Component.literal("S-"), b -> scalePlayer(-1)).bounds(panelX + 108, panelY + 102, 30, 20).build()
+        );
+    }
+
+    private void refreshEditorButtons() {
+        boolean showEditor = editMode && !previewMode;
+
+        previewButton.active = editMode;
+        resetButton.visible = showEditor;
+        targetPrevButton.visible = showEditor;
+        targetNextButton.visible = showEditor;
+
+        leftButton.visible = showEditor;
+        rightButton.visible = showEditor;
+        upButton.visible = showEditor;
+        downButton.visible = showEditor;
+
+        widthPlusButton.visible = showEditor;
+        widthMinusButton.visible = showEditor;
+        heightPlusButton.visible = showEditor;
+        heightMinusButton.visible = showEditor;
+
+        boolean playerSelected = showEditor && selectedTarget == EditTarget.PLAYER;
+        scalePlusButton.visible = playerSelected;
+        scaleMinusButton.visible = playerSelected;
     }
 
     @Override
@@ -78,51 +240,143 @@ public class AwakeningMainScreen extends Screen {
 
         renderPlayerInCenter(guiGraphics, frameX, frameY, frameW, frameH, mouseX, mouseY);
 
-        renderPathSeal(
-                guiGraphics,
+        renderPathSeal(guiGraphics,
                 bgX + ClientAwakeningScreenState.getFireX(),
                 bgY + ClientAwakeningScreenState.getFireY(),
-                FIRE_SEAL_TEXTURE,
-                FIRE_SEAL_ACTIVE_TEXTURE,
+                FIRE_SEAL_TEXTURE, FIRE_SEAL_ACTIVE_TEXTURE,
                 AwakeningPathType.FIRE,
-                hoveredPath == AwakeningPathType.FIRE
-        );
+                hoveredPath == AwakeningPathType.FIRE);
 
-        renderPathSeal(
-                guiGraphics,
+        renderPathSeal(guiGraphics,
                 bgX + ClientAwakeningScreenState.getIceX(),
                 bgY + ClientAwakeningScreenState.getIceY(),
-                ICE_SEAL_TEXTURE,
-                ICE_SEAL_ACTIVE_TEXTURE,
+                ICE_SEAL_TEXTURE, ICE_SEAL_ACTIVE_TEXTURE,
                 AwakeningPathType.ICE,
-                hoveredPath == AwakeningPathType.ICE
-        );
+                hoveredPath == AwakeningPathType.ICE);
 
-        renderPathSeal(
-                guiGraphics,
+        renderPathSeal(guiGraphics,
                 bgX + ClientAwakeningScreenState.getStormX(),
                 bgY + ClientAwakeningScreenState.getStormY(),
-                STORM_SEAL_TEXTURE,
-                STORM_SEAL_ACTIVE_TEXTURE,
+                STORM_SEAL_TEXTURE, STORM_SEAL_ACTIVE_TEXTURE,
                 AwakeningPathType.STORM,
-                hoveredPath == AwakeningPathType.STORM
-        );
+                hoveredPath == AwakeningPathType.STORM);
 
-        renderPathSeal(
-                guiGraphics,
+        renderPathSeal(guiGraphics,
                 bgX + ClientAwakeningScreenState.getVoidX(),
                 bgY + ClientAwakeningScreenState.getVoidY(),
-                VOID_SEAL_TEXTURE,
-                VOID_SEAL_ACTIVE_TEXTURE,
+                VOID_SEAL_TEXTURE, VOID_SEAL_ACTIVE_TEXTURE,
                 AwakeningPathType.VOID,
-                hoveredPath == AwakeningPathType.VOID
-        );
+                hoveredPath == AwakeningPathType.VOID);
 
         if (hoveredPath != null) {
             guiGraphics.drawCenteredString(this.font, hoveredPath.getTitle(), this.width / 2, bgY + 8, 0xE6D7B5);
         }
 
+        if (editMode && !previewMode) {
+            renderEditorOverlay(guiGraphics);
+        }
+
         super.render(guiGraphics, mouseX, mouseY, partialTick);
+    }
+
+    private void renderEditorOverlay(GuiGraphics guiGraphics) {
+        int panelX = 8;
+        int panelY = 8;
+
+        guiGraphics.fill(panelX - 4, panelY + 22, panelX + 144, panelY + 128, 0x88000000);
+        guiGraphics.drawString(this.font, "EDIT MODE", panelX, panelY + 30, 0xFFD98C, false);
+        guiGraphics.drawString(this.font, "Target: " + selectedTarget.label(), panelX + 24, panelY + 32, 0xFFFFFF, false);
+
+        drawSelectionBoxes(guiGraphics);
+
+        String info1 = "";
+        String info2 = "";
+
+        switch (selectedTarget) {
+            case BACKGROUND -> {
+                info1 = "x=" + ClientAwakeningScreenState.getBgX() + " y=" + ClientAwakeningScreenState.getBgY();
+                info2 = "w=" + ClientAwakeningScreenState.getBgWidth() + " h=" + ClientAwakeningScreenState.getBgHeight();
+            }
+            case CENTER -> {
+                info1 = "x=" + ClientAwakeningScreenState.getCenterFrameX() + " y=" + ClientAwakeningScreenState.getCenterFrameY();
+                info2 = "w=" + ClientAwakeningScreenState.getCenterFrameWidth() + " h=" + ClientAwakeningScreenState.getCenterFrameHeight();
+            }
+            case PLAYER -> {
+                info1 = "ox=" + ClientAwakeningScreenState.getPlayerOffsetX() + " oy=" + ClientAwakeningScreenState.getPlayerOffsetY();
+                info2 = "scale=" + Math.round(ClientAwakeningScreenState.getPlayerScale());
+            }
+            case FIRE -> {
+                info1 = "x=" + ClientAwakeningScreenState.getFireX() + " y=" + ClientAwakeningScreenState.getFireY();
+                info2 = "size=" + ClientAwakeningScreenState.getPathFrameSize();
+            }
+            case ICE -> {
+                info1 = "x=" + ClientAwakeningScreenState.getIceX() + " y=" + ClientAwakeningScreenState.getIceY();
+                info2 = "size=" + ClientAwakeningScreenState.getPathFrameSize();
+            }
+            case STORM -> {
+                info1 = "x=" + ClientAwakeningScreenState.getStormX() + " y=" + ClientAwakeningScreenState.getStormY();
+                info2 = "size=" + ClientAwakeningScreenState.getPathFrameSize();
+            }
+            case VOID -> {
+                info1 = "x=" + ClientAwakeningScreenState.getVoidX() + " y=" + ClientAwakeningScreenState.getVoidY();
+                info2 = "size=" + ClientAwakeningScreenState.getPathFrameSize();
+            }
+        }
+
+        guiGraphics.drawString(this.font, info1, panelX, panelY + 104, 0xD8D8D8, false);
+        guiGraphics.drawString(this.font, info2, panelX, panelY + 116, 0xD8D8D8, false);
+    }
+
+    private void drawSelectionBoxes(GuiGraphics guiGraphics) {
+        int bgX = ClientAwakeningScreenState.getBgX();
+        int bgY = ClientAwakeningScreenState.getBgY();
+        int bgW = ClientAwakeningScreenState.getBgWidth();
+        int bgH = ClientAwakeningScreenState.getBgHeight();
+
+        int frameX = bgX + ClientAwakeningScreenState.getCenterFrameX();
+        int frameY = bgY + ClientAwakeningScreenState.getCenterFrameY();
+        int frameW = ClientAwakeningScreenState.getCenterFrameWidth();
+        int frameH = ClientAwakeningScreenState.getCenterFrameHeight();
+
+        int pathSize = ClientAwakeningScreenState.getPathFrameSize();
+
+        drawBox(guiGraphics, bgX, bgY, bgW, bgH, selectedTarget == EditTarget.BACKGROUND ? 0xFFFFAA00 : 0x66FFFFFF);
+        drawBox(guiGraphics, frameX, frameY, frameW, frameH, selectedTarget == EditTarget.CENTER ? 0xFFFFAA00 : 0x66FFFFFF);
+
+        int playerX = frameX + (frameW / 2) + ClientAwakeningScreenState.getPlayerOffsetX() - 12;
+        int playerY = frameY + frameH - 10 + ClientAwakeningScreenState.getPlayerOffsetY() - 40;
+        drawBox(guiGraphics, playerX, playerY, 24, 48, selectedTarget == EditTarget.PLAYER ? 0xFFFFAA00 : 0x66FFFFFF);
+
+        drawBox(guiGraphics,
+                bgX + ClientAwakeningScreenState.getFireX(),
+                bgY + ClientAwakeningScreenState.getFireY(),
+                pathSize, pathSize,
+                selectedTarget == EditTarget.FIRE ? 0xFFFFAA00 : 0x66FFFFFF);
+
+        drawBox(guiGraphics,
+                bgX + ClientAwakeningScreenState.getIceX(),
+                bgY + ClientAwakeningScreenState.getIceY(),
+                pathSize, pathSize,
+                selectedTarget == EditTarget.ICE ? 0xFFFFAA00 : 0x66FFFFFF);
+
+        drawBox(guiGraphics,
+                bgX + ClientAwakeningScreenState.getStormX(),
+                bgY + ClientAwakeningScreenState.getStormY(),
+                pathSize, pathSize,
+                selectedTarget == EditTarget.STORM ? 0xFFFFAA00 : 0x66FFFFFF);
+
+        drawBox(guiGraphics,
+                bgX + ClientAwakeningScreenState.getVoidX(),
+                bgY + ClientAwakeningScreenState.getVoidY(),
+                pathSize, pathSize,
+                selectedTarget == EditTarget.VOID ? 0xFFFFAA00 : 0x66FFFFFF);
+    }
+
+    private void drawBox(GuiGraphics guiGraphics, int x, int y, int w, int h, int color) {
+        guiGraphics.fill(x, y, x + w, y + 1, color);
+        guiGraphics.fill(x, y + h - 1, x + w, y + h, color);
+        guiGraphics.fill(x, y, x + 1, y + h, color);
+        guiGraphics.fill(x + w - 1, y, x + w, y + h, color);
     }
 
     private void renderPathSeal(
@@ -145,80 +399,19 @@ public class AwakeningMainScreen extends Screen {
         );
 
         if (hovered) {
-            renderPathParticles(guiGraphics, x, y, size, pathType);
+            renderSimpleHoverAura(guiGraphics, x, y, size, pathType);
         }
     }
 
-    private void renderPathParticles(GuiGraphics guiGraphics, int x, int y, int size, AwakeningPathType pathType) {
-        float time = (this.minecraft != null && this.minecraft.level != null)
-                ? (this.minecraft.level.getGameTime() + this.minecraft.getFrameTime())
-                : 0.0F;
-
-        int centerX = x + size / 2;
-        int centerY = y + size / 2;
-        float radius = size / 2.0F + 4.0F;
-
-        int particleColor = getParticleColor(pathType);
-
-        for (int i = 0; i < 8; i++) {
-            float angle = (time * 0.08F) + (i * ((float) Math.PI * 2.0F / 8.0F));
-
-            int px = centerX + Math.round(Mth.cos(angle) * radius);
-            int py = centerY + Math.round(Mth.sin(angle) * radius);
-
-            int pSize = (i % 2 == 0) ? 2 : 1;
-            guiGraphics.fill(px, py, px + pSize, py + pSize, particleColor);
-        }
-
-        switch (pathType) {
-            case FIRE -> renderFireParticles(guiGraphics, centerX, centerY, time);
-            case ICE -> renderIceParticles(guiGraphics, centerX, centerY, time);
-            case STORM -> renderStormParticles(guiGraphics, centerX, centerY, time);
-            case VOID -> renderVoidParticles(guiGraphics, centerX, centerY, time);
-        }
-    }
-
-    private void renderFireParticles(GuiGraphics guiGraphics, int centerX, int centerY, float time) {
-        for (int i = 0; i < 5; i++) {
-            int px = centerX - 8 + (i * 4);
-            int py = centerY + 10 - ((int) ((time + i * 3) % 10));
-            guiGraphics.fill(px, py, px + 1, py + 2, 0xFFFFA040);
-        }
-    }
-
-    private void renderIceParticles(GuiGraphics guiGraphics, int centerX, int centerY, float time) {
-        for (int i = 0; i < 6; i++) {
-            int px = centerX - 10 + (i * 4);
-            int py = centerY - 10 + (int) ((time + i * 2) % 8);
-            guiGraphics.fill(px, py, px + 1, py + 1, 0xFFBFEFFF);
-        }
-    }
-
-    private void renderStormParticles(GuiGraphics guiGraphics, int centerX, int centerY, float time) {
-        int blink = ((int) time / 3) % 2;
-        if (blink == 0) {
-            guiGraphics.fill(centerX - 12, centerY - 6, centerX - 4, centerY - 5, 0xFF8CB8FF);
-            guiGraphics.fill(centerX + 4, centerY + 4, centerX + 12, centerY + 5, 0xFFB08CFF);
-            guiGraphics.fill(centerX + 8, centerY - 10, centerX + 9, centerY - 2, 0xFFD0D8FF);
-        }
-    }
-
-    private void renderVoidParticles(GuiGraphics guiGraphics, int centerX, int centerY, float time) {
-        for (int i = 0; i < 5; i++) {
-            float angle = -(time * 0.05F) - (i * ((float) Math.PI * 2.0F / 5.0F));
-            int px = centerX + Math.round(Mth.cos(angle) * 14.0F);
-            int py = centerY + Math.round(Mth.sin(angle) * 14.0F);
-            guiGraphics.fill(px, py, px + 2, py + 2, 0xCC6E4C9B);
-        }
-    }
-
-    private int getParticleColor(AwakeningPathType pathType) {
-        return switch (pathType) {
-            case FIRE -> 0xFFFFA040;
-            case ICE -> 0xFFBFEFFF;
-            case STORM -> 0xFF9DB8FF;
-            case VOID -> 0xCC7B52B3;
+    private void renderSimpleHoverAura(GuiGraphics guiGraphics, int x, int y, int size, AwakeningPathType pathType) {
+        int color = switch (pathType) {
+            case FIRE -> 0x66FF9A2E;
+            case ICE -> 0x66BFEFFF;
+            case STORM -> 0x6697B6FF;
+            case VOID -> 0x667A52B8;
         };
+
+        drawBox(guiGraphics, x - 2, y - 2, size + 4, size + 4, color);
     }
 
     private void renderPlayerInCenter(GuiGraphics guiGraphics, int frameX, int frameY, int frameW, int frameH, int mouseX, int mouseY) {
@@ -275,15 +468,12 @@ public class AwakeningMainScreen extends Screen {
         if (isInside(mouseX, mouseY, bgX + ClientAwakeningScreenState.getFireX(), bgY + ClientAwakeningScreenState.getFireY(), size, size)) {
             return AwakeningPathType.FIRE;
         }
-
         if (isInside(mouseX, mouseY, bgX + ClientAwakeningScreenState.getIceX(), bgY + ClientAwakeningScreenState.getIceY(), size, size)) {
             return AwakeningPathType.ICE;
         }
-
         if (isInside(mouseX, mouseY, bgX + ClientAwakeningScreenState.getStormX(), bgY + ClientAwakeningScreenState.getStormY(), size, size)) {
             return AwakeningPathType.STORM;
         }
-
         if (isInside(mouseX, mouseY, bgX + ClientAwakeningScreenState.getVoidX(), bgY + ClientAwakeningScreenState.getVoidY(), size, size)) {
             return AwakeningPathType.VOID;
         }
@@ -297,14 +487,153 @@ public class AwakeningMainScreen extends Screen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        AwakeningPathType clickedPath = getPathAt(mouseX, mouseY);
-        if (clickedPath != null) {
-            if (this.minecraft != null) {
-                this.minecraft.setScreen(new AwakeningPathDetailScreen(this, clickedPath));
+        if (!editMode) {
+            AwakeningPathType clickedPath = getPathAt(mouseX, mouseY);
+            if (clickedPath != null) {
+                if (this.minecraft != null) {
+                    this.minecraft.setScreen(new AwakeningPathDetailScreen(this, clickedPath));
+                }
+                return true;
             }
-            return true;
         }
 
         return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    private void nudgeSelected(int dx, int dy) {
+        switch (selectedTarget) {
+            case BACKGROUND -> ClientAwakeningScreenState.applyBackgroundConfig(
+                    ClientAwakeningScreenState.getBgX() + dx,
+                    ClientAwakeningScreenState.getBgY() + dy,
+                    ClientAwakeningScreenState.getBgWidth(),
+                    ClientAwakeningScreenState.getBgHeight()
+            );
+            case CENTER -> ClientAwakeningScreenState.applyCenterConfig(
+                    ClientAwakeningScreenState.getCenterFrameX() + dx,
+                    ClientAwakeningScreenState.getCenterFrameY() + dy,
+                    ClientAwakeningScreenState.getCenterFrameWidth(),
+                    ClientAwakeningScreenState.getCenterFrameHeight(),
+                    ClientAwakeningScreenState.getPlayerOffsetX(),
+                    ClientAwakeningScreenState.getPlayerOffsetY(),
+                    ClientAwakeningScreenState.getPlayerScale()
+            );
+            case PLAYER -> ClientAwakeningScreenState.applyCenterConfig(
+                    ClientAwakeningScreenState.getCenterFrameX(),
+                    ClientAwakeningScreenState.getCenterFrameY(),
+                    ClientAwakeningScreenState.getCenterFrameWidth(),
+                    ClientAwakeningScreenState.getCenterFrameHeight(),
+                    ClientAwakeningScreenState.getPlayerOffsetX() + dx,
+                    ClientAwakeningScreenState.getPlayerOffsetY() + dy,
+                    ClientAwakeningScreenState.getPlayerScale()
+            );
+            case FIRE -> applySinglePathOffset(EditTarget.FIRE,
+                    ClientAwakeningScreenState.getFireX() + dx,
+                    ClientAwakeningScreenState.getFireY() + dy);
+            case ICE -> applySinglePathOffset(EditTarget.ICE,
+                    ClientAwakeningScreenState.getIceX() + dx,
+                    ClientAwakeningScreenState.getIceY() + dy);
+            case STORM -> applySinglePathOffset(EditTarget.STORM,
+                    ClientAwakeningScreenState.getStormX() + dx,
+                    ClientAwakeningScreenState.getStormY() + dy);
+            case VOID -> applySinglePathOffset(EditTarget.VOID,
+                    ClientAwakeningScreenState.getVoidX() + dx,
+                    ClientAwakeningScreenState.getVoidY() + dy);
+        }
+    }
+
+    private void resizeSelected(int dw, int dh) {
+        switch (selectedTarget) {
+            case BACKGROUND -> ClientAwakeningScreenState.applyBackgroundConfig(
+                    ClientAwakeningScreenState.getBgX(),
+                    ClientAwakeningScreenState.getBgY(),
+                    ClientAwakeningScreenState.getBgWidth() + dw,
+                    ClientAwakeningScreenState.getBgHeight() + dh
+            );
+            case CENTER -> ClientAwakeningScreenState.applyCenterConfig(
+                    ClientAwakeningScreenState.getCenterFrameX(),
+                    ClientAwakeningScreenState.getCenterFrameY(),
+                    ClientAwakeningScreenState.getCenterFrameWidth() + dw,
+                    ClientAwakeningScreenState.getCenterFrameHeight() + dh,
+                    ClientAwakeningScreenState.getPlayerOffsetX(),
+                    ClientAwakeningScreenState.getPlayerOffsetY(),
+                    ClientAwakeningScreenState.getPlayerScale()
+            );
+            case FIRE, ICE, STORM, VOID -> ClientAwakeningScreenState.applyPathsConfig(
+                    ClientAwakeningScreenState.getPathFrameSize() + dw,
+                    ClientAwakeningScreenState.getPathIconSize() + dw,
+                    ClientAwakeningScreenState.getFireX(),
+                    ClientAwakeningScreenState.getFireY(),
+                    ClientAwakeningScreenState.getIceX(),
+                    ClientAwakeningScreenState.getIceY(),
+                    ClientAwakeningScreenState.getStormX(),
+                    ClientAwakeningScreenState.getStormY(),
+                    ClientAwakeningScreenState.getVoidX(),
+                    ClientAwakeningScreenState.getVoidY()
+            );
+            case PLAYER -> {
+            }
+        }
+    }
+
+    private void scalePlayer(int delta) {
+        ClientAwakeningScreenState.applyCenterConfig(
+                ClientAwakeningScreenState.getCenterFrameX(),
+                ClientAwakeningScreenState.getCenterFrameY(),
+                ClientAwakeningScreenState.getCenterFrameWidth(),
+                ClientAwakeningScreenState.getCenterFrameHeight(),
+                ClientAwakeningScreenState.getPlayerOffsetX(),
+                ClientAwakeningScreenState.getPlayerOffsetY(),
+                ClientAwakeningScreenState.getPlayerScale() + delta
+        );
+    }
+
+    private void applySinglePathOffset(EditTarget target, int x, int y) {
+        int fireX = ClientAwakeningScreenState.getFireX();
+        int fireY = ClientAwakeningScreenState.getFireY();
+        int iceX = ClientAwakeningScreenState.getIceX();
+        int iceY = ClientAwakeningScreenState.getIceY();
+        int stormX = ClientAwakeningScreenState.getStormX();
+        int stormY = ClientAwakeningScreenState.getStormY();
+        int voidX = ClientAwakeningScreenState.getVoidX();
+        int voidY = ClientAwakeningScreenState.getVoidY();
+
+        switch (target) {
+            case FIRE -> {
+                fireX = x;
+                fireY = y;
+            }
+            case ICE -> {
+                iceX = x;
+                iceY = y;
+            }
+            case STORM -> {
+                stormX = x;
+                stormY = y;
+            }
+            case VOID -> {
+                voidX = x;
+                voidY = y;
+            }
+            default -> {
+                return;
+            }
+        }
+
+        ClientAwakeningScreenState.applyPathsConfig(
+                ClientAwakeningScreenState.getPathFrameSize(),
+                ClientAwakeningScreenState.getPathIconSize(),
+                fireX, fireY,
+                iceX, iceY,
+                stormX, stormY,
+                voidX, voidY
+        );
+    }
+
+    private void resetSelectedTarget() {
+        switch (selectedTarget) {
+            case BACKGROUND -> ClientAwakeningScreenState.resetBackgroundConfig();
+            case CENTER, PLAYER -> ClientAwakeningScreenState.resetCenterConfig();
+            case FIRE, ICE, STORM, VOID -> ClientAwakeningScreenState.resetPathsConfig();
+        }
     }
 }
