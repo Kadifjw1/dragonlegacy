@@ -7,6 +7,7 @@ import com.frametrip.dragonlegacyquesttoast.network.ModNetwork;
 import com.frametrip.dragonlegacyquesttoast.network.NpcDialogueConfigPacket;
 import com.frametrip.dragonlegacyquesttoast.network.NpcDialoguePacket;
 import com.frametrip.dragonlegacyquesttoast.network.OpenAwakeningScreenPacket;
+import com.frametrip.dragonlegacyquesttoast.network.OpenUiEditorMenuPacket;
 import com.frametrip.dragonlegacyquesttoast.network.QuestToastConfigPacket;
 import com.frametrip.dragonlegacyquesttoast.network.QuestToastPacket;
 import com.mojang.brigadier.CommandDispatcher;
@@ -30,6 +31,7 @@ public class ModCommands {
         registerAwakeningBackgroundCommand(dispatcher);
         registerAwakeningCenterCommand(dispatcher);
         registerAwakeningPathsCommand(dispatcher);
+        registerUiEditorMenuCommand(dispatcher);
     }
 
     private static void registerQuestToastCommand(CommandDispatcher<CommandSourceStack> dispatcher) {
@@ -479,6 +481,28 @@ public class ModCommands {
                                         .then(
                                                 Commands.argument("player", EntityArgument.player())
                                                         .then(setChain)
+                                        )
+                        )
+        );
+    }
+
+    private static void registerUiEditorMenuCommand(CommandDispatcher<CommandSourceStack> dispatcher) {
+        dispatcher.register(
+                Commands.literal("dluieditor")
+                        .requires(source -> source.hasPermission(2))
+                        .then(
+                                Commands.literal("open")
+                                        .then(
+                                                Commands.argument("player", EntityArgument.player())
+                                                        .executes(ctx -> {
+                                                            ServerPlayer player = EntityArgument.getPlayer(ctx, "player");
+
+                                                            ModNetwork.CHANNEL.send(
+                                                                    PacketDistributor.PLAYER.with(() -> player),
+                                                                    new OpenUiEditorMenuPacket()
+                                                            );
+                                                            return 1;
+                                                        })
                                         )
                         )
         );
