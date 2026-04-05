@@ -34,21 +34,19 @@ public class NpcDialogueEditorScreen extends Screen {
     protected void init() {
         super.init();
 
-        loadDraftFromSaved();
-
         int panelX = 8;
         int panelY = 8;
 
         this.addRenderableWidget(
-                Button.builder(Component.literal("Сохранить"), b -> {
-                    saveDraft();
-                }).bounds(panelX, panelY, 70, 20).build()
+                Button.builder(Component.literal("Сохранить"), b -> saveDraft())
+                        .bounds(panelX, panelY, 70, 20)
+                        .build()
         );
 
         this.addRenderableWidget(
-                Button.builder(Component.literal("Сброс"), b -> {
-                    resetDraft();
-                }).bounds(panelX + 74, panelY, 50, 20).build()
+                Button.builder(Component.literal("Сброс"), b -> resetDraft())
+                        .bounds(panelX + 74, panelY, 50, 20)
+                        .build()
         );
 
         this.addRenderableWidget(
@@ -56,7 +54,8 @@ public class NpcDialogueEditorScreen extends Screen {
                     if (this.minecraft != null) {
                         this.minecraft.setScreen(parent == null ? new UiEditorMenuScreen(null) : parent);
                     }
-                }).bounds(panelX + 128, panelY, 50, 20).build()
+                }).bounds(panelX + 128, panelY, 50, 20)
+                        .build()
         );
 
         this.addRenderableWidget(Button.builder(Component.literal("←"), b -> draftX -= 1).bounds(panelX, panelY + 34, 20, 20).build());
@@ -83,13 +82,17 @@ public class NpcDialogueEditorScreen extends Screen {
             draftRightPadding = Math.max(0, draftRightPadding - 1);
         }).bounds(panelX + 224, panelY + 34, 46, 20).build());
 
-        this.addRenderableWidget(Button.builder(Component.literal("Center X"), b -> {
-            draftX = (this.width - draftMinWidth) / 2;
-        }).bounds(panelX, panelY + 60, 70, 20).build());
+        this.addRenderableWidget(
+                Button.builder(Component.literal("Center X"), b -> draftX = (this.width - draftMinWidth) / 2)
+                        .bounds(panelX, panelY + 60, 70, 20)
+                        .build()
+        );
 
-        this.addRenderableWidget(Button.builder(Component.literal("Bottom"), b -> {
-            draftYOffsetFromBottom = 40;
-        }).bounds(panelX + 74, panelY + 60, 50, 20).build());
+        this.addRenderableWidget(
+                Button.builder(Component.literal("Bottom"), b -> draftYOffsetFromBottom = 40)
+                        .bounds(panelX + 74, panelY + 60, 50, 20)
+                        .build()
+        );
 
         this.addRenderableWidget(Button.builder(Component.literal("Name+"), b -> draftNameYOffset += 1).bounds(panelX + 128, panelY + 60, 46, 20).build());
         this.addRenderableWidget(Button.builder(Component.literal("Name-"), b -> draftNameYOffset -= 1).bounds(panelX + 176, panelY + 60, 46, 20).build());
@@ -101,28 +104,6 @@ public class NpcDialogueEditorScreen extends Screen {
         return this.minecraft != null
                 && this.minecraft.player != null
                 && this.minecraft.player.getAbilities().instabuild;
-    }
-
-    private void loadDraftFromSaved() {
-        try {
-            draftX = ClientNpcDialogueManager.getX(this.width);
-            draftYOffsetFromBottom = ClientNpcDialogueManager.getYOffsetFromBottom();
-            draftMinWidth = ClientNpcDialogueManager.getMinWidth();
-            draftMaxWidth = ClientNpcDialogueManager.getMaxWidth();
-            draftMinHeight = ClientNpcDialogueManager.getMinHeight();
-            draftFadeIn = ClientNpcDialogueManager.getFadeInTicks();
-            draftStay = ClientNpcDialogueManager.getStayTicks();
-            draftFadeOut = ClientNpcDialogueManager.getFadeOutTicks();
-            draftTextMaxLines = ClientNpcDialogueManager.getTextMaxLines();
-            draftLeftPadding = ClientNpcDialogueManager.getLeftPadding();
-            draftRightPadding = ClientNpcDialogueManager.getRightPadding();
-            draftTopPadding = ClientNpcDialogueManager.getTopPadding();
-            draftBottomPadding = ClientNpcDialogueManager.getBottomPadding();
-            draftNameYOffset = ClientNpcDialogueManager.getNameYOffset();
-            draftTextYOffset = ClientNpcDialogueManager.getTextYOffset();
-            draftTextLineHeight = ClientNpcDialogueManager.getTextLineHeight();
-        } catch (Exception ignored) {
-        }
     }
 
     private void saveDraft() {
