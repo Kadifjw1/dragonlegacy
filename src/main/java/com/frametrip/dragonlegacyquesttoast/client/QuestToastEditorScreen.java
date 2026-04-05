@@ -31,8 +31,6 @@ public class QuestToastEditorScreen extends Screen {
     protected void init() {
         super.init();
 
-        loadDraftFromSaved();
-
         int panelX = 8;
         int panelY = 8;
 
@@ -112,20 +110,6 @@ public class QuestToastEditorScreen extends Screen {
         return this.minecraft != null
                 && this.minecraft.player != null
                 && this.minecraft.player.getAbilities().instabuild;
-    }
-
-    private void loadDraftFromSaved() {
-        try {
-            draftX = ClientQuestToastManager.getX();
-            draftY = ClientQuestToastManager.getY();
-            draftWidth = ClientQuestToastManager.getWidth();
-            draftHeight = ClientQuestToastManager.getHeight();
-            draftFadeIn = ClientQuestToastManager.getFadeInTicks();
-            draftStay = ClientQuestToastManager.getStayTicks();
-            draftFadeOut = ClientQuestToastManager.getFadeOutTicks();
-            draftStartOffsetX = ClientQuestToastManager.getStartOffsetX();
-        } catch (Exception ignored) {
-        }
     }
 
     private void saveDraft() {
