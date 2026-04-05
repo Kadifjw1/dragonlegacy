@@ -1,12 +1,12 @@
 package com.frametrip.dragonlegacyquesttoast.client;
 
-import com.frametrip.dragonlegacyquesttoast.network.QuestToastPacket;
 import com.frametrip.dragonlegacyquesttoast.network.ModNetwork;
-import net.minecraft.client.Minecraft;
+import com.frametrip.dragonlegacyquesttoast.network.QuestToastPacket;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraftforge.network.PacketDistributor;
 
 public class QuestToastEditorScreen extends Screen {
     private final Screen parent;
@@ -37,9 +37,9 @@ public class QuestToastEditorScreen extends Screen {
         int panelY = 8;
 
         this.addRenderableWidget(
-                Button.builder(Component.literal("Сохранить"), b -> {
-                    saveDraft();
-                }).bounds(panelX, panelY, 70, 20).build()
+                Button.builder(Component.literal("Сохранить"), b -> saveDraft())
+                        .bounds(panelX, panelY, 70, 20)
+                        .build()
         );
 
         this.addRenderableWidget(
@@ -48,13 +48,14 @@ public class QuestToastEditorScreen extends Screen {
                     if (previewMode) {
                         showPreview();
                     }
-                }).bounds(panelX + 74, panelY, 60, 20).build()
+                }).bounds(panelX + 74, panelY, 60, 20)
+                        .build()
         );
 
         this.addRenderableWidget(
-                Button.builder(Component.literal("Сброс"), b -> {
-                    resetDraft();
-                }).bounds(panelX + 138, panelY, 50, 20).build()
+                Button.builder(Component.literal("Сброс"), b -> resetDraft())
+                        .bounds(panelX + 138, panelY, 50, 20)
+                        .build()
         );
 
         this.addRenderableWidget(
@@ -62,7 +63,8 @@ public class QuestToastEditorScreen extends Screen {
                     if (this.minecraft != null) {
                         this.minecraft.setScreen(parent == null ? new UiEditorMenuScreen(null) : parent);
                     }
-                }).bounds(panelX + 192, panelY, 50, 20).build()
+                }).bounds(panelX + 192, panelY, 50, 20)
+                        .build()
         );
 
         this.addRenderableWidget(Button.builder(Component.literal("←"), b -> draftX -= 1).bounds(panelX, panelY + 34, 20, 20).build());
@@ -87,17 +89,23 @@ public class QuestToastEditorScreen extends Screen {
         this.addRenderableWidget(Button.builder(Component.literal("OX+"), b -> draftStartOffsetX += 1).bounds(panelX + 224, panelY + 34, 34, 20).build());
         this.addRenderableWidget(Button.builder(Component.literal("OX-"), b -> draftStartOffsetX -= 1).bounds(panelX + 260, panelY + 34, 34, 20).build());
 
-        this.addRenderableWidget(Button.builder(Component.literal("Center X"), b -> {
-            draftX = (this.width - draftWidth) / 2;
-        }).bounds(panelX, panelY + 60, 70, 20).build());
+        this.addRenderableWidget(
+                Button.builder(Component.literal("Center X"), b -> draftX = (this.width - draftWidth) / 2)
+                        .bounds(panelX, panelY + 60, 70, 20)
+                        .build()
+        );
 
-        this.addRenderableWidget(Button.builder(Component.literal("Top"), b -> {
-            draftY = 20;
-        }).bounds(panelX + 74, panelY + 60, 40, 20).build());
+        this.addRenderableWidget(
+                Button.builder(Component.literal("Top"), b -> draftY = 20)
+                        .bounds(panelX + 74, panelY + 60, 40, 20)
+                        .build()
+        );
 
-        this.addRenderableWidget(Button.builder(Component.literal("Mid"), b -> {
-            draftY = (this.height - draftHeight) / 2;
-        }).bounds(panelX + 118, panelY + 60, 40, 20).build());
+        this.addRenderableWidget(
+                Button.builder(Component.literal("Mid"), b -> draftY = (this.height - draftHeight) / 2)
+                        .bounds(panelX + 118, panelY + 60, 40, 20)
+                        .build()
+        );
     }
 
     private boolean canEdit() {
@@ -145,9 +153,8 @@ public class QuestToastEditorScreen extends Screen {
     }
 
     private void showPreview() {
-        ModNetwork.CHANNEL.sendToServer != null;
         ModNetwork.CHANNEL.send(
-                net.minecraftforge.network.PacketDistributor.SERVER.noArg(),
+                PacketDistributor.SERVER.noArg(),
                 new QuestToastPacket("accepted", "")
         );
     }
