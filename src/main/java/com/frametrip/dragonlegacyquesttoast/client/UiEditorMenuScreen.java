@@ -30,13 +30,17 @@ public class UiEditorMenuScreen extends Screen {
 
         this.addRenderableWidget(
                 Button.builder(Component.literal("Плашка заданий"), b -> {
-                    // Заглушка — следующим шагом сделаем отдельный экран редактора
+                    if (this.minecraft != null) {
+                        this.minecraft.setScreen(new QuestToastEditorScreen(this));
+                    }
                 }).bounds(cx - 60, y + 24, 120, 20).build()
         );
 
         this.addRenderableWidget(
                 Button.builder(Component.literal("Плашка текста"), b -> {
-                    // Заглушка — следующим шагом сделаем отдельный экран редактора
+                    if (this.minecraft != null) {
+                        this.minecraft.setScreen(new NpcDialogueEditorScreen(this));
+                    }
                 }).bounds(cx - 60, y + 48, 120, 20).build()
         );
 
