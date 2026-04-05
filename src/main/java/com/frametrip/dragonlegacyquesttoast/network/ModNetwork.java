@@ -81,5 +81,13 @@ public class ModNetwork {
                 AwakeningPathsConfigPacket::decode,
                 AwakeningPathsConfigPacket::handle
         );
+
+        CHANNEL.registerMessage(
+                packetId++,
+                OpenUiEditorMenuPacket.class,
+                OpenUiEditorMenuPacket::encode,
+                OpenUiEditorMenuPacket::decode,
+                OpenUiEditorMenuPacket::handle
+        );
     }
 }
