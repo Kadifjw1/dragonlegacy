@@ -15,4 +15,14 @@ public enum AwakeningPathType {
     public String getTitle() {
         return title;
     }
+
+    public AwakeningPathType next() {
+        AwakeningPathType[] values = values();
+        return values[(this.ordinal() + 1) % values.length];
+    }
+
+    public AwakeningPathType prev() {
+        AwakeningPathType[] values = values();
+        return values[(this.ordinal() - 1 + values.length) % values.length];
+    }
 }
