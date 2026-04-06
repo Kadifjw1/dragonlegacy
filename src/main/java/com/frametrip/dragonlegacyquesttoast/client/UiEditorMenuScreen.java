@@ -18,14 +18,22 @@ public class UiEditorMenuScreen extends Screen {
         super.init();
 
         int cx = this.width / 2;
-        int y = this.height / 2 - 50;
+        int y = this.height / 2 - 62;
 
         this.addRenderableWidget(
                 Button.builder(Component.literal("Пробуждение"), b -> {
                     if (this.minecraft != null) {
                         this.minecraft.setScreen(new AwakeningMainScreen());
                     }
-                }).bounds(cx - 60, y, 120, 20).build()
+                }).bounds(cx - 70, y, 140, 20).build()
+        );
+
+        this.addRenderableWidget(
+                Button.builder(Component.literal("Экраны путей"), b -> {
+                    if (this.minecraft != null) {
+                        this.minecraft.setScreen(new AwakeningPathEditorScreen(this, AwakeningPathType.FIRE));
+                    }
+                }).bounds(cx - 70, y + 24, 140, 20).build()
         );
 
         this.addRenderableWidget(
@@ -33,7 +41,7 @@ public class UiEditorMenuScreen extends Screen {
                     if (this.minecraft != null) {
                         this.minecraft.setScreen(new QuestToastEditorScreen(this));
                     }
-                }).bounds(cx - 60, y + 24, 120, 20).build()
+                }).bounds(cx - 70, y + 48, 140, 20).build()
         );
 
         this.addRenderableWidget(
@@ -41,7 +49,7 @@ public class UiEditorMenuScreen extends Screen {
                     if (this.minecraft != null) {
                         this.minecraft.setScreen(new NpcDialogueEditorScreen(this));
                     }
-                }).bounds(cx - 60, y + 48, 120, 20).build()
+                }).bounds(cx - 70, y + 72, 140, 20).build()
         );
 
         this.addRenderableWidget(
@@ -49,7 +57,7 @@ public class UiEditorMenuScreen extends Screen {
                     if (this.minecraft != null) {
                         this.minecraft.setScreen(parent);
                     }
-                }).bounds(cx - 60, y + 82, 120, 20).build()
+                }).bounds(cx - 70, y + 106, 140, 20).build()
         );
     }
 
@@ -69,8 +77,8 @@ public class UiEditorMenuScreen extends Screen {
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         this.renderBackground(guiGraphics);
 
-        guiGraphics.drawCenteredString(this.font, "Редактор UI", this.width / 2, this.height / 2 - 72, 0xE6D7B5);
-        guiGraphics.drawCenteredString(this.font, "Выбери, что редактировать", this.width / 2, this.height / 2 - 60, 0xCFCFCF);
+        guiGraphics.drawCenteredString(this.font, "Редактор UI", this.width / 2, this.height / 2 - 84, 0xE6D7B5);
+        guiGraphics.drawCenteredString(this.font, "Выбери, что редактировать", this.width / 2, this.height / 2 - 72, 0xCFCFCF);
 
         super.render(guiGraphics, mouseX, mouseY, partialTick);
     }
