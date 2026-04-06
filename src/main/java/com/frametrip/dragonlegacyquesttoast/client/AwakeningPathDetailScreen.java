@@ -9,8 +9,17 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 
 public class AwakeningPathDetailScreen extends Screen {
-    private static final ResourceLocation BG_TEXTURE =
-            new ResourceLocation(DragonLegacyQuestToastMod.MODID, "textures/gui/awakening_main_bg_320x220.png");
+    private static final ResourceLocation FIRE_BG_TEXTURE =
+            new ResourceLocation(DragonLegacyQuestToastMod.MODID, "textures/gui/awakening_path_fire_bg_320x220.png");
+
+    private static final ResourceLocation ICE_BG_TEXTURE =
+            new ResourceLocation(DragonLegacyQuestToastMod.MODID, "textures/gui/awakening_path_ice_bg_320x220.png");
+
+    private static final ResourceLocation STORM_BG_TEXTURE =
+            new ResourceLocation(DragonLegacyQuestToastMod.MODID, "textures/gui/awakening_path_storm_bg_320x220.png");
+
+    private static final ResourceLocation VOID_BG_TEXTURE =
+            new ResourceLocation(DragonLegacyQuestToastMod.MODID, "textures/gui/awakening_path_void_bg_320x220.png");
 
     private final Screen parent;
     private final AwakeningPathType pathType;
@@ -26,10 +35,37 @@ public class AwakeningPathDetailScreen extends Screen {
         super.init();
 
         this.addRenderableWidget(
-                Button.builder(Component.literal("Назад"), button -> this.minecraft.setScreen(parent))
-                        .bounds(this.width / 2 - 40, this.height - 30, 80, 20)
-                        .build()
+                Button.builder(Component.literal("Назад"), button -> {
+                    if (this.minecraft != null) {
+                        this.minecraft.setScreen(parent);
+                    }
+                }).bounds(this.width / 2 - 40, this.height - 30, 80, 20).build()
         );
+
+        if (canEdit()) {
+            this.addRenderableWidget(
+                    Button.builder(Component.literal("Ред"), button -> {
+                        if (this.minecraft != null) {
+                            this.minecraft.setScreen(new AwakeningPathEditorScreen(parent, pathType));
+                        }
+                    }).bounds(8, 8, 40, 20).build()
+            );
+        }
+    }
+
+    private boolean canEdit() {
+        return this.minecraft != null
+                && this.minecraft.player != null
+                && this.minecraft.player.getAbilities().instabuild;
+    }
+
+    private ResourceLocation getBackgroundTexture() {
+        return switch (pathType) {
+            case FIRE -> FIRE_BG_TEXTURE;
+            case ICE -> ICE_BG_TEXTURE;
+            case STORM -> STORM_BG_TEXTURE;
+            case VOID -> VOID_BG_TEXTURE;
+        };
     }
 
     @Override
@@ -48,13 +84,13 @@ public class AwakeningPathDetailScreen extends Screen {
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         this.renderBackground(guiGraphics);
 
-        int bgWidth = 320;
-        int bgHeight = 220;
-        int bgX = (this.width - bgWidth) / 2;
-        int bgY = (this.height - bgHeight) / 2;
+        int bgX = ClientAwakeningPathScreenState.getBgX(pathType);
+        int bgY = ClientAwakeningPathScreenState.getBgY(pathType);
+        int bgWidth = ClientAwakeningPathScreenState.getBgWidth(pathType);
+        int bgHeight = ClientAwakeningPathScreenState.getBgHeight(pathType);
 
         RenderSystem.enableBlend();
-        guiGraphics.blit(BG_TEXTURE, bgX, bgY, 0, 0, bgWidth, bgHeight, bgWidth, bgHeight);
+        guiGraphics.blit(getBackgroundTexture(), bgX, bgY, 0, 0, bgWidth, bgHeight, bgWidth, bgHeight);
 
         guiGraphics.drawCenteredString(this.font, pathType.getTitle(), this.width / 2, bgY + 16, 0xE6D7B5);
 
