@@ -39,6 +39,22 @@ public class ClientAwakeningScreenState {
 
         public int voidX = 136;
         public int voidY = 148;
+
+        public int attributesPanelX = 8;
+        public int attributesPanelY = 132;
+        public int attributesPanelWidth = 120;
+        public int attributesPanelHeight = 80;
+
+        public int attributesContentOffsetX = 8;
+        public int attributesContentOffsetY = 14;
+        public int attributesRowSpacing = 14;
+
+        public int attributesIconSize = 16;
+        public int attributesTextOffsetX = 20;
+        public int attributesValueOffsetX = 92;
+
+        public int attributesHoverWidth = 168;
+        public int attributesHoverHeight = 34;
     }
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
@@ -73,6 +89,22 @@ public class ClientAwakeningScreenState {
 
     private static int voidX = 136;
     private static int voidY = 148;
+
+    private static int attributesPanelX = 8;
+    private static int attributesPanelY = 132;
+    private static int attributesPanelWidth = 120;
+    private static int attributesPanelHeight = 80;
+
+    private static int attributesContentOffsetX = 8;
+    private static int attributesContentOffsetY = 14;
+    private static int attributesRowSpacing = 14;
+
+    private static int attributesIconSize = 16;
+    private static int attributesTextOffsetX = 20;
+    private static int attributesValueOffsetX = 92;
+
+    private static int attributesHoverWidth = 168;
+    private static int attributesHoverHeight = 34;
 
     static {
         loadConfig();
@@ -156,6 +188,59 @@ public class ClientAwakeningScreenState {
         saveConfig();
     }
 
+    public static void applyAttributesConfig(
+            int panelX,
+            int panelY,
+            int panelWidth,
+            int panelHeight,
+            int contentOffsetX,
+            int contentOffsetY,
+            int rowSpacing,
+            int iconSize,
+            int textOffsetX,
+            int valueOffsetX,
+            int hoverWidth,
+            int hoverHeight
+    ) {
+        attributesPanelX = panelX;
+        attributesPanelY = panelY;
+        attributesPanelWidth = Math.max(1, panelWidth);
+        attributesPanelHeight = Math.max(1, panelHeight);
+
+        attributesContentOffsetX = contentOffsetX;
+        attributesContentOffsetY = contentOffsetY;
+        attributesRowSpacing = Math.max(1, rowSpacing);
+
+        attributesIconSize = Math.max(1, iconSize);
+        attributesTextOffsetX = textOffsetX;
+        attributesValueOffsetX = valueOffsetX;
+
+        attributesHoverWidth = Math.max(1, hoverWidth);
+        attributesHoverHeight = Math.max(1, hoverHeight);
+
+        saveConfig();
+    }
+
+    public static void resetAttributesConfig() {
+        attributesPanelX = 8;
+        attributesPanelY = 132;
+        attributesPanelWidth = 120;
+        attributesPanelHeight = 80;
+
+        attributesContentOffsetX = 8;
+        attributesContentOffsetY = 14;
+        attributesRowSpacing = 14;
+
+        attributesIconSize = 16;
+        attributesTextOffsetX = 20;
+        attributesValueOffsetX = 92;
+
+        attributesHoverWidth = 168;
+        attributesHoverHeight = 34;
+
+        saveConfig();
+    }
+
     public static int getBgX() { return bgX; }
     public static int getBgY() { return bgY; }
     public static int getBgWidth() { return bgWidth; }
@@ -184,6 +269,22 @@ public class ClientAwakeningScreenState {
 
     public static int getVoidX() { return voidX; }
     public static int getVoidY() { return voidY; }
+
+    public static int getAttributesPanelX() { return attributesPanelX; }
+    public static int getAttributesPanelY() { return attributesPanelY; }
+    public static int getAttributesPanelWidth() { return attributesPanelWidth; }
+    public static int getAttributesPanelHeight() { return attributesPanelHeight; }
+
+    public static int getAttributesContentOffsetX() { return attributesContentOffsetX; }
+    public static int getAttributesContentOffsetY() { return attributesContentOffsetY; }
+    public static int getAttributesRowSpacing() { return attributesRowSpacing; }
+
+    public static int getAttributesIconSize() { return attributesIconSize; }
+    public static int getAttributesTextOffsetX() { return attributesTextOffsetX; }
+    public static int getAttributesValueOffsetX() { return attributesValueOffsetX; }
+
+    public static int getAttributesHoverWidth() { return attributesHoverWidth; }
+    public static int getAttributesHoverHeight() { return attributesHoverHeight; }
 
     private static void loadConfig() {
         try {
@@ -227,6 +328,22 @@ public class ClientAwakeningScreenState {
 
                 voidX = data.voidX;
                 voidY = data.voidY;
+
+                attributesPanelX = data.attributesPanelX;
+                attributesPanelY = data.attributesPanelY;
+                attributesPanelWidth = Math.max(1, data.attributesPanelWidth);
+                attributesPanelHeight = Math.max(1, data.attributesPanelHeight);
+
+                attributesContentOffsetX = data.attributesContentOffsetX;
+                attributesContentOffsetY = data.attributesContentOffsetY;
+                attributesRowSpacing = Math.max(1, data.attributesRowSpacing);
+
+                attributesIconSize = Math.max(1, data.attributesIconSize);
+                attributesTextOffsetX = data.attributesTextOffsetX;
+                attributesValueOffsetX = data.attributesValueOffsetX;
+
+                attributesHoverWidth = Math.max(1, data.attributesHoverWidth);
+                attributesHoverHeight = Math.max(1, data.attributesHoverHeight);
             }
         } catch (Exception e) {
             System.out.println("[DragonLegacyQuestToast] Failed to load awakening screen config: " + e.getMessage());
@@ -265,6 +382,22 @@ public class ClientAwakeningScreenState {
 
             data.voidX = voidX;
             data.voidY = voidY;
+
+            data.attributesPanelX = attributesPanelX;
+            data.attributesPanelY = attributesPanelY;
+            data.attributesPanelWidth = attributesPanelWidth;
+            data.attributesPanelHeight = attributesPanelHeight;
+
+            data.attributesContentOffsetX = attributesContentOffsetX;
+            data.attributesContentOffsetY = attributesContentOffsetY;
+            data.attributesRowSpacing = attributesRowSpacing;
+
+            data.attributesIconSize = attributesIconSize;
+            data.attributesTextOffsetX = attributesTextOffsetX;
+            data.attributesValueOffsetX = attributesValueOffsetX;
+
+            data.attributesHoverWidth = attributesHoverWidth;
+            data.attributesHoverHeight = attributesHoverHeight;
 
             try (Writer writer = Files.newBufferedWriter(CONFIG_PATH)) {
                 GSON.toJson(data, writer);
