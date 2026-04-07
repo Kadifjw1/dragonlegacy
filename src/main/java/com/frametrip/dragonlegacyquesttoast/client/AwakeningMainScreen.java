@@ -59,7 +59,13 @@ public class AwakeningMainScreen extends Screen {
         ICE("ICE"),
         STORM("STORM"),
         VOID("VOID"),
-        ATTRIBUTES("ATTR");
+        ATTRIBUTES("ATTR"),
+        ATTRIBUTES_LAYOUT("ATTR-L"),
+        ATTRIBUTES_ICON("ATTR-I"),
+        ATTRIBUTES_NAME("ATTR-N"),
+        ATTRIBUTES_VALUE("ATTR-V"),
+        ATTRIBUTES_HITBOX("ATTR-HIT"),
+        ATTRIBUTES_TOOLTIP("ATTR-TIP");
 
         private final String label;
 
@@ -159,9 +165,23 @@ public class AwakeningMainScreen extends Screen {
     private int draftAttributesContentOffsetY;
     private int draftAttributesRowSpacing;
 
-    private int draftAttributesIconSize;
-    private int draftAttributesTextOffsetX;
-    private int draftAttributesValueOffsetX;
+    private int draftAttributeRowWidth;
+    private int draftAttributeRowHeight;
+
+    private int draftAttributeIconOffsetX;
+    private int draftAttributeIconOffsetY;
+    private int draftAttributeIconSize;
+
+    private int draftAttributeNameOffsetX;
+    private int draftAttributeNameOffsetY;
+
+    private int draftAttributeValueOffsetX;
+    private int draftAttributeValueOffsetY;
+
+    private int draftAttributeHitboxOffsetX;
+    private int draftAttributeHitboxOffsetY;
+    private int draftAttributeHitboxWidth;
+    private int draftAttributeHitboxHeight;
 
     private int draftAttributesHoverWidth;
     private int draftAttributesHoverHeight;
@@ -233,9 +253,23 @@ public class AwakeningMainScreen extends Screen {
         draftAttributesContentOffsetY = ClientAwakeningScreenState.getAttributesContentOffsetY();
         draftAttributesRowSpacing = ClientAwakeningScreenState.getAttributesRowSpacing();
 
-        draftAttributesIconSize = ClientAwakeningScreenState.getAttributesIconSize();
-        draftAttributesTextOffsetX = ClientAwakeningScreenState.getAttributesTextOffsetX();
-        draftAttributesValueOffsetX = ClientAwakeningScreenState.getAttributesValueOffsetX();
+        draftAttributeRowWidth = ClientAwakeningScreenState.getAttributeRowWidth();
+        draftAttributeRowHeight = ClientAwakeningScreenState.getAttributeRowHeight();
+
+        draftAttributeIconOffsetX = ClientAwakeningScreenState.getAttributeIconOffsetX();
+        draftAttributeIconOffsetY = ClientAwakeningScreenState.getAttributeIconOffsetY();
+        draftAttributeIconSize = ClientAwakeningScreenState.getAttributeIconSize();
+
+        draftAttributeNameOffsetX = ClientAwakeningScreenState.getAttributeNameOffsetX();
+        draftAttributeNameOffsetY = ClientAwakeningScreenState.getAttributeNameOffsetY();
+
+        draftAttributeValueOffsetX = ClientAwakeningScreenState.getAttributeValueOffsetX();
+        draftAttributeValueOffsetY = ClientAwakeningScreenState.getAttributeValueOffsetY();
+
+        draftAttributeHitboxOffsetX = ClientAwakeningScreenState.getAttributeHitboxOffsetX();
+        draftAttributeHitboxOffsetY = ClientAwakeningScreenState.getAttributeHitboxOffsetY();
+        draftAttributeHitboxWidth = ClientAwakeningScreenState.getAttributeHitboxWidth();
+        draftAttributeHitboxHeight = ClientAwakeningScreenState.getAttributeHitboxHeight();
 
         draftAttributesHoverWidth = ClientAwakeningScreenState.getAttributesHoverWidth();
         draftAttributesHoverHeight = ClientAwakeningScreenState.getAttributesHoverHeight();
@@ -423,9 +457,19 @@ public class AwakeningMainScreen extends Screen {
                 draftAttributesContentOffsetX,
                 draftAttributesContentOffsetY,
                 draftAttributesRowSpacing,
-                draftAttributesIconSize,
-                draftAttributesTextOffsetX,
-                draftAttributesValueOffsetX,
+                draftAttributeRowWidth,
+                draftAttributeRowHeight,
+                draftAttributeIconOffsetX,
+                draftAttributeIconOffsetY,
+                draftAttributeIconSize,
+                draftAttributeNameOffsetX,
+                draftAttributeNameOffsetY,
+                draftAttributeValueOffsetX,
+                draftAttributeValueOffsetY,
+                draftAttributeHitboxOffsetX,
+                draftAttributeHitboxOffsetY,
+                draftAttributeHitboxWidth,
+                draftAttributeHitboxHeight,
                 draftAttributesHoverWidth,
                 draftAttributesHoverHeight
         );
@@ -509,7 +553,7 @@ public class AwakeningMainScreen extends Screen {
         int panelX = 8;
         int panelY = 8;
 
-        guiGraphics.fill(panelX - 4, panelY + 22, panelX + 232, panelY + 128, 0x88000000);
+        guiGraphics.fill(panelX - 4, panelY + 22, panelX + 248, panelY + 138, 0x88000000);
         guiGraphics.drawString(this.font, "EDIT MODE", panelX, panelY + 52, 0xFFD98C, false);
         guiGraphics.drawString(this.font, "Target: " + selectedTarget.label(), panelX + 80, panelY + 32, 0xFFFFFF, false);
 
@@ -551,6 +595,30 @@ public class AwakeningMainScreen extends Screen {
                 info1 = "x=" + draftAttributesPanelX + " y=" + draftAttributesPanelY;
                 info2 = "w=" + draftAttributesPanelWidth + " h=" + draftAttributesPanelHeight;
             }
+            case ATTRIBUTES_LAYOUT -> {
+                info1 = "cx=" + draftAttributesContentOffsetX + " cy=" + draftAttributesContentOffsetY;
+                info2 = "rowW=" + draftAttributeRowWidth + " rowH=" + draftAttributeRowHeight + " gap=" + draftAttributesRowSpacing;
+            }
+            case ATTRIBUTES_ICON -> {
+                info1 = "ix=" + draftAttributeIconOffsetX + " iy=" + draftAttributeIconOffsetY;
+                info2 = "size=" + draftAttributeIconSize;
+            }
+            case ATTRIBUTES_NAME -> {
+                info1 = "nx=" + draftAttributeNameOffsetX + " ny=" + draftAttributeNameOffsetY;
+                info2 = "name pos";
+            }
+            case ATTRIBUTES_VALUE -> {
+                info1 = "vx=" + draftAttributeValueOffsetX + " vy=" + draftAttributeValueOffsetY;
+                info2 = "value pos";
+            }
+            case ATTRIBUTES_HITBOX -> {
+                info1 = "hx=" + draftAttributeHitboxOffsetX + " hy=" + draftAttributeHitboxOffsetY;
+                info2 = "hw=" + draftAttributeHitboxWidth + " hh=" + draftAttributeHitboxHeight;
+            }
+            case ATTRIBUTES_TOOLTIP -> {
+                info1 = "tipW=" + draftAttributesHoverWidth;
+                info2 = "tipH=" + draftAttributesHoverHeight;
+            }
         }
 
         guiGraphics.drawString(this.font, info1, panelX, panelY + 104, 0xD8D8D8, false);
@@ -582,14 +650,53 @@ public class AwakeningMainScreen extends Screen {
         drawBox(guiGraphics, bgX + draftStormX, bgY + draftStormY, pathSize, pathSize, selectedTarget == EditTarget.STORM ? 0xFFFFAA00 : 0x66FFFFFF);
         drawBox(guiGraphics, bgX + draftVoidX, bgY + draftVoidY, pathSize, pathSize, selectedTarget == EditTarget.VOID ? 0xFFFFAA00 : 0x66FFFFFF);
 
-        drawBox(
-                guiGraphics,
-                bgX + draftAttributesPanelX,
-                bgY + draftAttributesPanelY,
-                draftAttributesPanelWidth,
-                draftAttributesPanelHeight,
-                selectedTarget == EditTarget.ATTRIBUTES ? 0xFFFFAA00 : 0x66FFFFFF
-        );
+        int panelX = bgX + draftAttributesPanelX;
+        int panelY = bgY + draftAttributesPanelY;
+        int rowX = panelX + draftAttributesContentOffsetX;
+        int rowY = panelY + draftAttributesContentOffsetY;
+
+        drawBox(guiGraphics, panelX, panelY, draftAttributesPanelWidth, draftAttributesPanelHeight,
+                selectedTarget == EditTarget.ATTRIBUTES ? 0xFFFFAA00 : 0x66FFFFFF);
+
+        if (selectedTarget == EditTarget.ATTRIBUTES_LAYOUT) {
+            drawBox(guiGraphics, rowX, rowY, draftAttributeRowWidth, draftAttributeRowHeight, 0xFFFFAA00);
+        }
+
+        if (selectedTarget == EditTarget.ATTRIBUTES_ICON) {
+            drawBox(guiGraphics,
+                    rowX + draftAttributeIconOffsetX,
+                    rowY + draftAttributeIconOffsetY,
+                    draftAttributeIconSize,
+                    draftAttributeIconSize,
+                    0xFFFFAA00);
+        }
+
+        if (selectedTarget == EditTarget.ATTRIBUTES_NAME) {
+            drawBox(guiGraphics,
+                    rowX + draftAttributeNameOffsetX - 2,
+                    rowY + draftAttributeNameOffsetY - 2,
+                    50,
+                    12,
+                    0xFFFFAA00);
+        }
+
+        if (selectedTarget == EditTarget.ATTRIBUTES_VALUE) {
+            drawBox(guiGraphics,
+                    rowX + draftAttributeValueOffsetX - 2,
+                    rowY + draftAttributeValueOffsetY - 2,
+                    12,
+                    12,
+                    0xFFFFAA00);
+        }
+
+        if (selectedTarget == EditTarget.ATTRIBUTES_HITBOX) {
+            drawBox(guiGraphics,
+                    rowX + draftAttributeHitboxOffsetX,
+                    rowY + draftAttributeHitboxOffsetY,
+                    draftAttributeHitboxWidth,
+                    draftAttributeHitboxHeight,
+                    0xFFFFAA00);
+        }
     }
 
     private void drawBox(GuiGraphics guiGraphics, int x, int y, int w, int h, int color) {
@@ -694,10 +801,20 @@ public class AwakeningMainScreen extends Screen {
                 panelW, panelH
         );
 
-        renderAttributeRow(guiGraphics, panelX + draftAttributesContentOffsetX, panelY + draftAttributesContentOffsetY, AttributeType.BODY);
-        renderAttributeRow(guiGraphics, panelX + draftAttributesContentOffsetX, panelY + draftAttributesContentOffsetY + draftAttributesRowSpacing, AttributeType.MIND);
-        renderAttributeRow(guiGraphics, panelX + draftAttributesContentOffsetX, panelY + draftAttributesContentOffsetY + draftAttributesRowSpacing * 2, AttributeType.SPIRIT);
-        renderAttributeRow(guiGraphics, panelX + draftAttributesContentOffsetX, panelY + draftAttributesContentOffsetY + draftAttributesRowSpacing * 3, AttributeType.BOND);
+        int rowX = panelX + draftAttributesContentOffsetX;
+        int rowY = panelY + draftAttributesContentOffsetY;
+
+        renderAttributeRow(guiGraphics, rowX, rowY, AttributeType.BODY);
+        renderAttributeRow(guiGraphics, rowX, rowY + draftAttributesRowSpacing, AttributeType.MIND);
+        renderAttributeRow(guiGraphics, rowX, rowY + draftAttributesRowSpacing * 2, AttributeType.SPIRIT);
+        renderAttributeRow(guiGraphics, rowX, rowY + draftAttributesRowSpacing * 3, AttributeType.BOND);
+
+        if (editMode && !previewMode) {
+            drawBox(guiGraphics, rowX, rowY, draftAttributeRowWidth, draftAttributeRowHeight, 0x44FFD98C);
+            drawBox(guiGraphics, rowX, rowY + draftAttributesRowSpacing, draftAttributeRowWidth, draftAttributeRowHeight, 0x44FFD98C);
+            drawBox(guiGraphics, rowX, rowY + draftAttributesRowSpacing * 2, draftAttributeRowWidth, draftAttributeRowHeight, 0x44FFD98C);
+            drawBox(guiGraphics, rowX, rowY + draftAttributesRowSpacing * 3, draftAttributeRowWidth, draftAttributeRowHeight, 0x44FFD98C);
+        }
     }
 
     private void renderAttributeRow(GuiGraphics guiGraphics, int x, int y, AttributeType type) {
@@ -705,18 +822,34 @@ public class AwakeningMainScreen extends Screen {
 
         guiGraphics.blit(
                 type.icon(),
-                x,
-                y - 2,
+                x + draftAttributeIconOffsetX,
+                y + draftAttributeIconOffsetY,
                 0, 0,
-                draftAttributesIconSize,
-                draftAttributesIconSize,
-                draftAttributesIconSize,
-                draftAttributesIconSize
+                draftAttributeIconSize,
+                draftAttributeIconSize,
+                draftAttributeIconSize,
+                draftAttributeIconSize
         );
 
         int nameColor = hoveredAttribute == type ? 0xFFD98C : 0xFFFFFF;
-        guiGraphics.drawString(this.font, type.title(), x + draftAttributesTextOffsetX, y + 2, nameColor, false);
-        guiGraphics.drawString(this.font, "" + level, x + draftAttributesValueOffsetX, y + 2, 0xE6D7B5, false);
+
+        guiGraphics.drawString(
+                this.font,
+                type.title(),
+                x + draftAttributeNameOffsetX,
+                y + draftAttributeNameOffsetY,
+                nameColor,
+                false
+        );
+
+        guiGraphics.drawString(
+                this.font,
+                "" + level,
+                x + draftAttributeValueOffsetX,
+                y + draftAttributeValueOffsetY,
+                0xE6D7B5,
+                false
+        );
     }
 
     private int getAttributeLevel(int points) {
@@ -727,15 +860,16 @@ public class AwakeningMainScreen extends Screen {
         int panelX = bgX + draftAttributesPanelX;
         int panelY = bgY + draftAttributesPanelY;
 
-        int rowX = panelX + draftAttributesContentOffsetX;
-        int rowY = panelY + draftAttributesContentOffsetY;
-        int rowW = Math.max(100, draftAttributesPanelWidth - draftAttributesContentOffsetX * 2);
-        int rowH = Math.max(12, draftAttributesRowSpacing);
+        int rowBaseX = panelX + draftAttributesContentOffsetX;
+        int rowBaseY = panelY + draftAttributesContentOffsetY;
 
-        if (isInside(mouseX, mouseY, rowX, rowY - 2, rowW, rowH)) return AttributeType.BODY;
-        if (isInside(mouseX, mouseY, rowX, rowY + draftAttributesRowSpacing - 2, rowW, rowH)) return AttributeType.MIND;
-        if (isInside(mouseX, mouseY, rowX, rowY + draftAttributesRowSpacing * 2 - 2, rowW, rowH)) return AttributeType.SPIRIT;
-        if (isInside(mouseX, mouseY, rowX, rowY + draftAttributesRowSpacing * 3 - 2, rowW, rowH)) return AttributeType.BOND;
+        int hitX = rowBaseX + draftAttributeHitboxOffsetX;
+        int hitY = rowBaseY + draftAttributeHitboxOffsetY;
+
+        if (isInside(mouseX, mouseY, hitX, hitY, draftAttributeHitboxWidth, draftAttributeHitboxHeight)) return AttributeType.BODY;
+        if (isInside(mouseX, mouseY, hitX, hitY + draftAttributesRowSpacing, draftAttributeHitboxWidth, draftAttributeHitboxHeight)) return AttributeType.MIND;
+        if (isInside(mouseX, mouseY, hitX, hitY + draftAttributesRowSpacing * 2, draftAttributeHitboxWidth, draftAttributeHitboxHeight)) return AttributeType.SPIRIT;
+        if (isInside(mouseX, mouseY, hitX, hitY + draftAttributesRowSpacing * 3, draftAttributeHitboxWidth, draftAttributeHitboxHeight)) return AttributeType.BOND;
 
         return null;
     }
@@ -819,6 +953,28 @@ public class AwakeningMainScreen extends Screen {
                 draftAttributesPanelX += dx;
                 draftAttributesPanelY += dy;
             }
+            case ATTRIBUTES_LAYOUT -> {
+                draftAttributesContentOffsetX += dx;
+                draftAttributesContentOffsetY += dy;
+            }
+            case ATTRIBUTES_ICON -> {
+                draftAttributeIconOffsetX += dx;
+                draftAttributeIconOffsetY += dy;
+            }
+            case ATTRIBUTES_NAME -> {
+                draftAttributeNameOffsetX += dx;
+                draftAttributeNameOffsetY += dy;
+            }
+            case ATTRIBUTES_VALUE -> {
+                draftAttributeValueOffsetX += dx;
+                draftAttributeValueOffsetY += dy;
+            }
+            case ATTRIBUTES_HITBOX -> {
+                draftAttributeHitboxOffsetX += dx;
+                draftAttributeHitboxOffsetY += dy;
+            }
+            case ATTRIBUTES_TOOLTIP -> {
+            }
         }
     }
 
@@ -839,6 +995,28 @@ public class AwakeningMainScreen extends Screen {
             case ATTRIBUTES -> {
                 draftAttributesPanelWidth = Math.max(1, draftAttributesPanelWidth + dw);
                 draftAttributesPanelHeight = Math.max(1, draftAttributesPanelHeight + dh);
+            }
+            case ATTRIBUTES_LAYOUT -> {
+                draftAttributeRowWidth = Math.max(1, draftAttributeRowWidth + dw);
+                draftAttributeRowHeight = Math.max(1, draftAttributeRowHeight + dh);
+                if (dh != 0) {
+                    draftAttributesRowSpacing = Math.max(1, draftAttributesRowSpacing + dh);
+                }
+            }
+            case ATTRIBUTES_ICON -> {
+                draftAttributeIconSize = Math.max(1, draftAttributeIconSize + dw);
+            }
+            case ATTRIBUTES_NAME -> {
+            }
+            case ATTRIBUTES_VALUE -> {
+            }
+            case ATTRIBUTES_HITBOX -> {
+                draftAttributeHitboxWidth = Math.max(1, draftAttributeHitboxWidth + dw);
+                draftAttributeHitboxHeight = Math.max(1, draftAttributeHitboxHeight + dh);
+            }
+            case ATTRIBUTES_TOOLTIP -> {
+                draftAttributesHoverWidth = Math.max(1, draftAttributesHoverWidth + dw);
+                draftAttributesHoverHeight = Math.max(1, draftAttributesHoverHeight + dh);
             }
             case PLAYER -> {
             }
@@ -885,15 +1063,34 @@ public class AwakeningMainScreen extends Screen {
                 draftAttributesPanelY = 132;
                 draftAttributesPanelWidth = 120;
                 draftAttributesPanelHeight = 80;
-
+            }
+            case ATTRIBUTES_LAYOUT -> {
                 draftAttributesContentOffsetX = 8;
                 draftAttributesContentOffsetY = 14;
                 draftAttributesRowSpacing = 14;
-
-                draftAttributesIconSize = 16;
-                draftAttributesTextOffsetX = 20;
-                draftAttributesValueOffsetX = 92;
-
+                draftAttributeRowWidth = 100;
+                draftAttributeRowHeight = 14;
+            }
+            case ATTRIBUTES_ICON -> {
+                draftAttributeIconOffsetX = 0;
+                draftAttributeIconOffsetY = -2;
+                draftAttributeIconSize = 16;
+            }
+            case ATTRIBUTES_NAME -> {
+                draftAttributeNameOffsetX = 20;
+                draftAttributeNameOffsetY = 2;
+            }
+            case ATTRIBUTES_VALUE -> {
+                draftAttributeValueOffsetX = 92;
+                draftAttributeValueOffsetY = 2;
+            }
+            case ATTRIBUTES_HITBOX -> {
+                draftAttributeHitboxOffsetX = 0;
+                draftAttributeHitboxOffsetY = -2;
+                draftAttributeHitboxWidth = 100;
+                draftAttributeHitboxHeight = 14;
+            }
+            case ATTRIBUTES_TOOLTIP -> {
                 draftAttributesHoverWidth = 168;
                 draftAttributesHoverHeight = 34;
             }
