@@ -49,9 +49,23 @@ public class ClientAwakeningScreenState {
         public int attributesContentOffsetY = 14;
         public int attributesRowSpacing = 14;
 
-        public int attributesIconSize = 16;
-        public int attributesTextOffsetX = 20;
-        public int attributesValueOffsetX = 92;
+        public int attributeRowWidth = 100;
+        public int attributeRowHeight = 14;
+
+        public int attributeIconOffsetX = 0;
+        public int attributeIconOffsetY = -2;
+        public int attributeIconSize = 16;
+
+        public int attributeNameOffsetX = 20;
+        public int attributeNameOffsetY = 2;
+
+        public int attributeValueOffsetX = 92;
+        public int attributeValueOffsetY = 2;
+
+        public int attributeHitboxOffsetX = 0;
+        public int attributeHitboxOffsetY = -2;
+        public int attributeHitboxWidth = 100;
+        public int attributeHitboxHeight = 14;
 
         public int attributesHoverWidth = 168;
         public int attributesHoverHeight = 34;
@@ -99,9 +113,23 @@ public class ClientAwakeningScreenState {
     private static int attributesContentOffsetY = 14;
     private static int attributesRowSpacing = 14;
 
-    private static int attributesIconSize = 16;
-    private static int attributesTextOffsetX = 20;
-    private static int attributesValueOffsetX = 92;
+    private static int attributeRowWidth = 100;
+    private static int attributeRowHeight = 14;
+
+    private static int attributeIconOffsetX = 0;
+    private static int attributeIconOffsetY = -2;
+    private static int attributeIconSize = 16;
+
+    private static int attributeNameOffsetX = 20;
+    private static int attributeNameOffsetY = 2;
+
+    private static int attributeValueOffsetX = 92;
+    private static int attributeValueOffsetY = 2;
+
+    private static int attributeHitboxOffsetX = 0;
+    private static int attributeHitboxOffsetY = -2;
+    private static int attributeHitboxWidth = 100;
+    private static int attributeHitboxHeight = 14;
 
     private static int attributesHoverWidth = 168;
     private static int attributesHoverHeight = 34;
@@ -118,14 +146,6 @@ public class ClientAwakeningScreenState {
         saveConfig();
     }
 
-    public static void resetBackgroundConfig() {
-        bgX = 0;
-        bgY = 0;
-        bgWidth = 320;
-        bgHeight = 220;
-        saveConfig();
-    }
-
     public static void applyCenterConfig(int frameX, int frameY, int frameWidth, int frameHeight,
                                          int modelOffsetX, int modelOffsetY, float modelScale) {
         centerFrameX = frameX;
@@ -135,17 +155,6 @@ public class ClientAwakeningScreenState {
         playerOffsetX = modelOffsetX;
         playerOffsetY = modelOffsetY;
         playerScale = Math.max(1.0F, modelScale);
-        saveConfig();
-    }
-
-    public static void resetCenterConfig() {
-        centerFrameX = 112;
-        centerFrameY = 44;
-        centerFrameWidth = 96;
-        centerFrameHeight = 96;
-        playerOffsetX = 0;
-        playerOffsetY = 8;
-        playerScale = 38.0F;
         saveConfig();
     }
 
@@ -169,25 +178,6 @@ public class ClientAwakeningScreenState {
         saveConfig();
     }
 
-    public static void resetPathsConfig() {
-        pathFrameSize = 48;
-        pathIconSize = 32;
-
-        fireX = 136;
-        fireY = 12;
-
-        iceX = 56;
-        iceY = 68;
-
-        stormX = 216;
-        stormY = 68;
-
-        voidX = 136;
-        voidY = 148;
-
-        saveConfig();
-    }
-
     public static void applyAttributesConfig(
             int panelX,
             int panelY,
@@ -196,9 +186,19 @@ public class ClientAwakeningScreenState {
             int contentOffsetX,
             int contentOffsetY,
             int rowSpacing,
+            int rowWidth,
+            int rowHeight,
+            int iconOffsetX,
+            int iconOffsetY,
             int iconSize,
-            int textOffsetX,
+            int nameOffsetX,
+            int nameOffsetY,
             int valueOffsetX,
+            int valueOffsetY,
+            int hitboxOffsetX,
+            int hitboxOffsetY,
+            int hitboxWidth,
+            int hitboxHeight,
             int hoverWidth,
             int hoverHeight
     ) {
@@ -211,32 +211,26 @@ public class ClientAwakeningScreenState {
         attributesContentOffsetY = contentOffsetY;
         attributesRowSpacing = Math.max(1, rowSpacing);
 
-        attributesIconSize = Math.max(1, iconSize);
-        attributesTextOffsetX = textOffsetX;
-        attributesValueOffsetX = valueOffsetX;
+        attributeRowWidth = Math.max(1, rowWidth);
+        attributeRowHeight = Math.max(1, rowHeight);
+
+        attributeIconOffsetX = iconOffsetX;
+        attributeIconOffsetY = iconOffsetY;
+        attributeIconSize = Math.max(1, iconSize);
+
+        attributeNameOffsetX = nameOffsetX;
+        attributeNameOffsetY = nameOffsetY;
+
+        attributeValueOffsetX = valueOffsetX;
+        attributeValueOffsetY = valueOffsetY;
+
+        attributeHitboxOffsetX = hitboxOffsetX;
+        attributeHitboxOffsetY = hitboxOffsetY;
+        attributeHitboxWidth = Math.max(1, hitboxWidth);
+        attributeHitboxHeight = Math.max(1, hitboxHeight);
 
         attributesHoverWidth = Math.max(1, hoverWidth);
         attributesHoverHeight = Math.max(1, hoverHeight);
-
-        saveConfig();
-    }
-
-    public static void resetAttributesConfig() {
-        attributesPanelX = 8;
-        attributesPanelY = 132;
-        attributesPanelWidth = 120;
-        attributesPanelHeight = 80;
-
-        attributesContentOffsetX = 8;
-        attributesContentOffsetY = 14;
-        attributesRowSpacing = 14;
-
-        attributesIconSize = 16;
-        attributesTextOffsetX = 20;
-        attributesValueOffsetX = 92;
-
-        attributesHoverWidth = 168;
-        attributesHoverHeight = 34;
 
         saveConfig();
     }
@@ -279,9 +273,23 @@ public class ClientAwakeningScreenState {
     public static int getAttributesContentOffsetY() { return attributesContentOffsetY; }
     public static int getAttributesRowSpacing() { return attributesRowSpacing; }
 
-    public static int getAttributesIconSize() { return attributesIconSize; }
-    public static int getAttributesTextOffsetX() { return attributesTextOffsetX; }
-    public static int getAttributesValueOffsetX() { return attributesValueOffsetX; }
+    public static int getAttributeRowWidth() { return attributeRowWidth; }
+    public static int getAttributeRowHeight() { return attributeRowHeight; }
+
+    public static int getAttributeIconOffsetX() { return attributeIconOffsetX; }
+    public static int getAttributeIconOffsetY() { return attributeIconOffsetY; }
+    public static int getAttributeIconSize() { return attributeIconSize; }
+
+    public static int getAttributeNameOffsetX() { return attributeNameOffsetX; }
+    public static int getAttributeNameOffsetY() { return attributeNameOffsetY; }
+
+    public static int getAttributeValueOffsetX() { return attributeValueOffsetX; }
+    public static int getAttributeValueOffsetY() { return attributeValueOffsetY; }
+
+    public static int getAttributeHitboxOffsetX() { return attributeHitboxOffsetX; }
+    public static int getAttributeHitboxOffsetY() { return attributeHitboxOffsetY; }
+    public static int getAttributeHitboxWidth() { return attributeHitboxWidth; }
+    public static int getAttributeHitboxHeight() { return attributeHitboxHeight; }
 
     public static int getAttributesHoverWidth() { return attributesHoverWidth; }
     public static int getAttributesHoverHeight() { return attributesHoverHeight; }
@@ -338,9 +346,23 @@ public class ClientAwakeningScreenState {
                 attributesContentOffsetY = data.attributesContentOffsetY;
                 attributesRowSpacing = Math.max(1, data.attributesRowSpacing);
 
-                attributesIconSize = Math.max(1, data.attributesIconSize);
-                attributesTextOffsetX = data.attributesTextOffsetX;
-                attributesValueOffsetX = data.attributesValueOffsetX;
+                attributeRowWidth = Math.max(1, data.attributeRowWidth);
+                attributeRowHeight = Math.max(1, data.attributeRowHeight);
+
+                attributeIconOffsetX = data.attributeIconOffsetX;
+                attributeIconOffsetY = data.attributeIconOffsetY;
+                attributeIconSize = Math.max(1, data.attributeIconSize);
+
+                attributeNameOffsetX = data.attributeNameOffsetX;
+                attributeNameOffsetY = data.attributeNameOffsetY;
+
+                attributeValueOffsetX = data.attributeValueOffsetX;
+                attributeValueOffsetY = data.attributeValueOffsetY;
+
+                attributeHitboxOffsetX = data.attributeHitboxOffsetX;
+                attributeHitboxOffsetY = data.attributeHitboxOffsetY;
+                attributeHitboxWidth = Math.max(1, data.attributeHitboxWidth);
+                attributeHitboxHeight = Math.max(1, data.attributeHitboxHeight);
 
                 attributesHoverWidth = Math.max(1, data.attributesHoverWidth);
                 attributesHoverHeight = Math.max(1, data.attributesHoverHeight);
@@ -392,9 +414,23 @@ public class ClientAwakeningScreenState {
             data.attributesContentOffsetY = attributesContentOffsetY;
             data.attributesRowSpacing = attributesRowSpacing;
 
-            data.attributesIconSize = attributesIconSize;
-            data.attributesTextOffsetX = attributesTextOffsetX;
-            data.attributesValueOffsetX = attributesValueOffsetX;
+            data.attributeRowWidth = attributeRowWidth;
+            data.attributeRowHeight = attributeRowHeight;
+
+            data.attributeIconOffsetX = attributeIconOffsetX;
+            data.attributeIconOffsetY = attributeIconOffsetY;
+            data.attributeIconSize = attributeIconSize;
+
+            data.attributeNameOffsetX = attributeNameOffsetX;
+            data.attributeNameOffsetY = attributeNameOffsetY;
+
+            data.attributeValueOffsetX = attributeValueOffsetX;
+            data.attributeValueOffsetY = attributeValueOffsetY;
+
+            data.attributeHitboxOffsetX = attributeHitboxOffsetX;
+            data.attributeHitboxOffsetY = attributeHitboxOffsetY;
+            data.attributeHitboxWidth = attributeHitboxWidth;
+            data.attributeHitboxHeight = attributeHitboxHeight;
 
             data.attributesHoverWidth = attributesHoverWidth;
             data.attributesHoverHeight = attributesHoverHeight;
