@@ -39,6 +39,18 @@ public class AwakeningMainScreen extends Screen {
     private static final ResourceLocation VOID_SEAL_ACTIVE_TEXTURE =
             new ResourceLocation(DragonLegacyQuestToastMod.MODID, "textures/gui/path_void_seal_active_48x48.png");
 
+    private static final ResourceLocation ATTRIBUTES_PANEL_TEXTURE =
+            new ResourceLocation(DragonLegacyQuestToastMod.MODID, "textures/gui/awakening_attributes_panel_120x80.png");
+
+    private static final ResourceLocation BODY_ICON_TEXTURE =
+            new ResourceLocation(DragonLegacyQuestToastMod.MODID, "textures/gui/attribute_body_icon_16x16.png");
+    private static final ResourceLocation MIND_ICON_TEXTURE =
+            new ResourceLocation(DragonLegacyQuestToastMod.MODID, "textures/gui/attribute_mind_icon_16x16.png");
+    private static final ResourceLocation SPIRIT_ICON_TEXTURE =
+            new ResourceLocation(DragonLegacyQuestToastMod.MODID, "textures/gui/attribute_spirit_icon_16x16.png");
+    private static final ResourceLocation BOND_ICON_TEXTURE =
+            new ResourceLocation(DragonLegacyQuestToastMod.MODID, "textures/gui/attribute_bond_icon_16x16.png");
+
     private enum EditTarget {
         BACKGROUND("BG"),
         CENTER("CENTER"),
@@ -69,7 +81,43 @@ public class AwakeningMainScreen extends Screen {
         }
     }
 
+    private enum AttributeType {
+        BODY("Тело", 5, "Физическая мощь, стойкость и выживание.", BODY_ICON_TEXTURE),
+        MIND("Разум", 2, "Знания, мышление, понимание и расчёт.", MIND_ICON_TEXTURE),
+        SPIRIT("Дух", 7, "Воля, внутренняя энергия и сила пробуждения.", SPIRIT_ICON_TEXTURE),
+        BOND("Связь", 1, "Резонанс с путями, сущностями и миром.", BOND_ICON_TEXTURE);
+
+        private final String title;
+        private final int points;
+        private final String description;
+        private final ResourceLocation icon;
+
+        AttributeType(String title, int points, String description, ResourceLocation icon) {
+            this.title = title;
+            this.points = points;
+            this.description = description;
+            this.icon = icon;
+        }
+
+        public String title() {
+            return title;
+        }
+
+        public int points() {
+            return points;
+        }
+
+        public String description() {
+            return description;
+        }
+
+        public ResourceLocation icon() {
+            return icon;
+        }
+    }
+
     private AwakeningPathType hoveredPath = null;
+    private AttributeType hoveredAttribute = null;
 
     private boolean editMode = false;
     private boolean previewMode = false;
@@ -350,6 +398,7 @@ public class AwakeningMainScreen extends Screen {
         int bgHeight = draftBgHeight;
 
         hoveredPath = getPathAt(mouseX, mouseY);
+        hoveredAttribute = getHoveredAttribute(mouseX, mouseY, bgX, bgY);
 
         RenderSystem.enableBlend();
         guiGraphics.blit(BG_TEXTURE, bgX, bgY, 0, 0, bgWidth, bgHeight, bgWidth, bgHeight);
@@ -365,7 +414,7 @@ public class AwakeningMainScreen extends Screen {
 
         renderPathSeal(guiGraphics,
                 bgX + draftFireX,
-                bgY + draftFireY(),
+                bgY + draftFireY,
                 FIRE_SEAL_TEXTURE, FIRE_SEAL_ACTIVE_TEXTURE,
                 AwakeningPathType.FIRE,
                 hoveredPath == AwakeningPathType.FIRE);
@@ -391,6 +440,12 @@ public class AwakeningMainScreen extends Screen {
                 AwakeningPathType.VOID,
                 hoveredPath == AwakeningPathType.VOID);
 
+        renderAttributesPanel(guiGraphics, bgX, bgY);
+
+        if (hoveredAttribute != null) {
+            renderAttributeTooltip(guiGraphics, mouseX, mouseY, hoveredAttribute);
+        }
+
         if (hoveredPath != null && (!editMode || previewMode)) {
             guiGraphics.drawCenteredString(this.font, hoveredPath.getTitle(), this.width / 2, bgY + 8, 0xE6D7B5);
         }
@@ -400,10 +455,6 @@ public class AwakeningMainScreen extends Screen {
         }
 
         super.render(guiGraphics, mouseX, mouseY, partialTick);
-    }
-
-    private int draftFireY() {
-        return draftFireY;
     }
 
     private void renderEditorOverlay(GuiGraphics guiGraphics) {
@@ -568,6 +619,65 @@ public class AwakeningMainScreen extends Screen {
         entity.yHeadRot = oldYHeadRot;
     }
 
+    private void renderAttributesPanel(GuiGraphics guiGraphics, int bgX, int bgY) {
+        int panelX = bgX + 8;
+        int panelY = bgY + 132;
+        int panelW = 120;
+        int panelH = 80;
+
+        guiGraphics.blit(
+                ATTRIBUTES_PANEL_TEXTURE,
+                panelX, panelY,
+                0, 0,
+                panelW, panelH,
+                panelW, panelH
+        );
+
+        renderAttributeRow(guiGraphics, panelX + 8, panelY + 14, AttributeType.BODY);
+        renderAttributeRow(guiGraphics, panelX + 8, panelY + 28, AttributeType.MIND);
+        renderAttributeRow(guiGraphics, panelX + 8, panelY + 42, AttributeType.SPIRIT);
+        renderAttributeRow(guiGraphics, panelX + 8, panelY + 56, AttributeType.BOND);
+    }
+
+    private void renderAttributeRow(GuiGraphics guiGraphics, int x, int y, AttributeType type) {
+        int level = getAttributeLevel(type.points());
+
+        guiGraphics.blit(type.icon(), x, y - 2, 0, 0, 16, 16, 16, 16);
+
+        int nameColor = hoveredAttribute == type ? 0xFFD98C : 0xFFFFFF;
+        guiGraphics.drawString(this.font, type.title(), x + 20, y + 2, nameColor, false);
+        guiGraphics.drawString(this.font, "" + level, x + 92, y + 2, 0xE6D7B5, false);
+    }
+
+    private int getAttributeLevel(int points) {
+        return Math.max(0, points / 3);
+    }
+
+    private AttributeType getHoveredAttribute(double mouseX, double mouseY, int bgX, int bgY) {
+        int panelX = bgX + 8;
+        int panelY = bgY + 132;
+
+        if (isInside(mouseX, mouseY, panelX + 8, panelY + 12, 100, 14)) return AttributeType.BODY;
+        if (isInside(mouseX, mouseY, panelX + 8, panelY + 26, 100, 14)) return AttributeType.MIND;
+        if (isInside(mouseX, mouseY, panelX + 8, panelY + 40, 100, 14)) return AttributeType.SPIRIT;
+        if (isInside(mouseX, mouseY, panelX + 8, panelY + 54, 100, 14)) return AttributeType.BOND;
+
+        return null;
+    }
+
+    private void renderAttributeTooltip(GuiGraphics guiGraphics, int mouseX, int mouseY, AttributeType type) {
+        int tooltipX = mouseX + 10;
+        int tooltipY = mouseY - 4;
+        int tooltipW = 168;
+        int tooltipH = 34;
+
+        guiGraphics.fill(tooltipX, tooltipY, tooltipX + tooltipW, tooltipY + tooltipH, 0xDD111111);
+        drawBox(guiGraphics, tooltipX, tooltipY, tooltipW, tooltipH, 0x99E6D7B5);
+
+        guiGraphics.drawString(this.font, type.title(), tooltipX + 6, tooltipY + 6, 0xE6D7B5, false);
+        guiGraphics.drawString(this.font, type.description(), tooltipX + 6, tooltipY + 18, 0xFFFFFF, false);
+    }
+
     private AwakeningPathType getPathAt(double mouseX, double mouseY) {
         int bgX = draftBgX;
         int bgY = draftBgY;
@@ -689,4 +799,4 @@ public class AwakeningMainScreen extends Screen {
             }
         }
     }
-}   
+}
