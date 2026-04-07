@@ -146,6 +146,14 @@ public class ClientAwakeningScreenState {
         saveConfig();
     }
 
+    public static void resetBackgroundConfig() {
+        bgX = 0;
+        bgY = 0;
+        bgWidth = 320;
+        bgHeight = 220;
+        saveConfig();
+    }
+
     public static void applyCenterConfig(int frameX, int frameY, int frameWidth, int frameHeight,
                                          int modelOffsetX, int modelOffsetY, float modelScale) {
         centerFrameX = frameX;
@@ -155,6 +163,17 @@ public class ClientAwakeningScreenState {
         playerOffsetX = modelOffsetX;
         playerOffsetY = modelOffsetY;
         playerScale = Math.max(1.0F, modelScale);
+        saveConfig();
+    }
+
+    public static void resetCenterConfig() {
+        centerFrameX = 112;
+        centerFrameY = 44;
+        centerFrameWidth = 96;
+        centerFrameHeight = 96;
+        playerOffsetX = 0;
+        playerOffsetY = 8;
+        playerScale = 38.0F;
         saveConfig();
     }
 
@@ -174,6 +193,25 @@ public class ClientAwakeningScreenState {
         stormY = newStormY;
         voidX = newVoidX;
         voidY = newVoidY;
+
+        saveConfig();
+    }
+
+    public static void resetPathsConfig() {
+        pathFrameSize = 48;
+        pathIconSize = 32;
+
+        fireX = 136;
+        fireY = 12;
+
+        iceX = 56;
+        iceY = 68;
+
+        stormX = 216;
+        stormY = 68;
+
+        voidX = 136;
+        voidY = 148;
 
         saveConfig();
     }
@@ -231,6 +269,40 @@ public class ClientAwakeningScreenState {
 
         attributesHoverWidth = Math.max(1, hoverWidth);
         attributesHoverHeight = Math.max(1, hoverHeight);
+
+        saveConfig();
+    }
+
+    public static void resetAttributesConfig() {
+        attributesPanelX = 8;
+        attributesPanelY = 132;
+        attributesPanelWidth = 120;
+        attributesPanelHeight = 80;
+
+        attributesContentOffsetX = 8;
+        attributesContentOffsetY = 14;
+        attributesRowSpacing = 14;
+
+        attributeRowWidth = 100;
+        attributeRowHeight = 14;
+
+        attributeIconOffsetX = 0;
+        attributeIconOffsetY = -2;
+        attributeIconSize = 16;
+
+        attributeNameOffsetX = 20;
+        attributeNameOffsetY = 2;
+
+        attributeValueOffsetX = 92;
+        attributeValueOffsetY = 2;
+
+        attributeHitboxOffsetX = 0;
+        attributeHitboxOffsetY = -2;
+        attributeHitboxWidth = 100;
+        attributeHitboxHeight = 14;
+
+        attributesHoverWidth = 168;
+        attributesHoverHeight = 34;
 
         saveConfig();
     }
