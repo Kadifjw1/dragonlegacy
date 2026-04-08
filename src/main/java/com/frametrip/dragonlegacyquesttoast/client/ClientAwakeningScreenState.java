@@ -10,6 +10,48 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class ClientAwakeningScreenState {
+    public static class AttributeLayoutData {
+        public int rowX = 8;
+        public int rowY = 14;
+        public int rowWidth = 100;
+        public int rowHeight = 14;
+
+        public int iconX = 0;
+        public int iconY = -2;
+        public int iconSize = 16;
+
+        public int nameX = 20;
+        public int nameY = 2;
+
+        public int valueX = 92;
+        public int valueY = 2;
+
+        public int hitboxX = 0;
+        public int hitboxY = -2;
+        public int hitboxWidth = 100;
+        public int hitboxHeight = 14;
+
+        public AttributeLayoutData copy() {
+            AttributeLayoutData d = new AttributeLayoutData();
+            d.rowX = rowX;
+            d.rowY = rowY;
+            d.rowWidth = rowWidth;
+            d.rowHeight = rowHeight;
+            d.iconX = iconX;
+            d.iconY = iconY;
+            d.iconSize = iconSize;
+            d.nameX = nameX;
+            d.nameY = nameY;
+            d.valueX = valueX;
+            d.valueY = valueY;
+            d.hitboxX = hitboxX;
+            d.hitboxY = hitboxY;
+            d.hitboxWidth = hitboxWidth;
+            d.hitboxHeight = hitboxHeight;
+            return d;
+        }
+    }
+
     public static class AwakeningScreenConfigData {
         public int bgX = 0;
         public int bgY = 0;
@@ -45,30 +87,13 @@ public class ClientAwakeningScreenState {
         public int attributesPanelWidth = 120;
         public int attributesPanelHeight = 80;
 
-        public int attributesContentOffsetX = 8;
-        public int attributesContentOffsetY = 14;
-        public int attributesRowSpacing = 14;
+        public int tooltipWidth = 168;
+        public int tooltipMinHeight = 34;
 
-        public int attributeRowWidth = 100;
-        public int attributeRowHeight = 14;
-
-        public int attributeIconOffsetX = 0;
-        public int attributeIconOffsetY = -2;
-        public int attributeIconSize = 16;
-
-        public int attributeNameOffsetX = 20;
-        public int attributeNameOffsetY = 2;
-
-        public int attributeValueOffsetX = 92;
-        public int attributeValueOffsetY = 2;
-
-        public int attributeHitboxOffsetX = 0;
-        public int attributeHitboxOffsetY = -2;
-        public int attributeHitboxWidth = 100;
-        public int attributeHitboxHeight = 14;
-
-        public int attributesHoverWidth = 168;
-        public int attributesHoverHeight = 34;
+        public AttributeLayoutData body = defaultBody();
+        public AttributeLayoutData mind = defaultMind();
+        public AttributeLayoutData spirit = defaultSpirit();
+        public AttributeLayoutData bond = defaultBond();
     }
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
@@ -109,33 +134,53 @@ public class ClientAwakeningScreenState {
     private static int attributesPanelWidth = 120;
     private static int attributesPanelHeight = 80;
 
-    private static int attributesContentOffsetX = 8;
-    private static int attributesContentOffsetY = 14;
-    private static int attributesRowSpacing = 14;
+    private static int tooltipWidth = 168;
+    private static int tooltipMinHeight = 34;
 
-    private static int attributeRowWidth = 100;
-    private static int attributeRowHeight = 14;
-
-    private static int attributeIconOffsetX = 0;
-    private static int attributeIconOffsetY = -2;
-    private static int attributeIconSize = 16;
-
-    private static int attributeNameOffsetX = 20;
-    private static int attributeNameOffsetY = 2;
-
-    private static int attributeValueOffsetX = 92;
-    private static int attributeValueOffsetY = 2;
-
-    private static int attributeHitboxOffsetX = 0;
-    private static int attributeHitboxOffsetY = -2;
-    private static int attributeHitboxWidth = 100;
-    private static int attributeHitboxHeight = 14;
-
-    private static int attributesHoverWidth = 168;
-    private static int attributesHoverHeight = 34;
+    private static AttributeLayoutData bodyLayout = defaultBody();
+    private static AttributeLayoutData mindLayout = defaultMind();
+    private static AttributeLayoutData spiritLayout = defaultSpirit();
+    private static AttributeLayoutData bondLayout = defaultBond();
 
     static {
         loadConfig();
+    }
+
+    public static AttributeLayoutData defaultBody() {
+        AttributeLayoutData d = new AttributeLayoutData();
+        d.rowX = 8;
+        d.rowY = 14;
+        return d;
+    }
+
+    public static AttributeLayoutData defaultMind() {
+        AttributeLayoutData d = new AttributeLayoutData();
+        d.rowX = 8;
+        d.rowY = 28;
+        return d;
+    }
+
+    public static AttributeLayoutData defaultSpirit() {
+        AttributeLayoutData d = new AttributeLayoutData();
+        d.rowX = 8;
+        d.rowY = 42;
+        return d;
+    }
+
+    public static AttributeLayoutData defaultBond() {
+        AttributeLayoutData d = new AttributeLayoutData();
+        d.rowX = 8;
+        d.rowY = 56;
+        return d;
+    }
+
+    public static AttributeLayoutData defaultLayoutFor(AwakeningMainScreen.AttributeType type) {
+        return switch (type) {
+            case BODY -> defaultBody();
+            case MIND -> defaultMind();
+            case SPIRIT -> defaultSpirit();
+            case BOND -> defaultBond();
+        };
     }
 
     public static void applyBackgroundConfig(int x, int y, int width, int height) {
@@ -216,60 +261,30 @@ public class ClientAwakeningScreenState {
         saveConfig();
     }
 
-    public static void applyAttributesConfig(
-            int panelX,
-            int panelY,
-            int panelWidth,
-            int panelHeight,
-            int contentOffsetX,
-            int contentOffsetY,
-            int rowSpacing,
-            int rowWidth,
-            int rowHeight,
-            int iconOffsetX,
-            int iconOffsetY,
-            int iconSize,
-            int nameOffsetX,
-            int nameOffsetY,
-            int valueOffsetX,
-            int valueOffsetY,
-            int hitboxOffsetX,
-            int hitboxOffsetY,
-            int hitboxWidth,
-            int hitboxHeight,
-            int hoverWidth,
-            int hoverHeight
+    public static void applyAttributesPanelConfig(int x, int y, int width, int height) {
+        attributesPanelX = x;
+        attributesPanelY = y;
+        attributesPanelWidth = Math.max(1, width);
+        attributesPanelHeight = Math.max(1, height);
+        saveConfig();
+    }
+
+    public static void applyTooltipConfig(int width, int minHeight) {
+        tooltipWidth = Math.max(1, width);
+        tooltipMinHeight = Math.max(1, minHeight);
+        saveConfig();
+    }
+
+    public static void applyAttributeLayouts(
+            AttributeLayoutData body,
+            AttributeLayoutData mind,
+            AttributeLayoutData spirit,
+            AttributeLayoutData bond
     ) {
-        attributesPanelX = panelX;
-        attributesPanelY = panelY;
-        attributesPanelWidth = Math.max(1, panelWidth);
-        attributesPanelHeight = Math.max(1, panelHeight);
-
-        attributesContentOffsetX = contentOffsetX;
-        attributesContentOffsetY = contentOffsetY;
-        attributesRowSpacing = Math.max(1, rowSpacing);
-
-        attributeRowWidth = Math.max(1, rowWidth);
-        attributeRowHeight = Math.max(1, rowHeight);
-
-        attributeIconOffsetX = iconOffsetX;
-        attributeIconOffsetY = iconOffsetY;
-        attributeIconSize = Math.max(1, iconSize);
-
-        attributeNameOffsetX = nameOffsetX;
-        attributeNameOffsetY = nameOffsetY;
-
-        attributeValueOffsetX = valueOffsetX;
-        attributeValueOffsetY = valueOffsetY;
-
-        attributeHitboxOffsetX = hitboxOffsetX;
-        attributeHitboxOffsetY = hitboxOffsetY;
-        attributeHitboxWidth = Math.max(1, hitboxWidth);
-        attributeHitboxHeight = Math.max(1, hitboxHeight);
-
-        attributesHoverWidth = Math.max(1, hoverWidth);
-        attributesHoverHeight = Math.max(1, hoverHeight);
-
+        bodyLayout = body.copy();
+        mindLayout = mind.copy();
+        spiritLayout = spirit.copy();
+        bondLayout = bond.copy();
         saveConfig();
     }
 
@@ -279,30 +294,13 @@ public class ClientAwakeningScreenState {
         attributesPanelWidth = 120;
         attributesPanelHeight = 80;
 
-        attributesContentOffsetX = 8;
-        attributesContentOffsetY = 14;
-        attributesRowSpacing = 14;
+        tooltipWidth = 168;
+        tooltipMinHeight = 34;
 
-        attributeRowWidth = 100;
-        attributeRowHeight = 14;
-
-        attributeIconOffsetX = 0;
-        attributeIconOffsetY = -2;
-        attributeIconSize = 16;
-
-        attributeNameOffsetX = 20;
-        attributeNameOffsetY = 2;
-
-        attributeValueOffsetX = 92;
-        attributeValueOffsetY = 2;
-
-        attributeHitboxOffsetX = 0;
-        attributeHitboxOffsetY = -2;
-        attributeHitboxWidth = 100;
-        attributeHitboxHeight = 14;
-
-        attributesHoverWidth = 168;
-        attributesHoverHeight = 34;
+        bodyLayout = defaultBody();
+        mindLayout = defaultMind();
+        spiritLayout = defaultSpirit();
+        bondLayout = defaultBond();
 
         saveConfig();
     }
@@ -341,30 +339,13 @@ public class ClientAwakeningScreenState {
     public static int getAttributesPanelWidth() { return attributesPanelWidth; }
     public static int getAttributesPanelHeight() { return attributesPanelHeight; }
 
-    public static int getAttributesContentOffsetX() { return attributesContentOffsetX; }
-    public static int getAttributesContentOffsetY() { return attributesContentOffsetY; }
-    public static int getAttributesRowSpacing() { return attributesRowSpacing; }
+    public static int getTooltipWidth() { return tooltipWidth; }
+    public static int getTooltipMinHeight() { return tooltipMinHeight; }
 
-    public static int getAttributeRowWidth() { return attributeRowWidth; }
-    public static int getAttributeRowHeight() { return attributeRowHeight; }
-
-    public static int getAttributeIconOffsetX() { return attributeIconOffsetX; }
-    public static int getAttributeIconOffsetY() { return attributeIconOffsetY; }
-    public static int getAttributeIconSize() { return attributeIconSize; }
-
-    public static int getAttributeNameOffsetX() { return attributeNameOffsetX; }
-    public static int getAttributeNameOffsetY() { return attributeNameOffsetY; }
-
-    public static int getAttributeValueOffsetX() { return attributeValueOffsetX; }
-    public static int getAttributeValueOffsetY() { return attributeValueOffsetY; }
-
-    public static int getAttributeHitboxOffsetX() { return attributeHitboxOffsetX; }
-    public static int getAttributeHitboxOffsetY() { return attributeHitboxOffsetY; }
-    public static int getAttributeHitboxWidth() { return attributeHitboxWidth; }
-    public static int getAttributeHitboxHeight() { return attributeHitboxHeight; }
-
-    public static int getAttributesHoverWidth() { return attributesHoverWidth; }
-    public static int getAttributesHoverHeight() { return attributesHoverHeight; }
+    public static AttributeLayoutData getBodyLayout() { return bodyLayout.copy(); }
+    public static AttributeLayoutData getMindLayout() { return mindLayout.copy(); }
+    public static AttributeLayoutData getSpiritLayout() { return spiritLayout.copy(); }
+    public static AttributeLayoutData getBondLayout() { return bondLayout.copy(); }
 
     private static void loadConfig() {
         try {
@@ -414,30 +395,13 @@ public class ClientAwakeningScreenState {
                 attributesPanelWidth = Math.max(1, data.attributesPanelWidth);
                 attributesPanelHeight = Math.max(1, data.attributesPanelHeight);
 
-                attributesContentOffsetX = data.attributesContentOffsetX;
-                attributesContentOffsetY = data.attributesContentOffsetY;
-                attributesRowSpacing = Math.max(1, data.attributesRowSpacing);
+                tooltipWidth = Math.max(1, data.tooltipWidth);
+                tooltipMinHeight = Math.max(1, data.tooltipMinHeight);
 
-                attributeRowWidth = Math.max(1, data.attributeRowWidth);
-                attributeRowHeight = Math.max(1, data.attributeRowHeight);
-
-                attributeIconOffsetX = data.attributeIconOffsetX;
-                attributeIconOffsetY = data.attributeIconOffsetY;
-                attributeIconSize = Math.max(1, data.attributeIconSize);
-
-                attributeNameOffsetX = data.attributeNameOffsetX;
-                attributeNameOffsetY = data.attributeNameOffsetY;
-
-                attributeValueOffsetX = data.attributeValueOffsetX;
-                attributeValueOffsetY = data.attributeValueOffsetY;
-
-                attributeHitboxOffsetX = data.attributeHitboxOffsetX;
-                attributeHitboxOffsetY = data.attributeHitboxOffsetY;
-                attributeHitboxWidth = Math.max(1, data.attributeHitboxWidth);
-                attributeHitboxHeight = Math.max(1, data.attributeHitboxHeight);
-
-                attributesHoverWidth = Math.max(1, data.attributesHoverWidth);
-                attributesHoverHeight = Math.max(1, data.attributesHoverHeight);
+                bodyLayout = data.body != null ? data.body.copy() : defaultBody();
+                mindLayout = data.mind != null ? data.mind.copy() : defaultMind();
+                spiritLayout = data.spirit != null ? data.spirit.copy() : defaultSpirit();
+                bondLayout = data.bond != null ? data.bond.copy() : defaultBond();
             }
         } catch (Exception e) {
             System.out.println("[DragonLegacyQuestToast] Failed to load awakening screen config: " + e.getMessage());
@@ -482,30 +446,13 @@ public class ClientAwakeningScreenState {
             data.attributesPanelWidth = attributesPanelWidth;
             data.attributesPanelHeight = attributesPanelHeight;
 
-            data.attributesContentOffsetX = attributesContentOffsetX;
-            data.attributesContentOffsetY = attributesContentOffsetY;
-            data.attributesRowSpacing = attributesRowSpacing;
+            data.tooltipWidth = tooltipWidth;
+            data.tooltipMinHeight = tooltipMinHeight;
 
-            data.attributeRowWidth = attributeRowWidth;
-            data.attributeRowHeight = attributeRowHeight;
-
-            data.attributeIconOffsetX = attributeIconOffsetX;
-            data.attributeIconOffsetY = attributeIconOffsetY;
-            data.attributeIconSize = attributeIconSize;
-
-            data.attributeNameOffsetX = attributeNameOffsetX;
-            data.attributeNameOffsetY = attributeNameOffsetY;
-
-            data.attributeValueOffsetX = attributeValueOffsetX;
-            data.attributeValueOffsetY = attributeValueOffsetY;
-
-            data.attributeHitboxOffsetX = attributeHitboxOffsetX;
-            data.attributeHitboxOffsetY = attributeHitboxOffsetY;
-            data.attributeHitboxWidth = attributeHitboxWidth;
-            data.attributeHitboxHeight = attributeHitboxHeight;
-
-            data.attributesHoverWidth = attributesHoverWidth;
-            data.attributesHoverHeight = attributesHoverHeight;
+            data.body = bodyLayout.copy();
+            data.mind = mindLayout.copy();
+            data.spirit = spiritLayout.copy();
+            data.bond = bondLayout.copy();
 
             try (Writer writer = Files.newBufferedWriter(CONFIG_PATH)) {
                 GSON.toJson(data, writer);
