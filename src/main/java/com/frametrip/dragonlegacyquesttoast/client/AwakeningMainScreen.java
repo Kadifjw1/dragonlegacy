@@ -8,8 +8,8 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.FormattedText;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.entity.LivingEntity;
 import org.joml.Quaternionf;
 
@@ -91,7 +91,7 @@ public class AwakeningMainScreen extends Screen {
         }
     }
 
-    private enum AttributeType {
+    public enum AttributeType {
         BODY("Тело", 5, "Физическая мощь, стойкость и выживание.", BODY_ICON_TEXTURE),
         MIND("Разум", 2, "Знания, мышление, понимание и расчёт.", MIND_ICON_TEXTURE),
         SPIRIT("Дух", 7, "Воля, внутренняя энергия и сила пробуждения.", SPIRIT_ICON_TEXTURE),
@@ -982,7 +982,7 @@ public class AwakeningMainScreen extends Screen {
         int padding = 6;
         int textWidth = Math.max(20, draftTooltipWidth - padding * 2);
 
-        List<FormattedText> wrapped = this.font.split(Component.literal(type.description()), textWidth);
+        List<FormattedCharSequence> wrapped = this.font.split(Component.literal(type.description()), textWidth);
 
         int titleHeight = 10;
         int lineHeight = 9;
@@ -996,7 +996,7 @@ public class AwakeningMainScreen extends Screen {
 
         int textY = tooltipY + padding + 12;
         for (int i = 0; i < wrapped.size(); i++) {
-            guiGraphics.drawString(this.font, wrapped.get(i).getVisualOrderText(), tooltipX + padding, textY + i * lineHeight, 0xFFFFFF, false);
+            guiGraphics.drawString(this.font, wrapped.get(i), tooltipX + padding, textY + i * lineHeight, 0xFFFFFF, false);
         }
     }
 
