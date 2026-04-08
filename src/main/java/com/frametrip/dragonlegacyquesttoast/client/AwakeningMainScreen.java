@@ -179,6 +179,7 @@ public class AwakeningMainScreen extends Screen {
     }
 
     private AwakeningPathType hoveredPath = null;
+    private AwakeningPathType selectedPath = null;
     private AttributeType hoveredAttribute = null;
 
     private boolean editMode = false;
@@ -625,12 +626,18 @@ public class AwakeningMainScreen extends Screen {
 
         renderAttributesPanel(guiGraphics, bgX, bgY);
 
+        AwakeningPathType infoPath = hoveredPath != null ? hoveredPath : selectedPath;
+        if (infoPath != null) {
+            renderPathInfoPanel(guiGraphics, bgX, bgY, infoPath);
+        }
+
         if (hoveredAttribute != null) {
             renderAttributeTooltip(guiGraphics, mouseX, mouseY, hoveredAttribute);
         }
 
-        if (hoveredPath != null && (!editMode || previewMode)) {
-            guiGraphics.drawCenteredString(this.font, hoveredPath.getTitle(), this.width / 2, bgY + 8, 0xE6D7B5);
+        AwakeningPathType titlePath = hoveredPath != null ? hoveredPath : selectedPath;
+        if (titlePath != null && (!editMode || previewMode)) {
+            guiGraphics.drawCenteredString(this.font, titlePath.getTitle(), this.width / 2, bgY + 8, 0xE6D7B5);
         }
 
         if (editMode && !previewMode) {
@@ -794,16 +801,26 @@ public class AwakeningMainScreen extends Screen {
             boolean hovered
     ) {
         int size = draftPathFrameSize;
+        boolean locked = isPathLocked(pathType);
+        boolean selected = selectedPath == pathType;
 
         guiGraphics.blit(
-                hovered ? activeTexture : normalTexture,
+                (hovered || selected) ? activeTexture : normalTexture,
                 x, y,
                 0, 0,
                 size, size,
                 size, size
         );
 
-        if (hovered && (!editMode || previewMode)) {
+        if (locked) {
+            guiGraphics.fill(x, y, x + size, y + size, 0x99000000);
+            drawBox(guiGraphics, x, y, size, size, 0xAA553333);
+            guiGraphics.drawCenteredString(this.font, "LOCK", x + size / 2, y + size / 2 - 4, 0xFFB26A6A);
+        } else if (selected) {
+            drawBox(guiGraphics, x - 2, y - 2, size + 4, size + 4, 0xCCFFD98C);
+        }
+
+        if ((hovered || selected) && (!editMode || previewMode)) {
             renderSimpleHoverAura(guiGraphics, x, y, size, pathType);
         }
     }
@@ -1000,6 +1017,57 @@ public class AwakeningMainScreen extends Screen {
         }
     }
 
+    private void renderPathInfoPanel(GuiGraphics guiGraphics, int bgX, int bgY, AwakeningPathType pathType) {
+        int panelX = bgX + 192;
+        int panelY = bgY + 144;
+        int panelW = 118;
+        int panelH = 62;
+
+        guiGraphics.fill(panelX, panelY, panelX + panelW, panelY + panelH, 0xCC111111);
+        drawBox(guiGraphics, panelX, panelY, panelW, panelH, 0x99E6D7B5);
+
+        String title = pathType.getTitle();
+        String status = getPathStatusText(pathType);
+        String desc = getPathShortDescription(pathType);
+
+        guiGraphics.drawString(this.font, title, panelX + 6, panelY + 6, 0xE6D7B5, false);
+        guiGraphics.drawString(this.font, status, panelX + 6, panelY + 18, getPathStatusColor(pathType), false);
+
+        int textWidth = panelW - 12;
+        List<FormattedCharSequence> lines = this.font.split(Component.literal(desc), textWidth);
+
+        int textY = panelY + 32;
+        for (int i = 0; i < lines.size() && i < 3; i++) {
+            guiGraphics.drawString(this.font, lines.get(i), panelX + 6, textY + i * 9, 0xFFFFFF, false);
+        }
+    }
+
+    private String getPathShortDescription(AwakeningPathType pathType) {
+        return switch (pathType) {
+            case FIRE -> "Сила пламени, напор, урон и агрессия.";
+            case ICE -> "Контроль, холод, замедление и стойкость.";
+            case STORM -> "Скорость, разряды, рывки и давление.";
+            case VOID -> "Искажение, тайна, нестабильная сила пустоты.";
+        };
+    }
+
+    private boolean isPathLocked(AwakeningPathType pathType) {
+        return switch (pathType) {
+            case FIRE -> false;
+            case ICE -> false;
+            case STORM -> true;
+            case VOID -> true;
+        };
+    }
+
+    private String getPathStatusText(AwakeningPathType pathType) {
+        return isPathLocked(pathType) ? "Заблокирован" : "Открыт";
+    }
+
+    private int getPathStatusColor(AwakeningPathType pathType) {
+        return isPathLocked(pathType) ? 0xD86A6A : 0x8FD98C;
+    }
+
     private AwakeningPathType getPathAt(double mouseX, double mouseY) {
         int bgX = draftBgX;
         int bgY = draftBgY;
@@ -1022,8 +1090,17 @@ public class AwakeningMainScreen extends Screen {
         if (!editMode) {
             AwakeningPathType clickedPath = getPathAt(mouseX, mouseY);
             if (clickedPath != null) {
-                if (this.minecraft != null) {
-                    this.minecraft.setScreen(new AwakeningPathDetailScreen(this, clickedPath));
+                if (isPathLocked(clickedPath)) {
+                    selectedPath = clickedPath;
+                    return true;
+                }
+
+                if (selectedPath == clickedPath) {
+                    if (this.minecraft != null) {
+                        this.minecraft.setScreen(new AwakeningPathDetailScreen(this, clickedPath));
+                    }
+                } else {
+                    selectedPath = clickedPath;
                 }
                 return true;
             }
