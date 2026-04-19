@@ -813,15 +813,17 @@ public class AwakeningMainScreen extends Screen {
         );
 
         if (locked) {
-            guiGraphics.fill(x, y, x + size, y + size, 0x99000000);
-            drawBox(guiGraphics, x, y, size, size, 0xAA553333);
-            guiGraphics.drawCenteredString(this.font, "LOCK", x + size / 2, y + size / 2 - 4, 0xFFB26A6A);
+            renderLockedSealOverlay(guiGraphics, x, y, size, hovered);
         } else if (selected) {
             drawBox(guiGraphics, x - 2, y - 2, size + 4, size + 4, 0xCCFFD98C);
         }
 
-        if ((hovered || selected) && (!editMode || previewMode)) {
+        if (!locked && (hovered || selected) && (!editMode || previewMode)) {
             renderSimpleHoverAura(guiGraphics, x, y, size, pathType);
+        }
+
+        if (locked && hovered && (!editMode || previewMode)) {
+            renderLockedHoverAura(guiGraphics, x, y, size);
         }
     }
 
@@ -834,6 +836,85 @@ public class AwakeningMainScreen extends Screen {
         };
 
         drawBox(guiGraphics, x - 2, y - 2, size + 4, size + 4, color);
+    }
+
+    private void renderLockedSealOverlay(GuiGraphics guiGraphics, int x, int y, int size, boolean hovered) {
+        int veilColor = hovered ? 0x66000000 : 0x88000000;
+        int outerColor = 0xAA6E584A;
+        int innerColor = 0x88614B3F;
+        int chainColor = 0xCC9A7B61;
+        int chainShadow = 0x884E3C31;
+        int sigilColor = 0xE2C29D;
+
+        guiGraphics.fill(x, y, x + size, y + size, veilColor);
+
+        drawBox(guiGraphics, x, y, size, size, outerColor);
+        drawBox(guiGraphics, x + 1, y + 1, size - 2, size - 2, innerColor);
+
+        drawDiagonalSeal(guiGraphics, x + 7, y + 7, x + size - 8, y + size - 8, chainShadow);
+        drawDiagonalSeal(guiGraphics, x + size - 8, y + 7, x + 7, y + size - 8, chainShadow);
+
+        drawDiagonalSeal(guiGraphics, x + 8, y + 7, x + size - 7, y + size - 8, chainColor);
+        drawDiagonalSeal(guiGraphics, x + size - 7, y + 7, x + 8, y + size - 8, chainColor);
+
+        drawChainLineHorizontal(guiGraphics, x + 6, y + size / 2 - 1, size - 12, chainColor, chainShadow);
+        drawChainLineVertical(guiGraphics, x + size / 2 - 1, y + 6, size - 12, chainColor, chainShadow);
+
+        guiGraphics.drawCenteredString(this.font, "◆", x + size / 2, y + size / 2 - 4, sigilColor);
+
+        guiGraphics.fill(x + 3, y + 3, x + 6, y + 4, outerColor);
+        guiGraphics.fill(x + 3, y + 3, x + 4, y + 6, outerColor);
+
+        guiGraphics.fill(x + size - 6, y + 3, x + size - 3, y + 4, outerColor);
+        guiGraphics.fill(x + size - 4, y + 3, x + size - 3, y + 6, outerColor);
+
+        guiGraphics.fill(x + 3, y + size - 4, x + 6, y + size - 3, outerColor);
+        guiGraphics.fill(x + 3, y + size - 6, x + 4, y + size - 3, outerColor);
+
+        guiGraphics.fill(x + size - 6, y + size - 4, x + size - 3, y + size - 3, outerColor);
+        guiGraphics.fill(x + size - 4, y + size - 6, x + size - 3, y + size - 3, outerColor);
+    }
+
+    private void renderLockedHoverAura(GuiGraphics guiGraphics, int x, int y, int size) {
+        drawBox(guiGraphics, x - 2, y - 2, size + 4, size + 4, 0x88745D4E);
+        drawBox(guiGraphics, x - 4, y - 4, size + 8, size + 8, 0x444C3B31);
+    }
+
+    private void drawDiagonalSeal(GuiGraphics guiGraphics, int x1, int y1, int x2, int y2, int color) {
+        int steps = Math.max(Math.abs(x2 - x1), Math.abs(y2 - y1));
+        for (int i = 0; i <= steps; i++) {
+            int x = x1 + (x2 - x1) * i / steps;
+            int y = y1 + (y2 - y1) * i / steps;
+            guiGraphics.fill(x, y, x + 1, y + 1, color);
+        }
+    }
+
+    private void drawChainLineHorizontal(GuiGraphics guiGraphics, int x, int y, int width, int color, int shadowColor) {
+        for (int i = 0; i < width; i += 6) {
+            int segW = Math.min(4, width - i);
+
+            guiGraphics.fill(x + i, y + 1, x + i + segW, y + 2, shadowColor);
+            guiGraphics.fill(x + i, y, x + i + segW, y + 1, color);
+
+            if (i + 4 < width) {
+                guiGraphics.fill(x + i + 4, y - 1, x + i + 5, y + 2, shadowColor);
+                guiGraphics.fill(x + i + 4, y - 1, x + i + 5, y + 1, color);
+            }
+        }
+    }
+
+    private void drawChainLineVertical(GuiGraphics guiGraphics, int x, int y, int height, int color, int shadowColor) {
+        for (int i = 0; i < height; i += 6) {
+            int segH = Math.min(4, height - i);
+
+            guiGraphics.fill(x + 1, y + i, x + 2, y + i + segH, shadowColor);
+            guiGraphics.fill(x, y + i, x + 1, y + i + segH, color);
+
+            if (i + 4 < height) {
+                guiGraphics.fill(x - 1, y + i + 4, x + 2, y + i + 5, shadowColor);
+                guiGraphics.fill(x - 1, y + i + 4, x + 1, y + i + 5, color);
+            }
+        }
     }
 
     private void renderPlayerInCenter(GuiGraphics guiGraphics, int frameX, int frameY, int frameW, int frameH, int mouseX, int mouseY) {
@@ -1043,6 +1124,15 @@ public class AwakeningMainScreen extends Screen {
     }
 
     private String getPathShortDescription(AwakeningPathType pathType) {
+        if (isPathLocked(pathType)) {
+            return switch (pathType) {
+                case FIRE -> "Печать пламени сокрыта. Этот путь ещё не пробуждён.";
+                case ICE -> "Холодная печать молчит. Путь остаётся закрытым.";
+                case STORM -> "Грозовой знак запечатан. Сила ещё не откликнулась.";
+                case VOID -> "Печать пустоты скрыта глубокой завесой.";
+            };
+        }
+
         return switch (pathType) {
             case FIRE -> "Сила пламени, напор, урон и агрессия.";
             case ICE -> "Контроль, холод, замедление и стойкость.";
@@ -1061,11 +1151,11 @@ public class AwakeningMainScreen extends Screen {
     }
 
     private String getPathStatusText(AwakeningPathType pathType) {
-        return isPathLocked(pathType) ? "Заблокирован" : "Открыт";
+        return isPathLocked(pathType) ? "Запечатан" : "Открыт";
     }
 
     private int getPathStatusColor(AwakeningPathType pathType) {
-        return isPathLocked(pathType) ? 0xD86A6A : 0x8FD98C;
+        return isPathLocked(pathType) ? 0xB8876B : 0x8FD98C;
     }
 
     private AwakeningPathType getPathAt(double mouseX, double mouseY) {
