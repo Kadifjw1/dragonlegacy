@@ -39,27 +39,23 @@ public class ModCommands {
         dispatcher.register(
                 Commands.literal("dlquesttoast")
                         .requires(source -> source.hasPermission(2))
-                        .then(
-                                Commands.argument("player", EntityArgument.player())
-                                        .then(
-                                                Commands.argument("type", StringArgumentType.word())
-                                                        .executes(ctx -> {
-                                                            ServerPlayer player = EntityArgument.getPlayer(ctx, "player");
-                                                            String type = StringArgumentType.getString(ctx, "type");
+                        .then(Commands.argument("player", EntityArgument.player())
+                                .then(Commands.argument("type", StringArgumentType.word())
+                                        .executes(ctx -> {
+                                            ServerPlayer player = EntityArgument.getPlayer(ctx, "player");
+                                            String type = StringArgumentType.getString(ctx, "type");
 
-                                                            if (!"accepted".equals(type) && !"completed".equals(type) && !"updated".equals(type)) {
-                                                                ctx.getSource().sendFailure(Component.literal("Type must be accepted, completed or updated"));
-                                                                return 0;
-                                                            }
+                                            if (!"accepted".equals(type) && !"completed".equals(type) && !"updated".equals(type)) {
+                                                ctx.getSource().sendFailure(Component.literal("Type must be accepted, completed or updated"));
+                                                return 0;
+                                            }
 
-                                                            ModNetwork.CHANNEL.send(
-                                                                    PacketDistributor.PLAYER.with(() -> player),
-                                                                    new QuestToastPacket(type, "")
-                                                            );
-                                                            return 1;
-                                                        })
-                                        )
-                        )
+                                            ModNetwork.CHANNEL.send(
+                                                    PacketDistributor.PLAYER.with(() -> player),
+                                                    new QuestToastPacket(type, "")
+                                            );
+                                            return 1;
+                                        })))
         );
     }
 
@@ -266,34 +262,26 @@ public class ModCommands {
         dispatcher.register(
                 Commands.literal("dlawakening")
                         .requires(source -> source.hasPermission(2))
-                        .then(
-                                Commands.literal("open")
-                                        .then(
-                                                Commands.argument("player", EntityArgument.player())
-                                                        .executes(ctx -> {
-                                                            ServerPlayer player = EntityArgument.getPlayer(ctx, "player");
-                                                            ModNetwork.CHANNEL.send(
-                                                                    PacketDistributor.PLAYER.with(() -> player),
-                                                                    new OpenAwakeningScreenPacket()
-                                                            );
-                                                            return 1;
-                                                        })
-                                        )
-                        )
-                        .then(
-                                Commands.literal("fire")
-                                        .then(
-                                                Commands.argument("player", EntityArgument.player())
-                                                        .executes(ctx -> {
-                                                            ServerPlayer player = EntityArgument.getPlayer(ctx, "player");
-                                                            ModNetwork.CHANNEL.send(
-                                                                    PacketDistributor.PLAYER.with(() -> player),
-                                                                    new OpenAwakeningFirePathScreenPacket()
-                                                            );
-                                                            return 1;
-                                                        })
-                                        )
-                        )
+                        .then(Commands.literal("open")
+                                .then(Commands.argument("player", EntityArgument.player())
+                                        .executes(ctx -> {
+                                            ServerPlayer player = EntityArgument.getPlayer(ctx, "player");
+                                            ModNetwork.CHANNEL.send(
+                                                    PacketDistributor.PLAYER.with(() -> player),
+                                                    new OpenAwakeningScreenPacket()
+                                            );
+                                            return 1;
+                                        })))
+                        .then(Commands.literal("fire")
+                                .then(Commands.argument("player", EntityArgument.player())
+                                        .executes(ctx -> {
+                                            ServerPlayer player = EntityArgument.getPlayer(ctx, "player");
+                                            ModNetwork.CHANNEL.send(
+                                                    PacketDistributor.PLAYER.with(() -> player),
+                                                    new OpenAwakeningFirePathScreenPacket()
+                                            );
+                                            return 1;
+                                        })))
         );
     }
 
@@ -505,21 +493,17 @@ public class ModCommands {
         dispatcher.register(
                 Commands.literal("dluieditor")
                         .requires(source -> source.hasPermission(2))
-                        .then(
-                                Commands.literal("open")
-                                        .then(
-                                                Commands.argument("player", EntityArgument.player())
-                                                        .executes(ctx -> {
-                                                            ServerPlayer player = EntityArgument.getPlayer(ctx, "player");
+                        .then(Commands.literal("open")
+                                .then(Commands.argument("player", EntityArgument.player())
+                                        .executes(ctx -> {
+                                            ServerPlayer player = EntityArgument.getPlayer(ctx, "player");
 
-                                                            ModNetwork.CHANNEL.send(
-                                                                    PacketDistributor.PLAYER.with(() -> player),
-                                                                    new OpenUiEditorMenuPacket()
-                                                            );
-                                                            return 1;
-                                                        })
-                                        )
-                        )
+                                            ModNetwork.CHANNEL.send(
+                                                    PacketDistributor.PLAYER.with(() -> player),
+                                                    new OpenUiEditorMenuPacket()
+                                            );
+                                            return 1;
+                                        })))
         );
     }
 }
