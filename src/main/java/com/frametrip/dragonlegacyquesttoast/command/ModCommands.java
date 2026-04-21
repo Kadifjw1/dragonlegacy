@@ -6,6 +6,7 @@ import com.frametrip.dragonlegacyquesttoast.network.AwakeningPathsConfigPacket;
 import com.frametrip.dragonlegacyquesttoast.network.ModNetwork;
 import com.frametrip.dragonlegacyquesttoast.network.NpcDialogueConfigPacket;
 import com.frametrip.dragonlegacyquesttoast.network.NpcDialoguePacket;
+import com.frametrip.dragonlegacyquesttoast.network.OpenAwakeningFirePathScreenPacket;
 import com.frametrip.dragonlegacyquesttoast.network.OpenAwakeningScreenPacket;
 import com.frametrip.dragonlegacyquesttoast.network.OpenUiEditorMenuPacket;
 import com.frametrip.dragonlegacyquesttoast.network.QuestToastConfigPacket;
@@ -265,20 +266,26 @@ public class ModCommands {
         dispatcher.register(
                 Commands.literal("dlawakening")
                         .requires(source -> source.hasPermission(2))
-                        .then(
-                                Commands.literal("open")
-                                        .then(
-                                                Commands.argument("player", EntityArgument.player())
-                                                        .executes(ctx -> {
-                                                            ServerPlayer player = EntityArgument.getPlayer(ctx, "player");
-                                                            ModNetwork.CHANNEL.send(
-                                                                    PacketDistributor.PLAYER.with(() -> player),
-                                                                    new OpenAwakeningScreenPacket()
-                                                            );
-                                                            return 1;
-                                                        })
-                                        )
-                        )
+                        .then(Commands.literal("open")
+                                .then(Commands.argument("player", EntityArgument.player())
+                                        .executes(ctx -> {
+                                            ServerPlayer player = EntityArgument.getPlayer(ctx, "player");
+                                            ModNetwork.CHANNEL.send(
+                                                    PacketDistributor.PLAYER.with(() -> player),
+                                                    new OpenAwakeningScreenPacket()
+                                            );
+                                            return 1;
+                                        })))
+                        .then(Commands.literal("fire")
+                                .then(Commands.argument("player", EntityArgument.player())
+                                        .executes(ctx -> {
+                                            ServerPlayer player = EntityArgument.getPlayer(ctx, "player");
+                                            ModNetwork.CHANNEL.send(
+                                                    PacketDistributor.PLAYER.with(() -> player),
+                                                    new OpenAwakeningFirePathScreenPacket()
+                                            );
+                                            return 1;
+                                        })))
         );
     }
 
