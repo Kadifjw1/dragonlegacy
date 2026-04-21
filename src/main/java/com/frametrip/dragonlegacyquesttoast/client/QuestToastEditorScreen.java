@@ -1,12 +1,9 @@
 package com.frametrip.dragonlegacyquesttoast.client;
 
-import com.frametrip.dragonlegacyquesttoast.network.ModNetwork;
-import com.frametrip.dragonlegacyquesttoast.network.QuestToastPacket;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.minecraftforge.network.PacketDistributor;
 
 public class QuestToastEditorScreen extends Screen {
     private final Screen parent;
@@ -19,8 +16,6 @@ public class QuestToastEditorScreen extends Screen {
     private int draftStay = 140;
     private int draftFadeOut = 8;
     private int draftStartOffsetX = 18;
-
-    private boolean previewMode = false;
 
     public QuestToastEditorScreen(Screen parent) {
         super(Component.literal("Редактор плашки заданий"));
@@ -42,10 +37,7 @@ public class QuestToastEditorScreen extends Screen {
 
         this.addRenderableWidget(
                 Button.builder(Component.literal("Превью"), b -> {
-                    previewMode = !previewMode;
-                    if (previewMode) {
-                        showPreview();
-                    }
+                    showPreview();
                 }).bounds(panelX + 74, panelY, 60, 20)
                         .build()
         );
@@ -137,10 +129,7 @@ public class QuestToastEditorScreen extends Screen {
     }
 
     private void showPreview() {
-        ModNetwork.CHANNEL.send(
-                PacketDistributor.SERVER.noArg(),
-                new QuestToastPacket("accepted", "")
-        );
+        ClientQuestToastManager.show("accepted", "");
     }
 
     @Override
