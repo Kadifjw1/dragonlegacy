@@ -17,8 +17,6 @@ public class QuestToastEditorScreen extends Screen {
     private int draftFadeOut = 8;
     private int draftStartOffsetX = 18;
 
-    private boolean previewMode = false;
-
     public QuestToastEditorScreen(Screen parent) {
         super(Component.literal("Редактор плашки заданий"));
         this.parent = parent;
@@ -39,10 +37,7 @@ public class QuestToastEditorScreen extends Screen {
 
         this.addRenderableWidget(
                 Button.builder(Component.literal("Превью"), b -> {
-                    previewMode = !previewMode;
-                    if (previewMode) {
-                        showPreview();
-                    }
+                    showPreview();
                 }).bounds(panelX + 74, panelY, 60, 20)
                         .build()
         );

@@ -23,6 +23,7 @@ public class ModNetwork {
         CHANNEL.registerMessage(packetId++, NpcDialoguePacket.class, NpcDialoguePacket::encode, NpcDialoguePacket::decode, NpcDialoguePacket::handle);
         CHANNEL.registerMessage(packetId++, NpcDialogueConfigPacket.class, NpcDialogueConfigPacket::encode, NpcDialogueConfigPacket::decode, NpcDialogueConfigPacket::handle);
         CHANNEL.registerMessage(packetId++, OpenAwakeningScreenPacket.class, OpenAwakeningScreenPacket::encode, OpenAwakeningScreenPacket::decode, OpenAwakeningScreenPacket::handle);
+        CHANNEL.registerMessage(packetId++, OpenAwakeningFirePathScreenPacket.class, OpenAwakeningFirePathScreenPacket::encode, OpenAwakeningFirePathScreenPacket::decode, OpenAwakeningFirePathScreenPacket::handle);
         CHANNEL.registerMessage(packetId++, AwakeningBackgroundConfigPacket.class, AwakeningBackgroundConfigPacket::encode, AwakeningBackgroundConfigPacket::decode, AwakeningBackgroundConfigPacket::handle);
         CHANNEL.registerMessage(packetId++, AwakeningCenterConfigPacket.class, AwakeningCenterConfigPacket::encode, AwakeningCenterConfigPacket::decode, AwakeningCenterConfigPacket::handle);
         CHANNEL.registerMessage(packetId++, AwakeningPathsConfigPacket.class, AwakeningPathsConfigPacket::encode, AwakeningPathsConfigPacket::decode, AwakeningPathsConfigPacket::handle);
