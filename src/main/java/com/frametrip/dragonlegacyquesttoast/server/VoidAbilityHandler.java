@@ -30,7 +30,7 @@ public class VoidAbilityHandler {
     private static final Random RNG = new Random();
  
     private static boolean has(ServerPlayer p, String id) {
-        return p.isCreative() || PlayerAbilityManager.hasAbility(p.getUUID(), id);
+        return p.isCreative() || PlayerAbilityManager.isAbilityEnabled(p.getUUID(), id);
     }
  
     // ─── HIT events ──────────────────────────────────────────────────────────
