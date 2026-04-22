@@ -37,3 +37,11 @@ public class SyncAbilitiesPacket {
         ctx.setPacketHandled(true);
     }
 }
+ 
+    public static void handle(SyncAbilitiesPacket msg, Supplier<NetworkEvent.Context> ctxSupplier) {
+        NetworkEvent.Context ctx = ctxSupplier.get();
+        ctx.enqueueWork(() -> ClientPlayerAbilityState.sync(msg.abilities, msg.disabledAbilities, msg.points));
+        ctx.setPacketHandled(true);
+    }
+}
+ 
