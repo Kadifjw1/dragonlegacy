@@ -61,11 +61,14 @@ public class DragonLegacyQuestToastMod {
         java.util.Set<String> abilities = player.isCreative()
                 ? AbilityRegistry.getAllIds()
                 : PlayerAbilityManager.getAbilities(player.getUUID());
+        java.util.Set<String> disabled = player.isCreative()
+                ? java.util.Collections.emptySet()
+                : PlayerAbilityManager.getDisabledAbilities(player.getUUID());
         int points = PlayerAbilityManager.getPoints(player.getUUID());
  
         ModNetwork.CHANNEL.send(
                 PacketDistributor.PLAYER.with(() -> player),
-                new SyncAbilitiesPacket(abilities, points)
+                new SyncAbilitiesPacket(abilities, disabled, points)
         );
     }
 }

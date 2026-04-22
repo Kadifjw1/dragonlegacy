@@ -6,6 +6,7 @@ import com.frametrip.dragonlegacyquesttoast.network.AwakeningPathsConfigPacket;
 import com.frametrip.dragonlegacyquesttoast.network.ModNetwork;
 import com.frametrip.dragonlegacyquesttoast.network.NpcDialogueConfigPacket;
 import com.frametrip.dragonlegacyquesttoast.network.NpcDialoguePacket;
+import com.frametrip.dragonlegacyquesttoast.network.OpenAbilityToggleScreenPacket;
 import com.frametrip.dragonlegacyquesttoast.network.OpenAwakeningScreenPacket;
 import com.frametrip.dragonlegacyquesttoast.network.OpenUiEditorMenuPacket;
 import com.frametrip.dragonlegacyquesttoast.network.QuestToastConfigPacket;
@@ -35,6 +36,7 @@ public class ModCommands {
         registerAwakeningCenterCommand(dispatcher);
         registerAwakeningPathsCommand(dispatcher);
         registerUiEditorMenuCommand(dispatcher);
+        registerAbilityScreenCommand(dispatcher);
         registerAbilityCommand(dispatcher);
         registerAbilityPointsCommand(dispatcher);
     }
@@ -523,8 +525,30 @@ public class ModCommands {
                 PacketDistributor.PLAYER.with(() -> player),
                 new SyncAbilitiesPacket(
                         PlayerAbilityManager.getAbilities(player.getUUID()),
+                        PlayerAbilityManager.getDisabledAbilities(player.getUUID()),
                         PlayerAbilityManager.getPoints(player.getUUID())
                 )
+        );
+    }
+
+    private static void registerAbilityScreenCommand(CommandDispatcher<CommandSourceStack> dispatcher) {
+        dispatcher.register(
+                Commands.literal("dlabilityscreen")
+                        .requires(source -> source.hasPermission(2))
+                        .then(
+                                Commands.literal("open")
+                                        .then(
+                                                Commands.argument("player", EntityArgument.player())
+                                                        .executes(ctx -> {
+                                                            ServerPlayer player = EntityArgument.getPlayer(ctx, "player");
+                                                            ModNetwork.CHANNEL.send(
+                                                                    PacketDistributor.PLAYER.with(() -> player),
+                                                                    new OpenAbilityToggleScreenPacket()
+                                                            );
+                                                            return 1;
+                                                        })
+                                        )
+                        )
         );
     }
 
