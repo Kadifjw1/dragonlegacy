@@ -33,5 +33,13 @@ public class ModNetwork {
         CHANNEL.registerMessage(packetId++, UnlockAbilityPacket.class, UnlockAbilityPacket::encode, UnlockAbilityPacket::decode, UnlockAbilityPacket::handle);
         CHANNEL.registerMessage(packetId++, ToggleAbilityEnabledPacket.class, ToggleAbilityEnabledPacket::encode, ToggleAbilityEnabledPacket::decode, ToggleAbilityEnabledPacket::handle);
         CHANNEL.registerMessage(packetId++, OpenAbilityToggleScreenPacket.class, OpenAbilityToggleScreenPacket::encode, OpenAbilityToggleScreenPacket::decode, OpenAbilityToggleScreenPacket::handle);
+         CHANNEL.registerMessage(packetId++, OpenMainHubPacket.class,         OpenMainHubPacket::encode,         OpenMainHubPacket::decode,         OpenMainHubPacket::handle);
+        CHANNEL.registerMessage(packetId++, ToggleAbilityPacket.class,       ToggleAbilityPacket::encode,       ToggleAbilityPacket::decode,       ToggleAbilityPacket::handle);
+        CHANNEL.registerMessage(packetId++, SyncQuestsPacket.class,          SyncQuestsPacket::encode,          SyncQuestsPacket::decode,          SyncQuestsPacket::handle);
+        CHANNEL.registerMessage(packetId++, SaveQuestPacket.class,           SaveQuestPacket::encode,           SaveQuestPacket::decode,           SaveQuestPacket::handle);
+        CHANNEL.registerMessage(packetId++, SyncDialoguesPacket.class,       SyncDialoguesPacket::encode,       SyncDialoguesPacket::decode,       SyncDialoguesPacket::handle);
+        CHANNEL.registerMessage(packetId++, SaveDialoguePacket.class,        SaveDialoguePacket::encode,        SaveDialoguePacket::decode,        SaveDialoguePacket::handle);
+        CHANNEL.registerMessage(packetId++, SyncNpcProfilesPacket.class,     SyncNpcProfilesPacket::encode,     SyncNpcProfilesPacket::decode,     SyncNpcProfilesPacket::handle);
+        CHANNEL.registerMessage(packetId++, SaveNpcProfilePacket.class,      SaveNpcProfilePacket::encode,      SaveNpcProfilePacket::decode,      SaveNpcProfilePacket::handle);
     }
 }
