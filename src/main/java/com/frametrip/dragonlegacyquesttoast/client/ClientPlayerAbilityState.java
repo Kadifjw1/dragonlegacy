@@ -25,3 +25,10 @@ public class ClientPlayerAbilityState {
         return awakeningPoints;
     }
 }
+    }
+ 
+    public static int getPoints() {
+        return awakeningPoints;
+    }
+}
+ 
