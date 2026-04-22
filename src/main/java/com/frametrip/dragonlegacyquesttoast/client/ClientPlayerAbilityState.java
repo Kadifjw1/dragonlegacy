@@ -23,6 +23,10 @@ public class ClientPlayerAbilityState {
         return disabledAbilities.contains(abilityId);
     }
 
+    public static boolean isEnabled(String abilityId) {
+        return unlockedAbilities.contains(abilityId) && !disabledAbilities.contains(abilityId);
+    }
+
     public static Set<String> getAbilities() {
         return Collections.unmodifiableSet(unlockedAbilities);
     }
