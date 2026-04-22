@@ -1,6 +1,7 @@
 package com.frametrip.dragonlegacyquesttoast.command;
 
 import com.frametrip.dragonlegacyquesttoast.network.AwakeningBackgroundConfigPacket;
+import com.frametrip.dragonlegacyquesttoast.network.OpenMainHubPacket;
 import com.frametrip.dragonlegacyquesttoast.network.AwakeningCenterConfigPacket;
 import com.frametrip.dragonlegacyquesttoast.network.AwakeningPathsConfigPacket;
 import com.frametrip.dragonlegacyquesttoast.network.ModNetwork;
@@ -27,6 +28,7 @@ import net.minecraftforge.network.PacketDistributor;
 
 public class ModCommands {
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
+        registerMainHubCommand(dispatcher);
         registerQuestToastCommand(dispatcher);
         registerQuestToastConfigCommand(dispatcher);
         registerNpcSayCommand(dispatcher);
@@ -39,6 +41,21 @@ public class ModCommands {
         registerAbilityScreenCommand(dispatcher);
         registerAbilityCommand(dispatcher);
         registerAbilityPointsCommand(dispatcher);
+    }
+
+        private static void registerMainHubCommand(CommandDispatcher<CommandSourceStack> dispatcher) {
+        dispatcher.register(
+            Commands.literal("dlmenu")
+                .requires(source -> source.hasPermission(2))
+                .executes(ctx -> {
+                    ServerPlayer player = ctx.getSource().getPlayerOrException();
+                    ModNetwork.CHANNEL.send(
+                        PacketDistributor.PLAYER.with(() -> player),
+                        new OpenMainHubPacket()
+                    );
+                    return 1;
+                })
+        );
     }
 
     private static void registerQuestToastCommand(CommandDispatcher<CommandSourceStack> dispatcher) {
