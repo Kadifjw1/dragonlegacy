@@ -48,7 +48,6 @@ public class UnlockAbilityPacket {
                     PacketDistributor.PLAYER.with(() -> player),
                     new SyncAbilitiesPacket(
                             PlayerAbilityManager.getAbilities(player.getUUID()),
-                            PlayerAbilityManager.getDisabledAbilities(player.getUUID()),
                             PlayerAbilityManager.getPoints(player.getUUID())
                     )
             );
@@ -56,3 +55,5 @@ public class UnlockAbilityPacket {
         ctx.setPacketHandled(true);
     }
 }
+}
+ 
