@@ -11,7 +11,7 @@ import com.frametrip.dragonlegacyquesttoast.network.OpenUiEditorMenuPacket;
 import com.frametrip.dragonlegacyquesttoast.network.QuestToastConfigPacket;
 import com.frametrip.dragonlegacyquesttoast.network.QuestToastPacket;
 import com.frametrip.dragonlegacyquesttoast.network.SyncAbilitiesPacket;
-import com.frametrip.dragonlegacyquesttoast.server.FireStrikeHandler;
+import com.frametrip.dragonlegacyquesttoast.server.AbilityRegistry;
 import com.frametrip.dragonlegacyquesttoast.server.PlayerAbilityManager;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
@@ -36,6 +36,7 @@ public class ModCommands {
         registerAwakeningPathsCommand(dispatcher);
         registerUiEditorMenuCommand(dispatcher);
         registerAbilityCommand(dispatcher);
+        registerAbilityPointsCommand(dispatcher);
     }
 
     private static void registerQuestToastCommand(CommandDispatcher<CommandSourceStack> dispatcher) {
@@ -516,51 +517,78 @@ public class ModCommands {
         );
     }
 
+
+    private static void sync(ServerPlayer player) {
+        ModNetwork.CHANNEL.send(
+                PacketDistributor.PLAYER.with(() -> player),
+                new SyncAbilitiesPacket(
+                        PlayerAbilityManager.getAbilities(player.getUUID()),
+                        PlayerAbilityManager.getPoints(player.getUUID())
+                )
+        );
+    }
+
     private static void registerAbilityCommand(CommandDispatcher<CommandSourceStack> dispatcher) {
+        // /dlability <abilityId> grant|revoke <player>
         dispatcher.register(
                 Commands.literal("dlability")
                         .requires(source -> source.hasPermission(2))
                         .then(
-                                Commands.literal("fire")
-                                        .then(
-                                                Commands.literal("grant")
-                                                        .then(
-                                                                Commands.argument("player", EntityArgument.player())
-                                                                        .executes(ctx -> {
-                                                                            ServerPlayer player = EntityArgument.getPlayer(ctx, "player");
-                                                                            PlayerAbilityManager.grantAbility(player.getUUID(), FireStrikeHandler.ABILITY_ID);
-                                                                            ModNetwork.CHANNEL.send(
-                                                                                    PacketDistributor.PLAYER.with(() -> player),
-                                                                                    new SyncAbilitiesPacket(PlayerAbilityManager.getAbilities(player.getUUID()))
-                                                                            );
-                                                                            ctx.getSource().sendSuccess(
-                                                                                    () -> Component.literal("Способность выдана игроку: " + player.getName().getString()),
-                                                                                    true
-                                                                            );
-                                                                            return 1;
-                                                                        })
-                                                        )
-                                        )
-                                        .then(
-                                                Commands.literal("revoke")
-                                                        .then(
-                                                                Commands.argument("player", EntityArgument.player())
-                                                                        .executes(ctx -> {
-                                                                            ServerPlayer player = EntityArgument.getPlayer(ctx, "player");
-                                                                            PlayerAbilityManager.revokeAbility(player.getUUID(), FireStrikeHandler.ABILITY_ID);
-                                                                            ModNetwork.CHANNEL.send(
-                                                                                    PacketDistributor.PLAYER.with(() -> player),
-                                                                                    new SyncAbilitiesPacket(PlayerAbilityManager.getAbilities(player.getUUID()))
-                                                                            );
-                                                                            ctx.getSource().sendSuccess(
-                                                                                    () -> Component.literal("Способность отозвана у игрока: " + player.getName().getString()),
-                                                                                    true
-                                                                            );
-                                                                            return 1;
-                                                                        })
-                                                        )
-                                        )
+                                Commands.argument("abilityId", StringArgumentType.word())
+                                        .then(Commands.literal("grant")
+                                                .then(Commands.argument("player", EntityArgument.player())
+                                                        .executes(ctx -> {
+                                                            String id = StringArgumentType.getString(ctx, "abilityId");
+                                                            ServerPlayer player = EntityArgument.getPlayer(ctx, "player");
+                                                            if (AbilityRegistry.get(id) == null) {
+                                                                ctx.getSource().sendFailure(Component.literal("Неизвестная способность: " + id));
+                                                                return 0;
+                                                            }
+                                                            PlayerAbilityManager.grantAbility(player.getUUID(), id);
+                                                            sync(player);
+                                                            ctx.getSource().sendSuccess(() -> Component.literal("Выдана «" + id + "» → " + player.getName().getString()), true);
+                                                            return 1;
+                                                        })))
+                                        .then(Commands.literal("revoke")
+                                                .then(Commands.argument("player", EntityArgument.player())
+                                                        .executes(ctx -> {
+                                                            String id = StringArgumentType.getString(ctx, "abilityId");
+                                                            ServerPlayer player = EntityArgument.getPlayer(ctx, "player");
+                                                            PlayerAbilityManager.revokeAbility(player.getUUID(), id);
+                                                            sync(player);
+                                                            ctx.getSource().sendSuccess(() -> Component.literal("Отозвана «" + id + "» у " + player.getName().getString()), true);
+                                                            return 1;
+                                                        })))
                         )
+        );
+    }
+
+    private static void registerAbilityPointsCommand(CommandDispatcher<CommandSourceStack> dispatcher) {
+        dispatcher.register(
+                Commands.literal("dlpoints")
+                        .requires(source -> source.hasPermission(2))
+                        .then(Commands.literal("give")
+                                .then(Commands.argument("player", EntityArgument.player())
+                                        .then(Commands.argument("amount", IntegerArgumentType.integer(1))
+                                                .executes(ctx -> {
+                                                    ServerPlayer player = EntityArgument.getPlayer(ctx, "player");
+                                                    int amount = IntegerArgumentType.getInteger(ctx, "amount");
+                                                    PlayerAbilityManager.addPoints(player.getUUID(), amount);
+                                                    sync(player);
+                                                    ctx.getSource().sendSuccess(() -> Component.literal("+" + amount + " очков пробуждения → " + player.getName().getString()), true);
+                                                    return 1;
+                                                }))))
+                        .then(Commands.literal("set")
+                                .then(Commands.argument("player", EntityArgument.player())
+                                        .then(Commands.argument("amount", IntegerArgumentType.integer(0))
+                                                .executes(ctx -> {
+                                                    ServerPlayer player = EntityArgument.getPlayer(ctx, "player");
+                                                    int amount = IntegerArgumentType.getInteger(ctx, "amount");
+                                                    PlayerAbilityManager.setPoints(player.getUUID(), amount);
+                                                    sync(player);
+                                                    ctx.getSource().sendSuccess(() -> Component.literal("Очки пробуждения: " + amount + " → " + player.getName().getString()), true);
+                                                    return 1;
+                                                }))))
         );
     }
 }
