@@ -34,3 +34,8 @@ startOffsetX — откуда выезжает слева
 
 Настройка из NPC
   event.API.executeCommand(event.player.world, '/dlquesttoastconfig ' + event.player.name + ' set 6 6 128 32 8 140 8 -140')
+
+---
+
+Экран управления способностями (вкл/выкл)
+  /dlabilityscreen open <ник>

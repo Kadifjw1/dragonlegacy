@@ -16,6 +16,7 @@ public class PlayerAbilityManager {
  
     private static class PlayerData {
         Set<String> abilities = new HashSet<>();
+        Set<String> disabledAbilities = new HashSet<>();
         int points = 0;
     }
  
@@ -38,15 +39,42 @@ public class PlayerAbilityManager {
         PlayerData pd = data.get(id.toString());
         return pd == null ? Collections.emptySet() : new HashSet<>(pd.abilities);
     }
+
+    public static Set<String> getDisabledAbilities(UUID id) {
+        PlayerData pd = data.get(id.toString());
+        return pd == null ? Collections.emptySet() : new HashSet<>(pd.disabledAbilities);
+    }
+
+    public static boolean isAbilityEnabled(UUID id, String abilityId) {
+        PlayerData pd = data.get(id.toString());
+        return pd != null && pd.abilities.contains(abilityId) && !pd.disabledAbilities.contains(abilityId);
+    }
+
+    public static void setAbilityEnabled(UUID id, String abilityId, boolean enabled) {
+        PlayerData pd = data.get(id.toString());
+        if (pd == null || !pd.abilities.contains(abilityId)) return;
+        if (enabled) {
+            pd.disabledAbilities.remove(abilityId);
+        } else {
+            pd.disabledAbilities.add(abilityId);
+        }
+        save();
+    }
  
     public static void grantAbility(UUID id, String abilityId) {
-        data.computeIfAbsent(id.toString(), k -> new PlayerData()).abilities.add(abilityId);
+        PlayerData pd = data.computeIfAbsent(id.toString(), k -> new PlayerData());
+        pd.abilities.add(abilityId);
+        pd.disabledAbilities.remove(abilityId);
         save();
     }
  
     public static void revokeAbility(UUID id, String abilityId) {
         PlayerData pd = data.get(id.toString());
-        if (pd != null) { pd.abilities.remove(abilityId); save(); }
+        if (pd != null) {
+            pd.abilities.remove(abilityId);
+            pd.disabledAbilities.remove(abilityId);
+            save();
+        }
     }
  
     // ── points ────────────────────────────────────────────────────────────────

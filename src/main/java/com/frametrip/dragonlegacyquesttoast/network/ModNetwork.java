@@ -29,7 +29,9 @@ public class ModNetwork {
         CHANNEL.registerMessage(packetId++, OpenUiEditorMenuPacket.class, OpenUiEditorMenuPacket::encode, OpenUiEditorMenuPacket::decode, OpenUiEditorMenuPacket::handle);
         CHANNEL.registerMessage(packetId++, OpenQuestToastEditorPacket.class, OpenQuestToastEditorPacket::encode, OpenQuestToastEditorPacket::decode, OpenQuestToastEditorPacket::handle);
         CHANNEL.registerMessage(packetId++, OpenNpcDialogueEditorPacket.class, OpenNpcDialogueEditorPacket::encode, OpenNpcDialogueEditorPacket::decode, OpenNpcDialogueEditorPacket::handle);
-         CHANNEL.registerMessage(packetId++, SyncAbilitiesPacket.class,  SyncAbilitiesPacket::encode,  SyncAbilitiesPacket::decode,  SyncAbilitiesPacket::handle);
+        CHANNEL.registerMessage(packetId++, SyncAbilitiesPacket.class,  SyncAbilitiesPacket::encode,  SyncAbilitiesPacket::decode,  SyncAbilitiesPacket::handle);
         CHANNEL.registerMessage(packetId++, UnlockAbilityPacket.class, UnlockAbilityPacket::encode, UnlockAbilityPacket::decode, UnlockAbilityPacket::handle);
+        CHANNEL.registerMessage(packetId++, ToggleAbilityEnabledPacket.class, ToggleAbilityEnabledPacket::encode, ToggleAbilityEnabledPacket::decode, ToggleAbilityEnabledPacket::handle);
+        CHANNEL.registerMessage(packetId++, OpenAbilityToggleScreenPacket.class, OpenAbilityToggleScreenPacket::encode, OpenAbilityToggleScreenPacket::decode, OpenAbilityToggleScreenPacket::handle);
     }
 }

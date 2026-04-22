@@ -26,7 +26,7 @@ public class FireAbilityHandler {
     private static final Map<UUID, Long>    vengeCooldown  = new HashMap<>();
  
     private static boolean has(ServerPlayer p, String id) {
-        return p.isCreative() || PlayerAbilityManager.hasAbility(p.getUUID(), id);
+        return p.isCreative() || PlayerAbilityManager.isAbilityEnabled(p.getUUID(), id);
     }
  
     // ─── HIT events ──────────────────────────────────────────────────────────
