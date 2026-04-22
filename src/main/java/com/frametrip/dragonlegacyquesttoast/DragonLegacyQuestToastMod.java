@@ -69,6 +69,6 @@ public class DragonLegacyQuestToastMod {
         ModNetwork.CHANNEL.send(
                PacketDistributor.PLAYER.with(() -> player),␊
                 new SyncAbilitiesPacket(abilities, disabled, points)
-        );␊
-    }␊
-}␊
+        );
+    }
+}
