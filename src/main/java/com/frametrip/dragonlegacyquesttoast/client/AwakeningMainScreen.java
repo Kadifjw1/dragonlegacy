@@ -1124,15 +1124,6 @@ public class AwakeningMainScreen extends Screen {
     }
 
     private String getPathShortDescription(AwakeningPathType pathType) {
-        if (isPathLocked(pathType)) {
-            return switch (pathType) {
-                case FIRE -> "Печать пламени сокрыта. Этот путь ещё не пробуждён.";
-                case ICE -> "Холодная печать молчит. Путь остаётся закрытым.";
-                case STORM -> "Грозовой знак запечатан. Сила ещё не откликнулась.";
-                case VOID -> "Печать пустоты скрыта глубокой завесой.";
-            };
-        }
-
         return switch (pathType) {
             case FIRE -> "Сила пламени, напор, урон и агрессия.";
             case ICE -> "Контроль, холод, замедление и стойкость.";
@@ -1142,12 +1133,7 @@ public class AwakeningMainScreen extends Screen {
     }
 
     private boolean isPathLocked(AwakeningPathType pathType) {
-        return switch (pathType) {
-            case FIRE -> false;
-            case ICE -> false;
-            case STORM -> true;
-            case VOID -> true;
-        };
+        return false;
     }
 
     private String getPathStatusText(AwakeningPathType pathType) {
