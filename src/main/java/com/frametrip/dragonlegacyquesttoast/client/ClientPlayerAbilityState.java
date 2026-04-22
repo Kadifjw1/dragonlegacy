@@ -6,9 +6,11 @@ import java.util.Set;
  
 public class ClientPlayerAbilityState {
     private static Set<String> unlockedAbilities = new HashSet<>();
+    private static int awakeningPoints = 0;
  
-    public static void setAbilities(Set<String> abilities) {
+    public static void sync(Set<String> abilities, int points) {
         unlockedAbilities = new HashSet<>(abilities);
+        awakeningPoints = points;
     }
  
     public static boolean hasAbility(String abilityId) {
@@ -17,5 +19,9 @@ public class ClientPlayerAbilityState {
  
     public static Set<String> getAbilities() {
         return Collections.unmodifiableSet(unlockedAbilities);
+    }
+ 
+    public static int getPoints() {
+        return awakeningPoints;
     }
 }
