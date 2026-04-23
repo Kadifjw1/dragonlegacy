@@ -1,6 +1,9 @@
 import com.frametrip.dragonlegacyquesttoast.network.ModNetwork;
 import com.frametrip.dragonlegacyquesttoast.network.QuestToastPacket;
 import com.frametrip.dragonlegacyquesttoast.network.SyncQuestProgressPacket;
+import com.frametrip.dragonlegacyquesttoast.server.QuestDefinition;
+import com.frametrip.dragonlegacyquesttoast.server.QuestManager;
+import com.frametrip.dragonlegacyquesttoast.server.QuestProgressManager;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
