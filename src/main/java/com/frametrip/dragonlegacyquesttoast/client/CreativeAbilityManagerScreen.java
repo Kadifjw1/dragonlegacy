@@ -80,7 +80,7 @@ public class CreativeAbilityManagerScreen extends Screen {
         for (int i = 0; i < abilities.size(); i++) {
             AbilityDefinition def = abilities.get(i);
             int rowY = listY + i * ROW_H;
-            boolean enabled = ClientPlayerAbilityState.hasAbility(def.id);
+            boolean enabled = ClientPlayerAbilityState.isEnabled(def.id);
  
             g.fill(listX, rowY, ox + W - 10, rowY + ROW_H - 2,
                    enabled ? 0x33001100 : 0x22110000);
@@ -146,7 +146,7 @@ public class CreativeAbilityManagerScreen extends Screen {
             int bx = ox + W - 74, by = rowY + 3, bw = 60, bh = ROW_H - 8;
  
             if (mx >= bx && mx < bx + bw && my >= by && my < by + bh) {
-                boolean wasEnabled = ClientPlayerAbilityState.hasAbility(def.id);
+                boolean wasEnabled = ClientPlayerAbilityState.isEnabled(def.id);
                 ModNetwork.CHANNEL.sendToServer(new ToggleAbilityPacket(def.id, !wasEnabled));
                 return true;
             }
