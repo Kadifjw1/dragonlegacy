@@ -6,10 +6,15 @@ import com.frametrip.dragonlegacyquesttoast.command.ModCommands;
 import com.frametrip.dragonlegacyquesttoast.network.ModNetwork;
 import com.frametrip.dragonlegacyquesttoast.network.SyncAbilitiesPacket;
 import com.frametrip.dragonlegacyquesttoast.network.SyncDialoguesPacket;
+import com.frametrip.dragonlegacyquesttoast.network.SyncFactionsPacket;
 import com.frametrip.dragonlegacyquesttoast.network.SyncNpcProfilesPacket;
 import com.frametrip.dragonlegacyquesttoast.network.SyncQuestsPacket;
+import com.frametrip.dragonlegacyquesttoast.registry.ModCreativeTabs;
+import com.frametrip.dragonlegacyquesttoast.registry.ModEntities;
+import com.frametrip.dragonlegacyquesttoast.registry.ModItems;
 import com.frametrip.dragonlegacyquesttoast.server.AbilityRegistry;
 import com.frametrip.dragonlegacyquesttoast.server.DialogueManager;
+import com.frametrip.dragonlegacyquesttoast.server.FactionManager;
 import com.frametrip.dragonlegacyquesttoast.server.FireAbilityHandler;
 import com.frametrip.dragonlegacyquesttoast.server.IceAbilityHandler;
 import com.frametrip.dragonlegacyquesttoast.server.NpcProfileManager;
@@ -39,11 +44,16 @@ public class DragonLegacyQuestToastMod {
     public DragonLegacyQuestToastMod() {
         IEventBus modBus = FMLJavaModLoadingContext.get().getModEventBus();
 
+         ModItems.ITEMS.register(modBus);
+        ModEntities.ENTITIES.register(modBus);
+        ModCreativeTabs.CREATIVE_TABS.register(modBus);
+        
         ModNetwork.init();
 
         QuestManager.load();
         DialogueManager.load();
         NpcProfileManager.load();
+        FactionManager.load();
 
         MinecraftForge.EVENT_BUS.addListener(this::registerCommands);
         MinecraftForge.EVENT_BUS.addListener(this::onPlayerLogin);
@@ -99,6 +109,11 @@ public class DragonLegacyQuestToastMod {
         ModNetwork.CHANNEL.send(
                 PacketDistributor.PLAYER.with(() -> player),
                 new SyncNpcProfilesPacket(NpcProfileManager.getAll())
+        );
+
+        ModNetwork.CHANNEL.send(
+                PacketDistributor.PLAYER.with(() -> player),
+                new SyncFactionsPacket(FactionManager.getAll())
         );
     }
 }
