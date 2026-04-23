@@ -9,7 +9,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.player.EntityItemPickupEvent;
-import net.minecraftforge.event.entity.player.ItemCraftedEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.level.BlockEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -79,7 +79,7 @@ public class QuestLogicHandler {
  
     // ── CRAFT ─────────────────────────────────────────────────────────────────
     @SubscribeEvent
-    public void onItemCrafted(ItemCraftedEvent event) {
+    public void onItemCrafted(PlayerEvent.ItemCraftedEvent event) {
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
         String craftedId = itemId(event.getCrafting());
         if (craftedId == null) return;
