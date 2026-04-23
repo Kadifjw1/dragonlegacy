@@ -28,17 +28,27 @@ public class ToggleAbilityPacket {
         return new ToggleAbilityPacket(buf.readUtf(), buf.readBoolean());
     }
 
-    public static void handle(ToggleAbilityPacket msg, Supplier<NetworkEvent.Context> ctx) {
-        ctx.get().enqueueWork(() -> {
-            ServerPlayer player = ctx.get().getSender();
-            if (player == null || !player.getAbilities().instabuild) return;
+    public static void handle(ToggleAbilityPacket msg, Supplier<NetworkEvent.Context> ctxSupplier) {
+        NetworkEvent.Context ctx = ctxSupplier.get();
+        ctx.enqueueWork(() -> {
+            ServerPlayer player = ctx.getSender();
+            if (player == null) return;
             if (AbilityRegistry.get(msg.abilityId) == null) return;
 
-            if (msg.enable) {
-                PlayerAbilityManager.grantAbility(player.getUUID(), msg.abilityId);
+            // В креативе все способности доступны: если способности ещё нет, выдаём её,
+            // но дальше управляем только enabled/disabled состоянием.
+            if (player.getAbilities().instabuild) {
+                if (!PlayerAbilityManager.hasAbility(player.getUUID(), msg.abilityId)) {
+                    PlayerAbilityManager.grantAbility(player.getUUID(), msg.abilityId);
+                }
             } else {
-                PlayerAbilityManager.revokeAbility(player.getUUID(), msg.abilityId);
+                // В выживании можно переключать только уже открытые способности.
+                if (!PlayerAbilityManager.hasAbility(player.getUUID(), msg.abilityId)) {
+                    return;
+                }
             }
+
+            PlayerAbilityManager.setAbilityEnabled(player.getUUID(), msg.abilityId, msg.enable);
 
             ModNetwork.CHANNEL.send(
                     PacketDistributor.PLAYER.with(() -> player),
@@ -49,6 +59,6 @@ public class ToggleAbilityPacket {
                     )
             );
         });
-        ctx.get().setPacketHandled(true);
+        ctx.setPacketHandled(true);
     }
 }
