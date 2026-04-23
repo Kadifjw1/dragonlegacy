@@ -429,7 +429,7 @@ public class NpcCreatorScreen extends Screen {
         g.drawCenteredString(font, "§e⚙ §fНастройка NPC§e ⚙", ox + W / 2, oy + 7, 0xFFE6D7B5);
  
         // Sidebar
-        g.fill(ox, oy + 24, ox + SIDEBAR_W, oy + H, 0x991010202);
+        g.fill(ox, oy + 24, ox + SIDEBAR_W, oy + H, 0x99101020);
         brd(g, ox, oy + 24, SIDEBAR_W, H - 24, 0xFF2A2A44);
         g.drawString(font, "§7ВКЛАДКИ", ox + 8, oy + 28, 0xFF666677, false);
  
@@ -441,7 +441,7 @@ public class NpcCreatorScreen extends Screen {
         g.fill(ox + SIDEBAR_W, oy + 24, px, oy + H - 28, 0x88090912);
  
         // Preview panel
-        g.fill(px, oy + 24, ox + W, oy + H, 0x991212201);
+        g.fill(px, oy + 24, ox + W, oy + H, 0x99121220);
         brd(g, px, oy + 24, PREVIEW_W, H - 24, 0xFF2A2A44);
         g.drawCenteredString(font, "§7Превью", px + PREVIEW_W / 2, oy + 28, 0xFF888877);
  
