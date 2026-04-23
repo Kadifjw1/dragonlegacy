@@ -42,5 +42,8 @@ public class ModNetwork {
         CHANNEL.registerMessage(packetId++, SyncNpcProfilesPacket.class,     SyncNpcProfilesPacket::encode,     SyncNpcProfilesPacket::decode,     SyncNpcProfilesPacket::handle);
         CHANNEL.registerMessage(packetId++, SaveNpcProfilePacket.class,      SaveNpcProfilePacket::encode,      SaveNpcProfilePacket::decode,      SaveNpcProfilePacket::handle);
         CHANNEL.registerMessage(packetId++, SyncQuestProgressPacket.class,  SyncQuestProgressPacket::encode,  SyncQuestProgressPacket::decode,  SyncQuestProgressPacket::handle);
+        CHANNEL.registerMessage(packetId++, SaveNpcEntityDataPacket.class,  SaveNpcEntityDataPacket::encode,  SaveNpcEntityDataPacket::decode,  SaveNpcEntityDataPacket::handle);
+        CHANNEL.registerMessage(packetId++, SyncFactionsPacket.class,       SyncFactionsPacket::encode,       SyncFactionsPacket::decode,       SyncFactionsPacket::handle);
+        CHANNEL.registerMessage(packetId++, SaveFactionPacket.class,        SaveFactionPacket::encode,        SaveFactionPacket::decode,        SaveFactionPacket::handle);
     }
 }
