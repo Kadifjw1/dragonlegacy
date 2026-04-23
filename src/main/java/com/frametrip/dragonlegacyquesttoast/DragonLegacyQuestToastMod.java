@@ -16,6 +16,7 @@ import com.frametrip.dragonlegacyquesttoast.server.NpcProfileManager;
 import com.frametrip.dragonlegacyquesttoast.server.PlayerAbilityManager;
 import com.frametrip.dragonlegacyquesttoast.server.QuestManager;
 import com.frametrip.dragonlegacyquesttoast.server.StormAbilityHandler;
+import com.frametrip.dragonlegacyquesttoast.server.QuestLogicHandler;
 import com.frametrip.dragonlegacyquesttoast.server.VoidAbilityHandler;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.api.distmarker.Dist;
@@ -51,6 +52,7 @@ public class DragonLegacyQuestToastMod {
         MinecraftForge.EVENT_BUS.register(new IceAbilityHandler());
         MinecraftForge.EVENT_BUS.register(new StormAbilityHandler());
         MinecraftForge.EVENT_BUS.register(new VoidAbilityHandler());
+        QuestLogicHandler.register();
 
         if (FMLEnvironment.dist == Dist.CLIENT) {
             modBus.addListener(this::registerOverlays);
