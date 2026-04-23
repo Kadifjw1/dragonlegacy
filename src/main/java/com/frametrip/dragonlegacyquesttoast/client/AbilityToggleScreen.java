@@ -27,6 +27,7 @@ public class AbilityToggleScreen extends Screen {
     @Override
     protected void init() {
         super.init();
+        this.clearWidgets();
         visibleAbilities = AbilityRegistry.getForPath(selectedPath);
 
         int tabY = 24;
@@ -36,7 +37,8 @@ public class AbilityToggleScreen extends Screen {
 
         for (int i = 0; i < AwakeningPathType.values().length; i++) {
             AwakeningPathType path = AwakeningPathType.values()[i];
-            Button tab = Button.builder(Component.literal(tabLabel(path)), b -> minecraft.setScreen(new AbilityToggleScreen(path)))
+            Button tab = Button.builder(Component.literal(tabLabel(path)),
+                            b -> minecraft.setScreen(new AbilityToggleScreen(path)))
                     .bounds(startX + i * tabW, tabY, tabW - 2, 20)
                     .build();
             tab.active = path != selectedPath;
@@ -45,15 +47,21 @@ public class AbilityToggleScreen extends Screen {
 
         int listX = width / 2 - 145;
         int listY = 56;
+
         for (int i = 0; i < visibleAbilities.size(); i++) {
             AbilityDefinition def = visibleAbilities.get(i);
             int rowY = listY + i * 16;
+
             Button toggleBtn = Button.builder(Component.literal(toggleLabel(def)), b -> {
                         boolean nextEnabled = !ClientPlayerAbilityState.isEnabled(def.id);
                         ModNetwork.CHANNEL.sendToServer(new ToggleAbilityPacket(def.id, nextEnabled));
+
+                        // Локально мгновенно перерисовываем экран, чтобы кнопка и статус обновились сразу.
+                        minecraft.setScreen(new AbilityToggleScreen(selectedPath));
                     })
                     .bounds(listX + 240, rowY - 2, 50, 14)
                     .build();
+
             toggleBtn.active = canToggle(def);
             addRenderableWidget(toggleBtn);
         }
@@ -77,16 +85,20 @@ public class AbilityToggleScreen extends Screen {
         for (int i = 0; i < visibleAbilities.size(); i++) {
             AbilityDefinition def = visibleAbilities.get(i);
             int rowY = listY + i * 16;
+
             boolean unlocked = isUnlocked(def);
             boolean enabled = ClientPlayerAbilityState.isEnabled(def.id);
+
             int color = unlocked ? 0xFFFFFF : 0x777777;
             g.drawString(font, (i + 1) + ". " + def.name, listX, rowY, color, false);
-            String status = unlocked ? (enabled ? "ВКЛ" : "ВЫКЛ") : "НЕ ОТКРЫТО";
+
+            String status = unlocked ? (enabled ? "АКТИВНА" : "ВЫКЛЮЧЕНА") : "НЕ ОТКРЫТО";
             int statusColor = unlocked ? (enabled ? 0x55FF55 : 0xFFAA55) : 0x777777;
-            g.drawString(font, status, listX + 170, rowY, statusColor, false);
+            g.drawString(font, status, listX + 150, rowY, statusColor, false);
         }
 
-        g.drawString(font, "* Переключаются только открытые способности", listX, height - 42, 0xAAAAAA, false);
+        g.drawString(font, "В креативе все способности доступны, но их можно выключать.", listX, height - 52, 0xAAAAAA, false);
+        g.drawString(font, "В выживании переключаются только открытые способности.", listX, height - 40, 0xAAAAAA, false);
     }
 
     private boolean isUnlocked(AbilityDefinition def) {
@@ -94,7 +106,7 @@ public class AbilityToggleScreen extends Screen {
     }
 
     private boolean canToggle(AbilityDefinition def) {
-    return isCreative() || ClientPlayerAbilityState.hasAbility(def.id);
+        return isCreative() || ClientPlayerAbilityState.hasAbility(def.id);
     }
 
     private boolean isCreative() {
