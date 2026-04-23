@@ -1,3 +1,5 @@
+package com.frametrip.dragonlegacyquesttoast.server;
+
 import com.frametrip.dragonlegacyquesttoast.network.ModNetwork;
 import com.frametrip.dragonlegacyquesttoast.network.QuestToastPacket;
 import com.frametrip.dragonlegacyquesttoast.network.SyncQuestProgressPacket;
