@@ -1,7 +1,7 @@
 package com.frametrip.dragonlegacyquesttoast.client;
 
 import com.frametrip.dragonlegacyquesttoast.network.ModNetwork;
-import com.frametrip.dragonlegacyquesttoast.network.ToggleAbilityEnabledPacket;
+import com.frametrip.dragonlegacyquesttoast.network.ToggleAbilityPacket;
 import com.frametrip.dragonlegacyquesttoast.server.AbilityDefinition;
 import com.frametrip.dragonlegacyquesttoast.server.AbilityRegistry;
 import net.minecraft.client.gui.GuiGraphics;
@@ -50,7 +50,7 @@ public class AbilityToggleScreen extends Screen {
             int rowY = listY + i * 16;
             Button toggleBtn = Button.builder(Component.literal(toggleLabel(def)), b -> {
                         boolean nextEnabled = !ClientPlayerAbilityState.isEnabled(def.id);
-                        ModNetwork.CHANNEL.sendToServer(new ToggleAbilityEnabledPacket(def.id, nextEnabled));
+                        ModNetwork.CHANNEL.sendToServer(new ToggleAbilityPacket(def.id, nextEnabled));
                     })
                     .bounds(listX + 240, rowY - 2, 50, 14)
                     .build();
@@ -94,7 +94,7 @@ public class AbilityToggleScreen extends Screen {
     }
 
     private boolean canToggle(AbilityDefinition def) {
-        return !isCreative() && ClientPlayerAbilityState.hasAbility(def.id);
+    return isCreative() || ClientPlayerAbilityState.hasAbility(def.id);
     }
 
     private boolean isCreative() {
