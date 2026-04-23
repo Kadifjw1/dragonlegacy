@@ -26,7 +26,7 @@ public class IceAbilityHandler {
     private static final Random RNG = new Random();
  
     private static boolean has(ServerPlayer p, String id) {
-        return p.isCreative() || PlayerAbilityManager.isAbilityEnabled(p.getUUID(), id);
+    return PlayerAbilityManager.isAbilityEnabled(p.getUUID(), id);
     }
  
     // ─── HIT events ──────────────────────────────────────────────────────────
