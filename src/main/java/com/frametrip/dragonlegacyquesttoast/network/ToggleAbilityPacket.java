@@ -35,14 +35,11 @@ public class ToggleAbilityPacket {
             if (player == null) return;
             if (AbilityRegistry.get(msg.abilityId) == null) return;
 
-            // В креативе все способности доступны: если способности ещё нет, выдаём её,
-            // но дальше управляем только enabled/disabled состоянием.
             if (player.getAbilities().instabuild) {
                 if (!PlayerAbilityManager.hasAbility(player.getUUID(), msg.abilityId)) {
                     PlayerAbilityManager.grantAbility(player.getUUID(), msg.abilityId);
                 }
             } else {
-                // В выживании можно переключать только уже открытые способности.
                 if (!PlayerAbilityManager.hasAbility(player.getUUID(), msg.abilityId)) {
                     return;
                 }
