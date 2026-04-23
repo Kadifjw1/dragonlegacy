@@ -1,5 +1,5 @@
 package com.frametrip.dragonlegacyquesttoast.entity;
- 
+
 import com.frametrip.dragonlegacyquesttoast.network.ModNetwork;
 import com.frametrip.dragonlegacyquesttoast.network.NpcDialoguePacket;
 import com.frametrip.dragonlegacyquesttoast.server.DialogueDefinition;
@@ -19,33 +19,36 @@ import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.ai.goal.*;
+import net.minecraft.world.entity.ai.goal.FloatGoal;
+import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
+import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
+import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.network.PacketDistributor;
- 
+
 import java.util.Objects;
- 
+
 public class NpcEntity extends PathfinderMob {
- 
+
     private static final Gson GSON = new Gson();
- 
+
     public static final EntityDataAccessor<String> DATA_NPC_JSON =
-        SynchedEntityData.defineId(NpcEntity.class, EntityDataSerializers.STRING);
- 
+            SynchedEntityData.defineId(NpcEntity.class, EntityDataSerializers.STRING);
+
     public NpcEntity(EntityType<? extends NpcEntity> type, Level level) {
         super(type, level);
         setCustomNameVisible(true);
         setPersistenceRequired();
     }
- 
+
     @Override
     protected void defineSynchedData() {
         super.defineSynchedData();
         entityData.define(DATA_NPC_JSON, GSON.toJson(new NpcEntityData()));
     }
- 
+
     @Override
     protected void registerGoals() {
         goalSelector.addGoal(1, new FloatGoal(this));
@@ -53,48 +56,43 @@ public class NpcEntity extends PathfinderMob {
         goalSelector.addGoal(3, new RandomLookAroundGoal(this));
         goalSelector.addGoal(4, new WaterAvoidingRandomStrollGoal(this, 0.4));
     }
- 
+
     public static AttributeSupplier.Builder createAttributes() {
         return Mob.createMobAttributes()
-            .add(Attributes.MAX_HEALTH, 20.0)
-            .add(Attributes.MOVEMENT_SPEED, 0.15)
-            .add(Attributes.FOLLOW_RANGE, 24.0);
+                .add(Attributes.MAX_HEALTH, 20.0)
+                .add(Attributes.MOVEMENT_SPEED, 0.15)
+                .add(Attributes.FOLLOW_RANGE, 24.0);
     }
- 
-    // ── Data access ───────────────────────────────────────────────────────────
- 
+
     public NpcEntityData getNpcData() {
         NpcEntityData d = GSON.fromJson(entityData.get(DATA_NPC_JSON), NpcEntityData.class);
         return d != null ? d : new NpcEntityData();
     }
- 
+
     public void setNpcData(NpcEntityData data) {
         entityData.set(DATA_NPC_JSON, GSON.toJson(data));
         applyDataEffects(data);
     }
- 
+
     private void applyDataEffects(NpcEntityData data) {
         setCustomName(Component.literal(data.displayName));
         Objects.requireNonNull(getAttribute(Attributes.MOVEMENT_SPEED))
-            .setBaseValue(data.walkSpeed * 0.25);
+                .setBaseValue(data.walkSpeed * 0.25);
     }
- 
-    // ── Pose management ───────────────────────────────────────────────────────
- 
+
     @Override
-    protected void tickPose() {
+    public void tick() {
+        super.tick();
         NpcEntityData data = getNpcData();
         setPose("CROUCHING".equals(data.idlePose) ? Pose.CROUCHING : Pose.STANDING);
     }
- 
-    // ── NBT ───────────────────────────────────────────────────────────────────
- 
+
     @Override
     public void addAdditionalSaveData(CompoundTag tag) {
         super.addAdditionalSaveData(tag);
         tag.putString("NpcData", entityData.get(DATA_NPC_JSON));
     }
- 
+
     @Override
     public void readAdditionalSaveData(CompoundTag tag) {
         super.readAdditionalSaveData(tag);
@@ -105,9 +103,7 @@ public class NpcEntity extends PathfinderMob {
             if (data != null) applyDataEffects(data);
         }
     }
- 
-    // ── Interaction ───────────────────────────────────────────────────────────
- 
+
     @Override
     public InteractionResult mobInteract(Player player, InteractionHand hand) {
         if (!level().isClientSide && !player.isShiftKeyDown()) {
@@ -117,8 +113,8 @@ public class NpcEntity extends PathfinderMob {
                 if (dlg != null && !dlg.lines.isEmpty()) {
                     String text = String.join("\n", dlg.lines);
                     ModNetwork.CHANNEL.send(
-                        PacketDistributor.PLAYER.with(() -> sp),
-                        new NpcDialoguePacket(data.displayName, text)
+                            PacketDistributor.PLAYER.with(() -> sp),
+                            new NpcDialoguePacket(data.displayName, text)
                     );
                 }
             }
@@ -126,18 +122,26 @@ public class NpcEntity extends PathfinderMob {
         }
         return InteractionResult.PASS;
     }
- 
-    // ── Misc overrides ────────────────────────────────────────────────────────
- 
-    @Override public boolean removeWhenFarAway(double d) { return false; }
-    @Override public boolean isPushable() { return false; }
-    @Override protected void playStepSound(net.minecraft.core.BlockPos pos, BlockState block) {}
- 
-    // ── Inner goal ────────────────────────────────────────────────────────────
- 
+
+    @Override
+    public boolean removeWhenFarAway(double d) {
+        return false;
+    }
+
+    @Override
+    public boolean isPushable() {
+        return false;
+    }
+
+    @Override
+    protected void playStepSound(net.minecraft.core.BlockPos pos, BlockState block) {
+    }
+
     private class NpcLookAtPlayerGoal extends LookAtPlayerGoal {
-        NpcLookAtPlayerGoal() { super(NpcEntity.this, Player.class, 8.0f); }
- 
+        NpcLookAtPlayerGoal() {
+            super(NpcEntity.this, Player.class, 8.0f);
+        }
+
         @Override
         public boolean canUse() {
             return NpcEntity.this.getNpcData().lookAtPlayer && super.canUse();
