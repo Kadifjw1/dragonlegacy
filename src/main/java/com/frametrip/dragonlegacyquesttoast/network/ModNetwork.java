@@ -45,5 +45,8 @@ public class ModNetwork {
         CHANNEL.registerMessage(packetId++, SaveNpcEntityDataPacket.class,  SaveNpcEntityDataPacket::encode,  SaveNpcEntityDataPacket::decode,  SaveNpcEntityDataPacket::handle);
         CHANNEL.registerMessage(packetId++, SyncFactionsPacket.class,       SyncFactionsPacket::encode,       SyncFactionsPacket::decode,       SyncFactionsPacket::handle);
         CHANNEL.registerMessage(packetId++, SaveFactionPacket.class,        SaveFactionPacket::encode,        SaveFactionPacket::decode,        SaveFactionPacket::handle);
+        CHANNEL.registerMessage(packetId++, SaveNpcScenePacket.class,       SaveNpcScenePacket::encode,       SaveNpcScenePacket::decode,       SaveNpcScenePacket::handle);
+        CHANNEL.registerMessage(packetId++, SyncNpcScenesPacket.class,      SyncNpcScenesPacket::encode,      SyncNpcScenesPacket::decode,      SyncNpcScenesPacket::handle);
+        CHANNEL.registerMessage(packetId++, NpcStartScenePacket.class,      NpcStartScenePacket::encode,      NpcStartScenePacket::decode,      NpcStartScenePacket::handle);
     }
 }
