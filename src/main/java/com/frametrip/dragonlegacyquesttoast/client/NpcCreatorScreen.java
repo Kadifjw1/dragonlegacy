@@ -24,7 +24,7 @@ import java.util.function.Consumer;
  */
 public class NpcCreatorScreen extends Screen {
 
-// ── Layout constants ──────────────────────────────────────────────────────
+    // ── Layout constants ──────────────────────────────────────────────────────
     private static final int W         = 740;
     private static final int H         = 470;
     private static final int SIDEBAR_W = 132;
@@ -58,7 +58,7 @@ public class NpcCreatorScreen extends Screen {
         super(Component.literal("Настройка NPC"));
         this.editorState = new NpcEditorState(entity);
     }
-    
+
     // ── Initialization ────────────────────────────────────────────────────────
 
     @Override
@@ -67,8 +67,8 @@ public class NpcCreatorScreen extends Screen {
         int ox = ox(), oy = oy();
         int rx = ox + SIDEBAR_W + 8;
         int rw = CONTENT_W - 16;
-        
-         // Top bar: Save / Reset / Close
+
+        // Top bar: Save / Reset / Close
         int topBtnY = oy + 5;
         addRenderableWidget(Button.builder(Component.literal("💾 Сохранить"), b -> save())
                 .bounds(ox + W - 210, topBtnY, 80, 18).build());
@@ -93,12 +93,12 @@ public class NpcCreatorScreen extends Screen {
             ).bounds(ox + 4, oy + TOP_H + 8 + i * 40, SIDEBAR_W - 8, 34).build());
         }
 
- // Active tab widgets — pass a Consumer so tabs can add widgets without breaking visibility
-        Consumer<AbstractWidget> addWidget = w -> addRenderableWidget(w);
+        // Active tab widgets
+        Consumer<AbstractWidget> addWidget = this::addRenderableWidget;
         TAB_INSTANCES[activeTab].init(addWidget, this::rebuildWidgets, editorState, rx, oy + TOP_H + 18, rw);
-        }
+    }
 
-        // ── Rendering ─────────────────────────────────────────────────────────────
+    // ── Rendering ─────────────────────────────────────────────────────────────
 
     @Override
     public void render(GuiGraphics g, int mx, int my, float pt) {
@@ -123,17 +123,17 @@ public class NpcCreatorScreen extends Screen {
         // NPC name in top bar
         String npcName = editorState.getDraft().displayName;
         g.drawString(font, "§8»  §7" + npcName, ox + 120, oy + 9, 0xFFAAAAAA, false);
-    
-     // Dirty indicator
+
+        // Dirty indicator
         if (editorState.isDirty()) {
             g.drawString(font, "§e● §7Несохранённые изменения", ox + W - 340, oy + 9, 0xFFEECC44, false);
         }
 
-       // ── Sidebar ───────────────────────────────────────────────────────────
+        // ── Sidebar ───────────────────────────────────────────────────────────
         g.fill(ox, oy + TOP_H, ox + SIDEBAR_W, oy + H, 0x99101020);
         brd(g, ox, oy + TOP_H, SIDEBAR_W, H - TOP_H, 0xFF2A2A44);
         g.drawString(font, "§7ВКЛАДКИ", ox + 8, oy + TOP_H + 4, 0xFF666677, false);
-        
+
         // Active tab accent stripe
         int tabY = oy + TOP_H + 8 + activeTab * 40;
         g.fill(ox + 2, tabY + 1, ox + 4, tabY + 33, TAB_ACCENT[activeTab]);
@@ -143,15 +143,15 @@ public class NpcCreatorScreen extends Screen {
         g.fill(ox + SIDEBAR_W, oy + TOP_H, ox + SIDEBAR_W + 1, oy + H, 0xFF2A2A44);
         g.fill(px, oy + TOP_H, px + 1, oy + H, 0xFF2A2A44);
 
-         // Tab header with accent
+        // Tab header with accent
         g.fill(rx, oy + TOP_H + 4, rx + rw, oy + TOP_H + 5, TAB_ACCENT[activeTab]);
         g.drawString(font, "§l" + TAB_LABELS[activeTab].trim(),
                 rx, oy + TOP_H + 8, TAB_ACCENT[activeTab], false);
 
-         // Active tab custom rendering (same oy as init)
+        // Active tab custom rendering
         TAB_INSTANCES[activeTab].render(g, editorState, rx, oy + TOP_H + 18, rw, mx, my);
 
-         // ── Preview panel ─────────────────────────────────────────────────────
+        // ── Preview panel ─────────────────────────────────────────────────────
         g.fill(px, oy + TOP_H, ox + W, oy + H, 0x99121220);
         brd(g, px, oy + TOP_H, PREVIEW_W, H - TOP_H, 0xFF2A2A44);
         g.drawCenteredString(font, "§7ПРЕВЬЮ", px + PREVIEW_W / 2, oy + TOP_H + 4, 0xFF888877);
@@ -164,7 +164,7 @@ public class NpcCreatorScreen extends Screen {
         g.fill(ox, oy + H - BOT_H, ox + W, oy + H, 0x99101020);
         brd(g, ox, oy + H - BOT_H, W, BOT_H, 0xFF2A2A44);
 
-    super.render(g, mx, my, pt);
+        super.render(g, mx, my, pt);
     }
 
     // ── 3D Preview ────────────────────────────────────────────────────────────
@@ -173,7 +173,7 @@ public class NpcCreatorScreen extends Screen {
         NpcEntity entity = editorState.getEntity();
         if (entity == null || !entity.isAlive()) return;
 
-       NpcEntityData backup = entity.getNpcData().copy();
+        NpcEntityData backup = entity.getNpcData().copy();
         Pose backupPose = entity.getPose();
 
         try {
@@ -182,7 +182,7 @@ public class NpcCreatorScreen extends Screen {
             entity.setCustomName(Component.literal(draft.displayName));
             entity.setPose("CROUCHING".equals(draft.idlePose) ? Pose.CROUCHING : Pose.STANDING);
 
-         int cx = panelX + PREVIEW_W / 2;
+            int cx = panelX + PREVIEW_W / 2;
             int cy = oy + H - 100;
             InventoryScreen.renderEntityInInventoryFollowsMouse(g, cx, cy, 52, mx, my, entity);
         } finally {
@@ -192,7 +192,7 @@ public class NpcCreatorScreen extends Screen {
         }
     }
 
-// ── Summary panel ─────────────────────────────────────────────────────────
+    // ── Summary panel ─────────────────────────────────────────────────────────
 
     private void renderSummary(GuiGraphics g, int px, int oy) {
         NpcEntityData d = editorState.getDraft();
@@ -228,9 +228,9 @@ public class NpcCreatorScreen extends Screen {
         g.drawString(font, "§8Поза:   §f" + NpcEntityData.idlePoseLabel(d.idlePose), sx, y, 0xFFCCCCCC, false);
     }
 
-     // ── Input handlers ────────────────────────────────────────────────────────
-    
-        @Override
+    // ── Input handlers ────────────────────────────────────────────────────────
+
+    @Override
     public boolean mouseScrolled(double mx, double my, double delta) {
         int rx = ox() + SIDEBAR_W + 8;
         int rw = CONTENT_W - 16;
@@ -244,7 +244,7 @@ public class NpcCreatorScreen extends Screen {
 
     @Override
     public boolean mouseClicked(double mx, double my, int btn) {
-         int rx = ox() + SIDEBAR_W + 8;
+        int rx = ox() + SIDEBAR_W + 8;
         int rw = CONTENT_W - 16;
         int tabOy = oy() + TOP_H + 18;
         if (TAB_INSTANCES[activeTab].onMouseClicked(mx, my, btn, editorState, rx, tabOy, rw)) {
@@ -266,7 +266,19 @@ public class NpcCreatorScreen extends Screen {
         if (minecraft != null) minecraft.setScreen(null);
     }
 
-   // ── Helpers ───────────────────────────────────────────────────────────────
+    // ── Public bridges for helper classes ────────────────────────────────────
+
+    public <T extends net.minecraft.client.gui.components.events.GuiEventListener
+            & net.minecraft.client.gui.components.Renderable
+            & net.minecraft.client.gui.narration.NarratableEntry> T addEditorWidget(T widget) {
+        return super.addRenderableWidget(widget);
+    }
+
+    public void rebuildEditorWidgets() {
+        super.rebuildWidgets();
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
 
     @Override
     public boolean isPauseScreen() { return false; }
@@ -274,7 +286,7 @@ public class NpcCreatorScreen extends Screen {
     private int ox() { return (width  - W) / 2; }
     private int oy() { return (height - H) / 2; }
 
-   static void brd(GuiGraphics g, int x, int y, int w, int h, int c) {
+    static void brd(GuiGraphics g, int x, int y, int w, int h, int c) {
         g.fill(x,     y,     x + w, y + 1, c);
         g.fill(x,     y+h-1, x + w, y + h, c);
         g.fill(x,     y,     x + 1, y + h, c);
