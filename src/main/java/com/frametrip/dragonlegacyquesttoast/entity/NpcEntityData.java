@@ -10,9 +10,13 @@ public class NpcEntityData {
     public String skinId       = "default";
     public Map<String, Integer> bodyParts = new LinkedHashMap<>();
     public String dialogueId   = "";
+    public String sceneId      = "";
     public List<String> questIds = new ArrayList<>();
     public String factionId    = "";
  
+    // texture layers: category -> textureId (base, hair, eyes, top, bottom, shoes, accessory, overlay)
+    public Map<String, String> textureLayers = new LinkedHashMap<>();
+
     // — Animation —
     public String  idlePose          = "STANDING"; // STANDING, CROUCHING
     public float   walkSpeed         = 0.5f;       // 0.0–1.0
@@ -40,7 +44,14 @@ public class NpcEntityData {
  
     public static final String[] RELATIONS       = {"FRIENDLY", "NEUTRAL", "HOSTILE"};
     public static final String[] RELATION_LABELS = {"Дружелюбный", "Нейтральный", "Враждебный"};
- 
+    
+    public static final String[] TEXTURE_LAYERS = {
+        "base", "hair", "eyes", "top", "bottom", "shoes", "accessory", "overlay"
+    };
+    public static final String[] TEXTURE_LAYER_LABELS = {
+        "База", "Волосы", "Глаза", "Верх", "Низ", "Обувь", "Аксессуар", "Оверлей"
+    };
+
     public NpcEntityData() {
         for (String part : NpcProfile.PART_OPTIONS.keySet()) {
             bodyParts.put(part, 0);
@@ -53,8 +64,10 @@ public class NpcEntityData {
         c.skinId            = this.skinId;
         c.bodyParts         = new LinkedHashMap<>(this.bodyParts);
         c.dialogueId        = this.dialogueId;
+        c.sceneId           = this.sceneId;
         c.questIds          = new ArrayList<>(this.questIds);
         c.factionId         = this.factionId;
+        c.textureLayers     = new LinkedHashMap<>(this.textureLayers);
         c.idlePose          = this.idlePose;
         c.walkSpeed         = this.walkSpeed;
         c.lookAtPlayer      = this.lookAtPlayer;
@@ -82,5 +95,11 @@ public class NpcEntityData {
         for (int i = 0; i < RELATIONS.length; i++)
             if (RELATIONS[i].equals(rel)) return RELATION_LABELS[i];
         return rel;
+    }
+ 
+    public static String textureLayerLabel(String layer) {
+        for (int i = 0; i < TEXTURE_LAYERS.length; i++)
+            if (TEXTURE_LAYERS[i].equals(layer)) return TEXTURE_LAYER_LABELS[i];
+        return layer;
     }
 }
