@@ -18,7 +18,7 @@ import java.util.function.Consumer;
 /** Tab 0 — Информация: имя, скин, слои текстур, части тела. */
 public class NpcInfoTab implements NpcEditorTab {
 
-    static final int ACCENT = 0xFF4488EE;
+    public static final int ACCENT = 0xFF4488EE;
 
     // sub-page: 0=skin 1=layers 2=bodyparts
     private int subPage = 0;
@@ -57,8 +57,6 @@ public class NpcInfoTab implements NpcEditorTab {
         }
     }
 
-    // ── Sub-page: Skin ────────────────────────────────────────────────────────
-
     private void initSkin(Consumer<AbstractWidget> add, Runnable rb,
                           NpcEditorState state, NpcEntityData d, int rx, int oy, int rw) {
         add.accept(Button.builder(Component.literal("◀"), b -> {
@@ -86,8 +84,6 @@ public class NpcInfoTab implements NpcEditorTab {
             rb.run();
         }).bounds(rx + 104, oy + 84, 72, 14).build());
     }
-
-    // ── Sub-page: Layers ──────────────────────────────────────────────────────
 
     private void initLayers(Consumer<AbstractWidget> add, Runnable rb,
                             NpcEditorState state, NpcEntityData d, int rx, int oy, int rw) {
@@ -124,8 +120,6 @@ public class NpcInfoTab implements NpcEditorTab {
         }).bounds(rx + 104, y + 4, 72, 14).build());
     }
 
-    // ── Sub-page: Body Parts ──────────────────────────────────────────────────
-
     private void initParts(Consumer<AbstractWidget> add, Runnable rb,
                            NpcEditorState state, NpcEntityData d, int rx, int oy, int rw) {
         int y = oy + 64;
@@ -153,25 +147,20 @@ public class NpcInfoTab implements NpcEditorTab {
         }
     }
 
-    // ── Render ────────────────────────────────────────────────────────────────
-
     @Override
     public void render(GuiGraphics g, NpcEditorState state, int rx, int oy, int rw, int mx, int my) {
         var font = Minecraft.getInstance().font;
         NpcEntityData d = state.getDraft();
 
-        // Name section
         sectionCard(g, rx, oy, rw, 38, "ИМЯ ПЕРСОНАЖА");
         g.drawString(font, "§7Имя:", rx + 4, oy + 10, 0xFF888877, false);
 
-        // Sub-page indicator underline
         int btnW = rw / 3 - 2;
         for (int i = 0; i < 3; i++) {
             if (i == subPage)
                 g.fill(rx + i * (btnW + 3), oy + 57, rx + i * (btnW + 3) + btnW, oy + 58, ACCENT);
         }
 
-        // Sub-page label and content
         String[] subLabels = {"СКИН", "СЛОИ ТЕКСТУР", "ЧАСТИ ТЕЛА"};
         sectionCard(g, rx, oy + 60, rw,
                 subPage == 1 ? NpcEntityData.TEXTURE_LAYERS.length * 16 + 28 :
@@ -223,8 +212,6 @@ public class NpcInfoTab implements NpcEditorTab {
             state.markDirty();
         }
     }
-
-    // ── Static helpers (delegates to NpcEditorUtils with tab's accent) ─────────
 
     static void sectionCard(GuiGraphics g, int x, int y, int w, int h, String title) {
         NpcEditorUtils.sectionCard(g, x, y, w, h, title, ACCENT);
