@@ -24,7 +24,7 @@ import java.util.function.Consumer;
 /** Tab 1 — Взаимодействие: сцена диалога, старый диалог, квесты, поиск. */
 public class NpcInteractionTab implements NpcEditorTab {
 
-    static final int ACCENT = 0xFF44CC88;
+    public static final int ACCENT = 0xFF44CC88;
     private static final int ROWS = 8;
 
     private int questScroll = 0;
