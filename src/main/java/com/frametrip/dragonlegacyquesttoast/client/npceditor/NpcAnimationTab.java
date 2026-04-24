@@ -12,8 +12,8 @@ import java.util.function.Consumer;
 /** Tab 2 — Анимация: поза, скорость ходьбы, позы рук, поворот тела. */
 public class NpcAnimationTab implements NpcEditorTab {
 
-    static final int ACCENT = 0xFFFF8844;
-
+    public static final int ACCENT = 0xFFFF8844;
+    
     @Override
     public void init(Consumer<AbstractWidget> add, Runnable rebuild,
                      NpcEditorState state, int rx, int oy, int rw) {
