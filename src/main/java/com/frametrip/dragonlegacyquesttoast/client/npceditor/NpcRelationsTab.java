@@ -19,8 +19,8 @@ import java.util.function.Consumer;
 /** Tab 3 — Отношения: отношение к игроку, фракция NPC, редактор фракций. */
 public class NpcRelationsTab implements NpcEditorTab {
 
-    static final int ACCENT = 0xFFCC55EE;
-
+public static final int ACCENT = 0xFFCC55EE;
+    
     private static final int SWATCH_COUNT = 8;
     private static final int[] SWATCH_COLORS = {
             0xFF4466EE, 0xFFEE4444, 0xFF44EE55, 0xFFEEEE33,
