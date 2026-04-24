@@ -1,23 +1,23 @@
 package com.frametrip.dragonlegacyquesttoast.client.npceditor;
 
+import com.frametrip.dragonlegacyquesttoast.client.NpcCreatorScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.AbstractWidget;
-import net.minecraft.client.gui.screens.Screen;
 
 /**
  * Thin wrapper so tab components can add widgets and trigger rebuilds
- * without holding a direct reference to NpcCreatorScreen.
+ * without holding a direct reference to Screen protected methods.
  */
 public class NpcEditorHelper {
 
-    private final Screen screen;
+    private final NpcCreatorScreen screen;
 
-    private NpcEditorHelper(Screen screen) {
+    private NpcEditorHelper(NpcCreatorScreen screen) {
         this.screen = screen;
     }
 
-    public static NpcEditorHelper of(Screen screen) {
+    public static NpcEditorHelper of(NpcCreatorScreen screen) {
         return new NpcEditorHelper(screen);
     }
 
@@ -30,11 +30,11 @@ public class NpcEditorHelper {
     }
 
     public void addWidget(AbstractWidget widget) {
-        if (screen != null) screen.addRenderableWidget(widget);
+        if (screen != null) screen.addEditorWidget(widget);
     }
 
     public void rebuild() {
-        if (screen != null) screen.rebuildWidgets();
+        if (screen != null) screen.rebuildEditorWidgets();
     }
 
     public Font font() {
