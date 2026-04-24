@@ -2,8 +2,11 @@ package com.frametrip.dragonlegacyquesttoast.entity;
 
 import com.frametrip.dragonlegacyquesttoast.network.ModNetwork;
 import com.frametrip.dragonlegacyquesttoast.network.NpcDialoguePacket;
+import com.frametrip.dragonlegacyquesttoast.network.NpcStartScenePacket;
 import com.frametrip.dragonlegacyquesttoast.server.DialogueDefinition;
 import com.frametrip.dragonlegacyquesttoast.server.DialogueManager;
+import com.frametrip.dragonlegacyquesttoast.server.dialogue.NpcScene;
+import com.frametrip.dragonlegacyquesttoast.server.dialogue.NpcSceneManager;
 import com.google.gson.Gson;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -108,14 +111,25 @@ public class NpcEntity extends PathfinderMob {
     public InteractionResult mobInteract(Player player, InteractionHand hand) {
         if (!level().isClientSide && !player.isShiftKeyDown()) {
             NpcEntityData data = getNpcData();
-            if (!data.dialogueId.isEmpty() && player instanceof ServerPlayer sp) {
-                DialogueDefinition dlg = DialogueManager.get(data.dialogueId);
-                if (dlg != null && !dlg.lines.isEmpty()) {
-                    String text = String.join("\n", dlg.lines);
-                    ModNetwork.CHANNEL.send(
-                            PacketDistributor.PLAYER.with(() -> sp),
-                            new NpcDialoguePacket(data.displayName, text)
-                    );
+        if (player instanceof ServerPlayer sp) {
+                // Prefer scene-based dialogue, fall back to legacy dialogue
+                if (!data.sceneId.isEmpty()) {
+                    NpcScene scene = NpcSceneManager.get(data.sceneId);
+                    if (scene != null) {
+                        ModNetwork.CHANNEL.send(
+                                PacketDistributor.PLAYER.with(() -> sp),
+                                new NpcStartScenePacket(data.displayName, data.sceneId)
+                        );
+                    }
+                } else if (!data.dialogueId.isEmpty()) {
+                    DialogueDefinition dlg = DialogueManager.get(data.dialogueId);
+                    if (dlg != null && !dlg.lines.isEmpty()) {
+                        String text = String.join("\n", dlg.lines);
+                        ModNetwork.CHANNEL.send(
+                                PacketDistributor.PLAYER.with(() -> sp),
+                                new NpcDialoguePacket(data.displayName, text)
+                        );
+                    }
                 }
             }
             return InteractionResult.CONSUME;
