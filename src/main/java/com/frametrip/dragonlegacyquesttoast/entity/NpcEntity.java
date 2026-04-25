@@ -3,6 +3,8 @@ package com.frametrip.dragonlegacyquesttoast.entity;
 import com.frametrip.dragonlegacyquesttoast.network.ModNetwork;
 import com.frametrip.dragonlegacyquesttoast.network.NpcDialoguePacket;
 import com.frametrip.dragonlegacyquesttoast.network.NpcStartScenePacket;
+import com.frametrip.dragonlegacyquesttoast.network.OpenTraderShopPacket;
+import com.frametrip.dragonlegacyquesttoast.profession.NpcProfessionType;
 import com.frametrip.dragonlegacyquesttoast.server.DialogueDefinition;
 import com.frametrip.dragonlegacyquesttoast.server.DialogueManager;
 import com.frametrip.dragonlegacyquesttoast.server.dialogue.NpcScene;
@@ -112,6 +114,17 @@ public class NpcEntity extends PathfinderMob {
         if (!level().isClientSide && !player.isShiftKeyDown()) {
             NpcEntityData data = getNpcData();
         if (player instanceof ServerPlayer sp) {
+                // Profession: Trader → open shop window
+                if (data.professionData != null
+                        && data.professionData.type == NpcProfessionType.TRADER
+                        && data.professionData.traderData != null) {
+                    ModNetwork.CHANNEL.send(
+                            PacketDistributor.PLAYER.with(() -> sp),
+                            new OpenTraderShopPacket(this.getUUID(), data)
+                    );
+                    return InteractionResult.CONSUME;
+                }
+
                 // Prefer scene-based dialogue, fall back to legacy dialogue
                 if (!data.sceneId.isEmpty()) {
                     NpcScene scene = NpcSceneManager.get(data.sceneId);
