@@ -1,5 +1,6 @@
 package com.frametrip.dragonlegacyquesttoast.client;
- 
+
+import com.frametrip.dragonlegacyquesttoast.currency.ClientCurrencyState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -9,7 +10,7 @@ import net.minecraft.network.chat.Component;
 public class MainHubMenuScreen extends Screen {
  
     private static final int W = 420;
-    private static final int H = 270;
+    private static final int H = 310;
  
     // Section colors
     private static final int COL_HEADER  = 0xFFE6D7B5;
@@ -57,7 +58,7 @@ public class MainHubMenuScreen extends Screen {
             mc().setScreen(new NpcCustomizerScreen(this)));
  
         // ── Нижняя полоса: Настройки ──────────────────────────────────────────
-        int settY = oy + H - 82;
+        int settY = oy + H - 122;
  
         if (creative) {
             addBtn("Редактор UI", col1X, settY, 180, () ->
@@ -122,11 +123,20 @@ public class MainHubMenuScreen extends Screen {
         g.drawString(font, "КОНТЕНТ", col2X + 6, col1Y + 5, COL_SECTION, false);
  
         // Секция: Настройки
-        int settY = oy + H - 92;
+        int settY = oy + H - 132;
         g.fill(ox + 16, settY, ox + W - 16, settY + 54, COL_PANEL);
         drawBorder(g, ox + 16, settY, W - 32, 54, COL_DIVIDER);
         g.drawString(font, "НАСТРОЙКИ", ox + 22, settY + 5, COL_SECTION, false);
- 
+
+        // Секция: Банк наследия
+        int bankY = oy + H - 72;
+        g.fill(ox + 16, bankY, ox + W - 16, bankY + 40, COL_PANEL);
+        drawBorder(g, ox + 16, bankY, W - 32, 40, 0xFF554422);
+        g.drawString(font, "БАНК НАСЛЕДИЯ", ox + 22, bankY + 5, 0xFFE6A030, false);
+        g.drawString(font,
+                "§e◆ §fМонеты наследия: §e" + ClientCurrencyState.formatted(),
+                ox + 22, bankY + 18, 0xFFCCCCCC, false);
+     
         super.render(g, mx, my, pt);
     }
  
