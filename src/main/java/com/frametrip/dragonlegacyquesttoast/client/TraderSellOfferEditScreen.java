@@ -1,0 +1,157 @@
+package com.frametrip.dragonlegacyquesttoast.client;
+
+import com.frametrip.dragonlegacyquesttoast.client.npceditor.NpcEditorState;
+import com.frametrip.dragonlegacyquesttoast.profession.trader.SellTradeOffer;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
+
+import java.util.UUID;
+
+public class TraderSellOfferEditScreen extends Screen {
+
+    private static final int W = 400;
+    private static final int H = 380;
+
+    private final NpcEditorState editorState;
+    private final SellTradeOffer original;
+    private final Screen parent;
+
+    private SellTradeOffer draft;
+
+    private EditBox nameField;
+    private EditBox descField;
+    private EditBox itemIdField;
+    private EditBox priceField;
+    private EditBox amountField;
+    private EditBox discountPercentField;
+    private EditBox stockField;
+    private EditBox maxStockField;
+    private EditBox restockAmountField;
+
+    public TraderSellOfferEditScreen(NpcEditorState state, SellTradeOffer offer, Screen parent) {
+        super(Component.literal(offer == null ? "Добавить товар" : "Редактировать товар"));
+        this.editorState = state;
+        this.original    = offer;
+        this.parent      = parent;
+        this.draft       = offer != null ? offer.copy() : new SellTradeOffer();
+    }
+
+    @Override
+    protected void init() {
+        super.init();
+        int ox = ox(), oy = oy();
+        int fw = W - 120;
+
+        itemIdField          = addBox(ox + 110, oy + 36,  fw, "Предмет (ID)", draft.itemId, 64);
+        nameField            = addBox(ox + 110, oy + 60,  fw, "Название", draft.customName, 64);
+        descField            = addBox(ox + 110, oy + 84,  fw, "Описание", draft.description, 128);
+        priceField           = addBox(ox + 110, oy + 108, 80, "Цена", String.valueOf(draft.price), 10);
+        amountField          = addBox(ox + 200, oy + 108, 80, "Количество", String.valueOf(draft.amount), 10);
+        discountPercentField = addBox(ox + 110, oy + 132, 60, "Скидка %", String.valueOf(draft.discountPercent), 3);
+
+        addRenderableWidget(Button.builder(
+                Component.literal(draft.infiniteStock ? "§a■ §fБескон. запас" : "§7□ §fБескон. запас"),
+                b -> { draft.infiniteStock = !draft.infiniteStock; rebuildWidgets(); }
+        ).bounds(ox + 110, oy + 156, 140, 18).build());
+
+        if (!draft.infiniteStock) {
+            stockField    = addBox(ox + 110, oy + 180, 80, "Запас", String.valueOf(draft.stock), 10);
+            maxStockField = addBox(ox + 200, oy + 180, 80, "Макс.", String.valueOf(draft.maxStock), 10);
+
+            addRenderableWidget(Button.builder(
+                    Component.literal(draft.restockEnabled ? "§a■ §fАвто-обновление" : "§7□ §fАвто-обновление"),
+                    b -> { draft.restockEnabled = !draft.restockEnabled; rebuildWidgets(); }
+            ).bounds(ox + 110, oy + 206, 150, 18).build());
+
+            if (draft.restockEnabled) {
+                restockAmountField = addBox(ox + 110, oy + 230, 80, "Восстановление", String.valueOf(draft.restockAmount), 10);
+            }
+        }
+
+        int btnY = oy + H - 30;
+        addRenderableWidget(Button.builder(Component.literal("Сохранить"), b -> save())
+                .bounds(ox + 8, btnY, 100, 20).build());
+        addRenderableWidget(Button.builder(Component.literal("Отмена"),
+                b -> { if (minecraft != null) minecraft.setScreen(parent); })
+                .bounds(ox + 114, btnY, 80, 20).build());
+    }
+
+    private EditBox addBox(int x, int y, int w, String hint, String value, int maxLen) {
+        EditBox box = new EditBox(font, x, y, w, 16, Component.literal(hint));
+        box.setMaxLength(maxLen);
+        box.setValue(value);
+        addRenderableWidget(box);
+        return box;
+    }
+
+    private void save() {
+        pullFields();
+        var d = editorState.getDraft();
+        if (d.professionData == null) return;
+        d.professionData.ensureTraderData();
+        var offers = d.professionData.traderData.sellOffers;
+        if (original == null) {
+            offers.add(draft);
+        } else {
+            int idx = indexOf(offers, original.id);
+            if (idx >= 0) offers.set(idx, draft);
+            else          offers.add(draft);
+        }
+        editorState.markDirty();
+        if (minecraft != null) minecraft.setScreen(parent);
+    }
+
+    private void pullFields() {
+        draft.itemId          = val(itemIdField);
+        draft.customName      = val(nameField);
+        draft.description     = val(descField);
+        draft.price           = parseInt(val(priceField),  draft.price);
+        draft.amount          = parseInt(val(amountField), draft.amount);
+        draft.discountPercent = Math.max(0, Math.min(90, parseInt(val(discountPercentField), draft.discountPercent)));
+        if (!draft.infiniteStock) {
+            draft.stock    = parseInt(val(stockField),    draft.stock);
+            draft.maxStock = parseInt(val(maxStockField), draft.maxStock);
+            if (draft.restockEnabled)
+                draft.restockAmount = parseInt(val(restockAmountField), draft.restockAmount);
+        }
+    }
+
+    @Override
+    public void render(GuiGraphics g, int mx, int my, float pt) {
+        renderBackground(g);
+        int ox = ox(), oy = oy();
+        g.fill(ox, oy, ox + W, oy + H, 0xEE0A0A14);
+        NpcCreatorScreen.brd(g, ox, oy, W, H, 0xFF3A3A55);
+        g.fill(ox, oy, ox + W, oy + 26, 0xBB12121E);
+        g.drawString(font, "§f" + getTitle().getString(), ox + 8, oy + 8, 0xFFE6D7B5, false);
+
+        label(g, "Предмет (ID):", ox + 8, oy + 39);
+        label(g, "Название:",     ox + 8, oy + 63);
+        label(g, "Описание:",     ox + 8, oy + 87);
+        label(g, "Цена / кол.:",  ox + 8, oy + 111);
+        label(g, "Скидка % (0-90):", ox + 8, oy + 135);
+        super.render(g, mx, my, pt);
+    }
+
+    private void label(GuiGraphics g, String text, int x, int y) {
+        g.drawString(font, "§7" + text, x, y, 0xFF888877, false);
+    }
+
+    @Override
+    public boolean isPauseScreen() { return false; }
+
+    private int ox() { return (width  - W) / 2; }
+    private int oy() { return (height - H) / 2; }
+
+    private static String val(EditBox box) { return box == null ? "" : box.getValue(); }
+    private static int parseInt(String s, int def) {
+        try { return Integer.parseInt(s.trim()); } catch (Exception e) { return def; }
+    }
+    private static int indexOf(java.util.List<SellTradeOffer> list, String id) {
+        for (int i = 0; i < list.size(); i++) if (list.get(i).id.equals(id)) return i;
+        return -1;
+    }
+}
