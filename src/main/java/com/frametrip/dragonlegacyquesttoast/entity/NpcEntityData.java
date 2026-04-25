@@ -1,5 +1,6 @@
 package com.frametrip.dragonlegacyquesttoast.entity;
- 
+
+import com.frametrip.dragonlegacyquesttoast.profession.NpcProfessionData;
 import com.frametrip.dragonlegacyquesttoast.server.NpcProfile;
  
 import java.util.*;
@@ -28,6 +29,9 @@ public class NpcEntityData {
  
     // — Relations —
     public String playerRelation = "NEUTRAL"; // FRIENDLY, NEUTRAL, HOSTILE
+ 
+    // — Profession —
+    public NpcProfessionData professionData = new NpcProfessionData();
  
     // ── Pose labels (for UI) ──────────────────────────────────────────────────
     public static final String[] IDLE_POSES       = {"STANDING", "CROUCHING"};
@@ -76,6 +80,8 @@ public class NpcEntityData {
         c.lockBodyRotation  = this.lockBodyRotation;
         c.bodyYaw           = this.bodyYaw;
         c.playerRelation    = this.playerRelation;
+        c.professionData    = this.professionData != null ? this.professionData.copy() : new NpcProfessionData();
+
         return c;
     }
  
