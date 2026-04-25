@@ -1,6 +1,7 @@
 package com.frametrip.dragonlegacyquesttoast.registry;
  
 import com.frametrip.dragonlegacyquesttoast.DragonLegacyQuestToastMod;
+import com.frametrip.dragonlegacyquesttoast.item.LegacyCoinItem;
 import com.frametrip.dragonlegacyquesttoast.item.NpcSpawnerItem;
 import net.minecraft.world.item.Item;
 import net.minecraftforge.registries.DeferredRegister;
@@ -15,5 +16,10 @@ public class ModItems {
     public static final RegistryObject<Item> NPC_SPAWNER =
         ITEMS.register("npc_spawner", () ->
             new NpcSpawnerItem(new Item.Properties().stacksTo(1))
+        );
+ 
+    public static final RegistryObject<Item> LEGACY_COIN =
+        ITEMS.register("legacy_coin", () ->
+            new LegacyCoinItem(new Item.Properties().stacksTo(64))
         );
 }
