@@ -1,111 +1,223 @@
 package com.frametrip.dragonlegacyquesttoast.client.dialogue;
 
 import com.frametrip.dragonlegacyquesttoast.client.ClientNpcDialogueManager;
+import com.frametrip.dragonlegacyquesttoast.server.dialogue.NpcChoiceOption;
 import com.frametrip.dragonlegacyquesttoast.server.dialogue.NpcScene;
 import com.frametrip.dragonlegacyquesttoast.server.dialogue.NpcSceneNode;
 import net.minecraft.client.Minecraft;
+import net.minecraft.core.BlockPos;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
 
 /**
  * Client-side runtime controller for NPC scenes.
- * Processes nodes in order: speech → overlay, question → NpcChoiceScreen, action → auto-execute.
+ * Processes nodes in order: speech → overlay, question → NpcChoiceScreen,
+ * action → auto-execute, condition → branch, end → finish.
+ *
+ * Supports a preview mode where destructive side-effects (give_quest, etc.)
+ * are replaced with informational overlays — for the editor's "Preview scene".
  */
 public class NpcSceneController {
 
-    private static String currentNpcName = "";
-    private static NpcScene currentScene = null;
-    private static String pendingNodeId  = null;
-
+    private static String  currentNpcName = "";
+    private static NpcScene currentScene  = null;
+    private static String  pendingNodeId  = null;
+    private static boolean previewMode    = false;
+    
     private NpcSceneController() {}
 
     public static void startScene(String npcName, String sceneId) {
         NpcScene scene = ClientNpcSceneState.get(sceneId);
         if (scene == null) return;
+        startScene(npcName, scene, scene.startNodeId, false);
+    }
 
-        currentNpcName = npcName;
+    /** Start a (possibly unsaved) scene from the given node, optionally in preview mode. */
+    public static void startScene(String npcName, NpcScene scene, String startNodeId, boolean preview) {
+        if (scene == null) return;
+        currentNpcName = npcName == null ? "" : npcName;        
         currentScene   = scene;
-        processNode(scene.startNodeId);
+        previewMode    = preview;
+        String start = (startNodeId == null || startNodeId.isEmpty()) ? scene.startNodeId : startNodeId;
+        processNode(start);    
     }
 
     public static void processNode(String nodeId) {
         if (currentScene == null) return;
-        if (nodeId == null || nodeId.isEmpty()) {
-            finish();
-            return;
-        }
+        if (nodeId == null || nodeId.isEmpty()) { finish(); return; }
 
         NpcSceneNode node = currentScene.getNode(nodeId);
-        if (node == null) {
-            finish();
-            return;
-        }
+        if (node == null) { finish(); return; }
 
         switch (node.type) {
-            case NpcSceneNode.TYPE_SPEECH   -> processSpeech(node);
-            case NpcSceneNode.TYPE_QUESTION -> processQuestion(node);
-            case NpcSceneNode.TYPE_ACTION   -> processAction(node);
-            default -> finish();
+            case NpcSceneNode.TYPE_SPEECH    -> processSpeech(node);
+            case NpcSceneNode.TYPE_QUESTION  -> processQuestion(node);
+            case NpcSceneNode.TYPE_ACTION    -> processAction(node);
+            case NpcSceneNode.TYPE_CONDITION -> processCondition(node);
+            case NpcSceneNode.TYPE_END       -> finish();
+            default                          -> finish();
         }
     }
 
     private static void processSpeech(NpcSceneNode node) {
-        // Use existing dialogue overlay; after it ends, call next node
-        String next = node.nextNodeId;
-        ClientNpcDialogueManager.show(currentNpcName, node.text);
-        // We chain: after the overlay text, process next node.
-        // Because the overlay is tick-based, we schedule via pending.
-        pendingNodeId = next;
+         String speaker = (node.speakerName != null && !node.speakerName.isBlank())
+                ? node.speakerName : currentNpcName;
+        ClientNpcDialogueManager.show(speaker, node.text);
+
+        if (node.soundId != null && !node.soundId.isBlank()) playSound(node.soundId);
+
+        pendingNodeId = node.nextNodeId;
         schedulePending();
     }
 
     private static void processQuestion(NpcSceneNode node) {
+        String speaker = (node.speakerName != null && !node.speakerName.isBlank())
+                ? node.speakerName : currentNpcName;
         Minecraft mc = Minecraft.getInstance();
-        mc.setScreen(new NpcChoiceScreen(currentNpcName, node, NpcSceneController::processNode));
+        mc.setScreen(new NpcChoiceScreen(speaker, node, NpcSceneController::onChoicePicked));
+    }
+
+    private static void onChoicePicked(String choiceId) {
+        if (currentScene == null) { finish(); return; }
+        // Find the choice in the scene by id (UUID-based) and execute its optional action.
+        NpcChoiceOption picked = null;
+        for (NpcSceneNode n : currentScene.nodes) {
+            if (!NpcSceneNode.TYPE_QUESTION.equals(n.type) || n.choices == null) continue;
+            for (NpcChoiceOption o : n.choices) {
+                if (choiceId != null && choiceId.equals(o.id)) { picked = o; break; }
+            }
+            if (picked != null) break;
+        }
+
+        if (picked == null) { processNode(choiceId); return; } // fallback: treat as nextNodeId
+
+        if (picked.actionType != null && !picked.actionType.isBlank()) {
+            executeAction(picked.actionType, picked.actionParam);
+        }
+        processNode(picked.nextNodeId);
     }
 
     private static void processAction(NpcSceneNode node) {
-        executeAction(node);
+        executeAction(node.actionType, node.actionParam);
+        if (NpcSceneNode.ACTION_CLOSE_SCENE.equals(node.actionType)) { finish(); return; }
+        if (NpcSceneNode.ACTION_OPEN_SCENE.equals(node.actionType)) {
+            NpcScene target = ClientNpcSceneState.get(node.actionParam);
+            if (target != null) { currentScene = target; processNode(target.startNodeId); return; }
+        }
         processNode(node.actionNextNodeId);
     }
 
-    private static void executeAction(NpcSceneNode node) {
-        // Actions are client-side effects only; server-side effects require additional packets.
-        switch (node.actionType) {
-            case NpcSceneNode.ACTION_GIVE_QUEST, NpcSceneNode.ACTION_COMPLETE_QUEST -> {
-                // Notify server via chat command or dedicated packet (future extension).
-                // For now show a brief overlay message.
-                String label = node.actionType.equals(NpcSceneNode.ACTION_GIVE_QUEST)
-                        ? "Выдан квест: " : "Квест выполнен: ";
-                ClientNpcDialogueManager.show("", label + node.actionParam);
-            }
-            case NpcSceneNode.ACTION_SET_RELATION -> {
-                ClientNpcDialogueManager.show("", "Отношение изменено: " + node.actionParam);
-            }
+    private static void processCondition(NpcSceneNode node) {
+        boolean result = evaluateCondition(node.conditionType, node.conditionParam);
+        processNode(result ? node.trueNextNodeId : node.falseNextNodeId);
+    }
+
+    // ── Condition evaluator (client-side approximations) ────────────────────
+
+    private static boolean evaluateCondition(String type, String param) {
+        if (type == null || type.isBlank()) return true;
+        Minecraft mc = Minecraft.getInstance();
+        Player p = mc.player;
+        Level lvl = mc.level;
+        return switch (type) {
+            case NpcSceneNode.COND_TIME_DAY   -> lvl != null && lvl.isDay();
+            case NpcSceneNode.COND_TIME_NIGHT -> lvl != null && lvl.isNight();
+            case NpcSceneNode.COND_HAS_ITEM   -> p != null && playerHasItem(p, param);
+            case NpcSceneNode.COND_NOT_HAS_ITEM -> p == null || !playerHasItem(p, param);
+            case NpcSceneNode.COND_FIRST_TALK -> true;   // client can't know reliably; default true
+            case NpcSceneNode.COND_RE_TALK    -> false;
+            // Relation/faction/quest/path stages are server-authoritative; assume true to show content.
+            default -> true;
+        };
+    }
+
+    private static boolean playerHasItem(Player p, String itemId) {
+        if (itemId == null || itemId.isBlank()) return false;
+        ResourceLocation rl = tryParse(itemId);
+        if (rl == null) return false;
+        var item = net.minecraft.core.registries.BuiltInRegistries.ITEM.get(rl);
+        if (item == null) return false;
+        return p.getInventory().contains(new net.minecraft.world.item.ItemStack(item));
+    }
+
+    // ── Action executor ─────────────────────────────────────────────────────
+
+    private static void executeAction(String actionType, String actionParam) {
+        if (actionType == null || actionType.isBlank()) return;
+        // In preview mode all destructive actions become informational overlays only.
+        if (previewMode) {
+            String label = switch (actionType) {
+                case NpcSceneNode.ACTION_GIVE_QUEST           -> "⏵ Выдан квест";
+                case NpcSceneNode.ACTION_COMPLETE_QUEST       -> "⏵ Квест выполнен";
+                case NpcSceneNode.ACTION_FAIL_QUEST           -> "⏵ Квест провален";
+                case NpcSceneNode.ACTION_SET_RELATION         -> "⏵ Отношение изменено";
+                case NpcSceneNode.ACTION_SET_FACTION_RELATION -> "⏵ Отношение фракции";
+                case NpcSceneNode.ACTION_GIVE_ITEM            -> "⏵ Выдан предмет";
+                case NpcSceneNode.ACTION_TAKE_ITEM            -> "⏵ Забран предмет";
+                case NpcSceneNode.ACTION_PLAY_SOUND           -> "⏵ Звук";
+                case NpcSceneNode.ACTION_PLAY_ANIMATION       -> "⏵ Анимация";
+                case NpcSceneNode.ACTION_OPEN_SCENE           -> "⏵ Переход в сцену";
+                case NpcSceneNode.ACTION_CLOSE_SCENE          -> "⏵ Завершение сцены";
+                default                                       -> "⏵ " + actionType;
+            };
+            String extra = (actionParam == null || actionParam.isBlank()) ? "" : ": " + actionParam;
+            ClientNpcDialogueManager.show("[предпросмотр]", label + extra);
+            return;
         }
+        
+        switch (actionType) {
+            case NpcSceneNode.ACTION_GIVE_QUEST, NpcSceneNode.ACTION_COMPLETE_QUEST,
+                 NpcSceneNode.ACTION_FAIL_QUEST ->
+                    ClientNpcDialogueManager.show("", labelFor(actionType) + ": " + actionParam);
+            case NpcSceneNode.ACTION_SET_RELATION, NpcSceneNode.ACTION_SET_FACTION_RELATION ->
+                    ClientNpcDialogueManager.show("", labelFor(actionType) + ": " + actionParam);
+            case NpcSceneNode.ACTION_GIVE_ITEM, NpcSceneNode.ACTION_TAKE_ITEM ->
+                    ClientNpcDialogueManager.show("", labelFor(actionType) + ": " + actionParam);
+            case NpcSceneNode.ACTION_PLAY_SOUND -> playSound(actionParam);
+            case NpcSceneNode.ACTION_PLAY_ANIMATION ->
+                    ClientNpcDialogueManager.show("", "Анимация: " + actionParam);
+            // OPEN_SCENE / CLOSE_SCENE are handled in processAction() flow.
+            default -> {}
+        }
+    }
+
+    private static String labelFor(String actionType) {
+        return NpcSceneNode.actionLabel(actionType);
+    }
+
+    private static void playSound(String soundId) {
+        if (soundId == null || soundId.isBlank()) return;
+        ResourceLocation rl = tryParse(soundId);
+        if (rl == null) return;
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.level == null || mc.player == null) return;
+        SoundEvent evt = net.minecraft.core.registries.BuiltInRegistries.SOUND_EVENT.get(rl);
+        if (evt == null) return;
+        BlockPos pos = mc.player.blockPosition();
+        mc.level.playLocalSound(pos, evt, SoundSource.NEUTRAL, 1.0f, 1.0f, false);
+    }
+
+    private static ResourceLocation tryParse(String s) {
+        try { return new ResourceLocation(s); } catch (Exception e) { return null; }
     }
 
     /** Called after overlay finishes ticking to proceed to the next pending node. */
     private static void schedulePending() {
         if (pendingNodeId == null) return;
-        // We hook into the existing overlay tick; the simplest client-side approach is
-        // to process immediately after the text display is queued (it queues, not blocks).
         String next = pendingNodeId;
         pendingNodeId = null;
-        // If next is empty, done; otherwise continue after overlay finishes.
-        // For simplicity: if it's another speech node, let it queue in the overlay.
-        // If it's a question/action, we need to wait. Store for deferred call.
-        if (next.isEmpty()) {
-            finish();
+       if (next.isEmpty()) { finish(); return; }
+
+        NpcScene scene = currentScene;
+        NpcSceneNode nextNode = scene.getNode(next);
+        if (nextNode == null) { finish(); return; }
+        if (nextNode.type.equals(NpcSceneNode.TYPE_SPEECH)) {
+            processNode(next);
         } else {
-            NpcScene scene = currentScene;
-            NpcSceneNode nextNode = scene.getNode(next);
-            if (nextNode == null) { finish(); return; }
-            if (nextNode.type.equals(NpcSceneNode.TYPE_SPEECH)) {
-                // queue directly — overlay handles multiple pages
-                processNode(next);
-            } else {
-                // defer until overlay is no longer active
-                NpcSceneTickHandler.scheduleDeferredNode(next);
-            }
+        NpcSceneTickHandler.scheduleDeferredNode(next);
         }
     }
 
@@ -113,9 +225,14 @@ public class NpcSceneController {
         currentScene   = null;
         currentNpcName = "";
         pendingNodeId  = null;
+        previewMode    = false;
     }
 
     public static boolean isActive() {
         return currentScene != null;
+    }
+    
+    public static boolean isPreview() {
+        return previewMode;
     }
 }
