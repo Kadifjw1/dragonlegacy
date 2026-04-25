@@ -48,5 +48,13 @@ public class ModNetwork {
         CHANNEL.registerMessage(packetId++, SaveNpcScenePacket.class,       SaveNpcScenePacket::encode,       SaveNpcScenePacket::decode,       SaveNpcScenePacket::handle);
         CHANNEL.registerMessage(packetId++, SyncNpcScenesPacket.class,      SyncNpcScenesPacket::encode,      SyncNpcScenesPacket::decode,      SyncNpcScenesPacket::handle);
         CHANNEL.registerMessage(packetId++, NpcStartScenePacket.class,      NpcStartScenePacket::encode,      NpcStartScenePacket::decode,      NpcStartScenePacket::handle);
+        CHANNEL.registerMessage(packetId++, SyncPlayerCurrencyPacket.class, SyncPlayerCurrencyPacket::encode, SyncPlayerCurrencyPacket::decode, SyncPlayerCurrencyPacket::handle);
+        CHANNEL.registerMessage(packetId++, BuyTradeOfferPacket.class,      BuyTradeOfferPacket::encode,      BuyTradeOfferPacket::decode,      BuyTradeOfferPacket::handle);
+        CHANNEL.registerMessage(packetId++, SellToNpcPacket.class,          SellToNpcPacket::encode,          SellToNpcPacket::decode,          SellToNpcPacket::handle);
+        CHANNEL.registerMessage(packetId++, SaveTraderDataPacket.class,     SaveTraderDataPacket::encode,     SaveTraderDataPacket::decode,     SaveTraderDataPacket::handle);
+        CHANNEL.registerMessage(packetId++, OpenTraderShopPacket.class,          OpenTraderShopPacket::encode,          OpenTraderShopPacket::decode,          OpenTraderShopPacket::handle);
+        CHANNEL.registerMessage(packetId++, SaveTraderLayoutPacket.class,        SaveTraderLayoutPacket::encode,        SaveTraderLayoutPacket::decode,        SaveTraderLayoutPacket::handle);
+        CHANNEL.registerMessage(packetId++, SaveTraderDiscountsPacket.class,     SaveTraderDiscountsPacket::encode,     SaveTraderDiscountsPacket::decode,     SaveTraderDiscountsPacket::handle);
+        CHANNEL.registerMessage(packetId++, ApplyTraderLayoutPresetPacket.class, ApplyTraderLayoutPresetPacket::encode, ApplyTraderLayoutPresetPacket::decode, ApplyTraderLayoutPresetPacket::handle);
     }
 }
