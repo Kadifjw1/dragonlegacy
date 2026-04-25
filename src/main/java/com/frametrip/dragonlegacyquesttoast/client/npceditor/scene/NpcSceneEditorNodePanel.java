@@ -93,18 +93,16 @@ final class NpcSceneEditorNodePanel {
         scr.sceneNameBox.setValue(s.name == null ? "" : s.name);
         scr.addRenderableWidget(scr.sceneNameBox);
 
-        // Type cycle
         int ti = indexOf(NpcScene.TYPE_IDS, s.type);
         scr.addRenderableWidget(Button.builder(
                 Component.literal("◀▶ Тип: " + NpcScene.typeLabel(s.type)),
-                    b -> {
+                b -> {
                     scr.pullAllFields();
                     s.type = NpcScene.TYPE_IDS[(ti + 1) % NpcScene.TYPE_IDS.length];
                     scr.rebuildAll();
                 }
         ).bounds(x + 8, y + 30, COL3_W - 16, 14).build());
 
-        // Repeatable / Enabled toggles
         scr.addRenderableWidget(Button.builder(
                 Component.literal(s.repeatable ? "§a↻ Повторяемая" : "§7↻ Однократная"),
                 b -> { scr.pullAllFields(); s.repeatable = !s.repeatable; scr.rebuildAll(); }
@@ -116,14 +114,12 @@ final class NpcSceneEditorNodePanel {
         ).bounds(x + 8 + (COL3_W - 16) / 2 + 2, y + 48,
                 (COL3_W - 16) / 2 - 2, 14).build());
 
-        // Description
         scr.sceneDescBox = new EditBox(font, x + 8, y + 70, COL3_W - 16, 16,
                 Component.literal("Описание"));
         scr.sceneDescBox.setMaxLength(200);
         scr.sceneDescBox.setValue(s.description == null ? "" : s.description);
         scr.addRenderableWidget(scr.sceneDescBox);
 
-        // Start node cycler
         cycleNodeNext(scr, x + 8, y + 92, COL3_W - 16,
                 "★ Старт", s.startNodeId,
                 id -> { scr.pullAllFields(); s.startNodeId = id; scr.rebuildAll(); });
@@ -146,7 +142,6 @@ final class NpcSceneEditorNodePanel {
         scr.nodeSpeakerBox.setHint(Component.literal("Имя…").withStyle(s -> s.withColor(0xFF555566)));
         scr.addRenderableWidget(scr.nodeSpeakerBox);
 
-        // Emotion cycle
         int ei = indexOf(NpcSceneNode.EMOTION_IDS, n.emotion);
         scr.addRenderableWidget(Button.builder(
                 Component.literal("◀▶ " + NpcSceneNode.emotionLabel(n.emotion)),
@@ -157,7 +152,6 @@ final class NpcSceneEditorNodePanel {
                 }
         ).bounds(x + 8 + (COL3_W - 16) / 2 + 2, y + 30, (COL3_W - 16) / 2 - 2, 14).build());
 
-        // Animation + Sound
         scr.nodeAnimBox = new EditBox(font, x + 8, y + 48, (COL3_W - 16) / 2 - 2, 14,
                 Component.literal("Анимация"));
         scr.nodeAnimBox.setMaxLength(64);
@@ -172,12 +166,10 @@ final class NpcSceneEditorNodePanel {
         scr.nodeSoundBox.setHint(Component.literal("minecraft:…").withStyle(s -> s.withColor(0xFF555566)));
         scr.addRenderableWidget(scr.nodeSoundBox);
 
-        // Next-node cycler
         cycleNodeNext(scr, x + 8, y + 70, COL3_W - 16,
                 "→ Следующий", n.nextNodeId,
                 id -> { scr.pullAllFields(); n.nextNodeId = id; scr.rebuildAll(); });
 
-        // Incoming refs hint
         renderIncomingHint(scr, x + 8, y + 92, n.id);
     }
 
@@ -185,7 +177,6 @@ final class NpcSceneEditorNodePanel {
     private static void initAction(NpcSceneEditorScreen scr, int x, int y, NpcSceneNode n) {
         var font = Minecraft.getInstance().font;
 
-        // Action type cycle
         int ai = indexOf(NpcSceneNode.ACTION_IDS, n.actionType);
         scr.addRenderableWidget(Button.builder(
                 Component.literal("◀▶ " + NpcSceneNode.actionLabel(n.actionType)),
@@ -196,27 +187,25 @@ final class NpcSceneEditorNodePanel {
                 }
         ).bounds(x + 8, y + 8, COL3_W - 16, 14).build());
 
-        // Param: free text + helper picker for some types
         scr.nodeActionParamBox = new EditBox(font, x + 8, y + 26, COL3_W - 16, 16,
-                  Component.literal("Параметр"));
+                Component.literal("Параметр"));
         scr.nodeActionParamBox.setMaxLength(160);
         scr.nodeActionParamBox.setValue(n.actionParam);
         scr.nodeActionParamBox.setHint(actionHint(n.actionType));
         scr.addRenderableWidget(scr.nodeActionParamBox);
 
-        // Quest picker for quest actions
         if (NpcSceneNode.ACTION_GIVE_QUEST.equals(n.actionType)
                 || NpcSceneNode.ACTION_COMPLETE_QUEST.equals(n.actionType)
                 || NpcSceneNode.ACTION_FAIL_QUEST.equals(n.actionType)) {
             initQuestPicker(scr, x + 8, y + 48, COL3_W - 16,
                     n.actionParam, id -> n.actionParam = id);
         }
-        // Scene picker for OPEN_SCENE
+
         if (NpcSceneNode.ACTION_OPEN_SCENE.equals(n.actionType)) {
             initScenePicker(scr, x + 8, y + 48, COL3_W - 16,
                     n.actionParam, id -> n.actionParam = id);
         }
-        // Relation cycler for SET_RELATION
+
         if (NpcSceneNode.ACTION_SET_RELATION.equals(n.actionType)) {
             String[] vals = {"FRIENDLY", "NEUTRAL", "HOSTILE"};
             int ri = Math.max(0, indexOf(vals, n.actionParam == null ? "" : n.actionParam.toUpperCase()));
@@ -258,7 +247,6 @@ final class NpcSceneEditorNodePanel {
         scr.nodeCondParamBox.setHint(condHint(n.conditionType));
         scr.addRenderableWidget(scr.nodeCondParamBox);
 
-        // Quest picker for quest-related conditions
         if (NpcSceneNode.COND_QUEST_ACTIVE.equals(n.conditionType)
                 || NpcSceneNode.COND_QUEST_COMPLETE.equals(n.conditionType)
                 || NpcSceneNode.COND_QUEST_NOT_TAKEN.equals(n.conditionType)) {
@@ -285,25 +273,31 @@ final class NpcSceneEditorNodePanel {
         ).bounds(x + 8, y + 8, COL3_W - 16, 14).build());
     }
 
-    // ── Helpers (also reused by question/choice panel) ─────────────────────
+    // ── Helpers ────────────────────────────────────────────────────────────
     static void cycleNodeNext(NpcSceneEditorScreen scr, int x, int y, int w,
                               String label, String currentId,
                               java.util.function.Consumer<String> apply) {
-        List<NpcSceneNode> nodes = scr.draftScene.nodes;
-        int cur = -1;
-        for (int i = 0; i < nodes.size(); i++)
-            if (nodes.get(i).id.equals(currentId)) { cur = i; break; }
+        final List<NpcSceneNode> nodes = scr.draftScene.nodes;
+        int curIndex = -1;
+        for (int i = 0; i < nodes.size(); i++) {
+            if (nodes.get(i).id.equals(currentId)) {
+                curIndex = i;
+                break;
+            }
+        }
+        final int currentIndex = curIndex;
+
         String label2 = (currentId == null || currentId.isEmpty()) ? "§8(конец)"
                 : nodes.stream().filter(nn -> nn.id.equals(currentId))
-                       .map(nn -> "§f" + shortLabel(nn))
-                       .findFirst().orElse("§c" + currentId);
+                .map(nn -> "§f" + shortLabel(nn))
+                .findFirst().orElse("§c" + currentId);
 
-  scr.addRenderableWidget(Button.builder(
+        scr.addRenderableWidget(Button.builder(
                 Component.literal(label + " " + label2),
                 b -> {
                     scr.pullAllFields();
-                    int next = (cur + 1) % (nodes.size() + 1);
-                    apply.accept(next >= nodes.size() ? "" : nodes.get(next).id);
+                    int nextIndex = (currentIndex + 1) % (nodes.size() + 1);
+                    apply.accept(nextIndex >= nodes.size() ? "" : nodes.get(nextIndex).id);
                     scr.rebuildAll();
                 }
         ).bounds(x, y, w, 14).build());
@@ -356,21 +350,30 @@ final class NpcSceneEditorNodePanel {
     private static void initQuestPicker(NpcSceneEditorScreen scr, int x, int y, int w,
                                         String currentId,
                                         java.util.function.Consumer<String> apply) {
-        List<QuestDefinition> quests = ClientQuestState.getAll();
+        final List<QuestDefinition> quests = ClientQuestState.getAll();
         if (quests.isEmpty()) return;
-        int cur = -1;
-        for (int i = 0; i < quests.size(); i++)
-            if (quests.get(i).id.equals(currentId)) { cur = i; break; }
-        String label = (cur < 0) ? "§7подобрать квест"
-                : "§e" + (quests.get(cur).title == null ? quests.get(cur).id : quests.get(cur).title);
+
+        int curIndex = -1;
+        for (int i = 0; i < quests.size(); i++) {
+            if (quests.get(i).id.equals(currentId)) {
+                curIndex = i;
+                break;
+            }
+        }
+        final int currentQuestIndex = curIndex;
+
+        String label = (currentQuestIndex < 0) ? "§7подобрать квест"
+                : "§e" + (quests.get(currentQuestIndex).title == null
+                ? quests.get(currentQuestIndex).id
+                : quests.get(currentQuestIndex).title);
         if (label.length() > 30) label = label.substring(0, 30) + "…";
 
         scr.addRenderableWidget(Button.builder(
                 Component.literal("◀▶ " + label),
                 b -> {
                     scr.pullAllFields();
-                    int next = (cur + 1) % quests.size();
-                    apply.accept(quests.get(next).id);
+                    int nextIndex = (currentQuestIndex + 1) % quests.size();
+                    apply.accept(quests.get(nextIndex).id);
                     scr.rebuildAll();
                 }
         ).bounds(x, y, w, 14).build());
@@ -379,21 +382,30 @@ final class NpcSceneEditorNodePanel {
     private static void initScenePicker(NpcSceneEditorScreen scr, int x, int y, int w,
                                         String currentId,
                                         java.util.function.Consumer<String> apply) {
-        List<NpcScene> scenes = ClientNpcSceneState.getAll();
+        final List<NpcScene> scenes = ClientNpcSceneState.getAll();
         if (scenes.isEmpty()) return;
-        int cur = -1;
-        for (int i = 0; i < scenes.size(); i++)
-            if (scenes.get(i).id.equals(currentId)) { cur = i; break; }
-        String label = (cur < 0) ? "§7выбрать сцену"
-                : "§a" + (scenes.get(cur).name == null ? scenes.get(cur).id : scenes.get(cur).name);
+
+        int curIndex = -1;
+        for (int i = 0; i < scenes.size(); i++) {
+            if (scenes.get(i).id.equals(currentId)) {
+                curIndex = i;
+                break;
+            }
+        }
+        final int currentSceneIndex = curIndex;
+
+        String label = (currentSceneIndex < 0) ? "§7выбрать сцену"
+                : "§a" + (scenes.get(currentSceneIndex).name == null
+                ? scenes.get(currentSceneIndex).id
+                : scenes.get(currentSceneIndex).name);
         if (label.length() > 30) label = label.substring(0, 30) + "…";
 
-   scr.addRenderableWidget(Button.builder(
+        scr.addRenderableWidget(Button.builder(
                 Component.literal("◀▶ " + label),
                 b -> {
                     scr.pullAllFields();
-                    int next = (cur + 1) % scenes.size();
-                    apply.accept(scenes.get(next).id);
+                    int nextIndex = (currentSceneIndex + 1) % scenes.size();
+                    apply.accept(scenes.get(nextIndex).id);
                     scr.rebuildAll();
                 }
         ).bounds(x, y, w, 14).build());
@@ -402,7 +414,6 @@ final class NpcSceneEditorNodePanel {
     private static void renderIncomingHint(NpcSceneEditorScreen scr, int x, int y, String nodeId) {
         if (scr.draftScene == null) return;
         List<String> incoming = scr.draftScene.incomingOf(nodeId);
-        // Just a button that, when clicked, jumps to the first incoming node.
         if (incoming.isEmpty()) return;
         String first = incoming.get(0);
         scr.addRenderableWidget(Button.builder(
