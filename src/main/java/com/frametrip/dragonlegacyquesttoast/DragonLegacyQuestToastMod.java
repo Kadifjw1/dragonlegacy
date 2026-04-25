@@ -7,12 +7,16 @@ import com.frametrip.dragonlegacyquesttoast.client.NpcSkinManager;
 import com.frametrip.dragonlegacyquesttoast.client.QuestToastOverlay;
 import com.frametrip.dragonlegacyquesttoast.client.dialogue.NpcSceneTickHandler;
 import com.frametrip.dragonlegacyquesttoast.command.ModCommands;
+import com.frametrip.dragonlegacyquesttoast.currency.CurrencyEvents;
+import com.frametrip.dragonlegacyquesttoast.currency.CurrencyManager;
+import com.frametrip.dragonlegacyquesttoast.profession.trader.TraderManager;
 import com.frametrip.dragonlegacyquesttoast.network.ModNetwork;
 import com.frametrip.dragonlegacyquesttoast.network.SyncAbilitiesPacket;
 import com.frametrip.dragonlegacyquesttoast.network.SyncDialoguesPacket;
 import com.frametrip.dragonlegacyquesttoast.network.SyncFactionsPacket;
 import com.frametrip.dragonlegacyquesttoast.network.SyncNpcProfilesPacket;
 import com.frametrip.dragonlegacyquesttoast.network.SyncNpcScenesPacket;
+import com.frametrip.dragonlegacyquesttoast.network.SyncPlayerCurrencyPacket;
 import com.frametrip.dragonlegacyquesttoast.network.SyncQuestsPacket;
 import com.frametrip.dragonlegacyquesttoast.registry.ModCreativeTabs;
 import com.frametrip.dragonlegacyquesttoast.registry.ModEntities;
@@ -73,6 +77,12 @@ public class DragonLegacyQuestToastMod {
         MinecraftForge.EVENT_BUS.register(new VoidAbilityHandler());
         QuestLogicHandler.register();
 
+        // Currency events (auto-deposit coins)
+        MinecraftForge.EVENT_BUS.register(new CurrencyEvents());
+
+        // Trader restock tick
+        MinecraftForge.EVENT_BUS.register(new TraderManager());
+
         if (FMLEnvironment.dist == Dist.CLIENT) {
             modBus.addListener(this::onClientSetup);
             modBus.addListener(this::registerOverlays);
@@ -124,5 +134,7 @@ public class DragonLegacyQuestToastMod {
                 new SyncFactionsPacket(FactionManager.getAll()));
         ModNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player),
                 new SyncNpcScenesPacket(NpcSceneManager.getAll()));
+         ModNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player),
+                new SyncPlayerCurrencyPacket(CurrencyManager.getBalance(player.getUUID())));
     }
 }
