@@ -28,6 +28,7 @@ public class TraderBuyOfferEditScreen extends Screen {
     private EditBox demandField;
     private EditBox maxDemandField;
     private EditBox restockAmountField;
+    private boolean autoImportName = true;
 
     public TraderBuyOfferEditScreen(NpcEditorState state, BuyTradeOffer offer, Screen parent) {
         super(Component.literal(offer == null ? "Добавить скупку" : "Редактировать скупку"));
@@ -42,8 +43,11 @@ public class TraderBuyOfferEditScreen extends Screen {
         super.init();
         int ox = ox(), oy = oy();
         int fw = W - 120;
+        int itemFieldW = fw - 90;
 
-        itemIdField         = addBox(ox + 110, oy + 36,  fw, "Предмет (ID)", draft.itemId, 64);
+        itemIdField         = addBox(ox + 110, oy + 36,  itemFieldW, "Предмет (ID)", draft.itemId, 100);
+        addRenderableWidget(Button.builder(Component.literal("Выбрать…"), b -> openItemPicker())
+                .bounds(ox + 110 + itemFieldW + 6, oy + 36, 84, 16).build());
         nameField           = addBox(ox + 110, oy + 60,  fw, "Название", draft.customName, 64);
         descField           = addBox(ox + 110, oy + 84,  fw, "Описание", draft.description, 128);
         requiredAmountField = addBox(ox + 110, oy + 108, 80, "Кол. предметов", String.valueOf(draft.requiredAmount), 10);
@@ -68,6 +72,11 @@ public class TraderBuyOfferEditScreen extends Screen {
                 restockAmountField = addBox(ox + 110, oy + 230, 80, "Восстановление", String.valueOf(draft.restockAmount), 10);
             }
         }
+
+        addRenderableWidget(Button.builder(
+                Component.literal(autoImportName ? "§a■ §fАвто-импорт названия" : "§7□ §fАвто-импорт названия"),
+                b -> { autoImportName = !autoImportName; rebuildWidgets(); }
+        ).bounds(ox + 110, oy + 254, 190, 18).build());
 
         int btnY = oy + H - 30;
         addRenderableWidget(Button.builder(Component.literal("Сохранить"), b -> save())
@@ -102,6 +111,21 @@ public class TraderBuyOfferEditScreen extends Screen {
         if (minecraft != null) minecraft.setScreen(parent);
     }
 
+     private void openItemPicker() {
+        pullFields();
+        if (minecraft == null) return;
+        minecraft.setScreen(new TraderItemPickerScreen(this, draft.itemId, (itemId, displayName) -> {
+            draft.itemId = itemId;
+            itemIdField.setValue(itemId);
+
+            boolean nameEmpty = val(nameField).isBlank();
+            if (autoImportName || nameEmpty) {
+                draft.customName = displayName;
+                nameField.setValue(displayName);
+            }
+        }));
+    }
+
     private void pullFields() {
         draft.itemId         = val(itemIdField);
         draft.customName     = val(nameField);
@@ -126,7 +150,7 @@ public class TraderBuyOfferEditScreen extends Screen {
         g.fill(ox, oy, ox + W, oy + 26, 0xBB12121E);
         g.drawString(font, "§f" + getTitle().getString(), ox + 8, oy + 8, 0xFFE6D7B5, false);
 
-        label(g, "Предмет (ID):",    ox + 8, oy + 39);
+        label(g, "Предмет:",         ox + 8, oy + 39);
         label(g, "Название:",        ox + 8, oy + 63);
         label(g, "Описание:",        ox + 8, oy + 87);
         label(g, "Кол. / монет:",    ox + 8, oy + 111);
