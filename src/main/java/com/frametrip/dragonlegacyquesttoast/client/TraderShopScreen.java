@@ -20,8 +20,11 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.world.item.ItemStack;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public class TraderShopScreen extends Screen {
@@ -36,6 +39,7 @@ public class TraderShopScreen extends Screen {
     private int activeTab     = 0;  // 0=buy-from-npc, 1=sell-to-npc
     private int selectedIndex = -1;
     private int scrollOffset  = 0;
+    private final Map<String, Integer> buyCart = new HashMap<>();
 
     public TraderShopScreen(UUID npcUuid, NpcEntityData npcData) {
         super(Component.literal(npcData.displayName));
@@ -78,10 +82,10 @@ public class TraderShopScreen extends Screen {
 
         if (!offers.isEmpty()) {
             if (activeTab == 0) {
-                GuiRect b    = layout.buyButtonRect;
-                Button  btn  = Button.builder(Component.literal("§a⬇ Купить"), x -> doBuy())
+                GuiRect b = layout.buyButtonRect;
+                Button btn = Button.builder(Component.literal("§a⬇ Купить корзину"), x -> doBuy())
                         .bounds(abx + b.x, aby + b.y, b.width, b.height).build();
-                btn.active = canAffordSelected();
+                btn.active = canAffordCart() && totalCartItems() > 0;
                 addRenderableWidget(btn);
             } else {
                 GuiRect b    = layout.sellButtonRect;
@@ -147,8 +151,9 @@ private void addTabBtn(String label, int x, int y, int idx) {
         GuiRect gr     = layout.itemGridRect;
         int startX = ox + gr.x + 2, startY = oy + gr.y + 2;
         int maxY   = oy + gr.y + gr.height - 2;
-        int cols   = Math.max(1, layout.itemColumns);
-        int sW     = layout.itemSlotWidth, sH = layout.itemSlotHeight;
+        int cols   = 4;
+        int sW     = slotSize();
+        int sH     = sW;
         int gX     = layout.itemSlotGapX,  gY = layout.itemSlotGapY;
 
         if (offers.isEmpty()) {
@@ -171,22 +176,25 @@ private void addTabBtn(String label, int x, int y, int idx) {
     private void renderBuySlot(GuiGraphics g, int x, int y, int w, int h, SellTradeOffer o, boolean sel) {
         g.fill(x, y, x + w, y + h, sel ? layout.slotSelBgColor : layout.slotBgColor);
         NpcCreatorScreen.brd(g, x, y, w, h, sel ? layout.slotSelBdrColor : layout.slotBdrColor);
-        if (layout.showItemName)
-            g.drawString(font, o.customName.isBlank() ? "§8" + o.itemId : "§f" + o.customName,
-                    x + 6, y + 6, layout.titleTextColor, false);
-        if (layout.showItemPrice) {
-            int disc = discounts.effectiveBuyDiscount(o.discountPercent);
-            long fp  = TradePriceResult.calculate(o.price, o.amount, disc).finalPrice;
-            boolean can = ClientCurrencyState.getBalance() >= fp;
-            String discPart = disc > 0 ? " §a(-" + disc + "%)" : "";
-            g.drawString(font, "Цена: " + (can ? "§e" : "§c") + fp + " §7монет" + discPart, x + 6, y + 17, 0xFFAAAAAA, false);
-        }
-        if (layout.showStock) {
-            String st = o.infiniteStock ? "§a∞" : (o.stock > 0 ? "§f" + o.stock : "§cНет");
-            g.drawString(font, "§7Остаток: " + st, x + 6, y + 28, 0xFF888877, false);
-        }
-    }
+        int controlsH = 20;
+        int previewSize = Math.max(16, h - controlsH - 8);
+        int previewX = x + (w - previewSize) / 2;
+        int previewY = y + 4;
+        drawBox(g, previewX, previewY, previewSize, previewSize);
+        renderOfferIcon(g, o.itemId, previewX + (previewSize - 16) / 2, previewY + (previewSize - 16) / 2);
 
+        int qty = cartCount(o.id);
+        if (qty > 0) {
+            g.drawString(font, "§e" + qty, x + w - 12, y + 5, 0xFFF9E07F, false);
+    }
+        
+        int cy = y + h - controlsH;
+        g.fill(x + 2, cy, x + w - 2, cy + controlsH - 2, 0x33000000);
+        g.drawCenteredString(font, Component.literal("§c-1"), x + 12, cy + 6, layout.priceTextColor);
+        g.drawCenteredString(font, Component.literal("§e" + pricePerSingle(o)), x + (w / 2), cy + 6, layout.priceTextColor);
+        g.drawCenteredString(font, Component.literal("§a+1"), x + w - 12, cy + 6, layout.priceTextColor);
+    }
+    
 private void renderSellSlot(GuiGraphics g, int x, int y, int w, int h, BuyTradeOffer o, boolean sel) {
         g.fill(x, y, x + w, y + h, sel ? layout.slotSelBgColor : layout.slotBgColor);
         NpcCreatorScreen.brd(g, x, y, w, h, sel ? layout.slotSelBdrColor : layout.slotBdrColor);
@@ -221,10 +229,11 @@ private void renderSellSlot(GuiGraphics g, int x, int y, int w, int h, BuyTradeO
     private void renderBuyDetail(GuiGraphics g, int rpx, int rpy, SellTradeOffer o) {
         GuiRect prev = layout.previewItemBoxRect;
         drawBox(g, rpx + prev.x, rpy + prev.y, prev.width, prev.height);
+        renderOfferIcon(g, o.itemId, rpx + prev.x + (prev.width - 32) / 2, rpy + prev.y + 10, 2.0f);
         g.drawString(font, "§f§l" + (o.customName.isBlank() ? o.itemId : o.customName),
-                rpx + prev.x + 6, rpy + prev.y + 8, layout.titleTextColor, false);
-        if (!o.description.isBlank())
-            g.drawString(font, "§8" + o.description, rpx + prev.x + 6, rpy + prev.y + 22, layout.descriptionTextColor, false);
+               rpx + prev.x + 6, rpy + prev.y + prev.height - 28, layout.titleTextColor, false);
+        g.drawString(font, "§8" + (o.description.isBlank() ? "Описание отсутствует" : o.description),
+                rpx + prev.x + 6, rpy + prev.y + prev.height - 15, layout.descriptionTextColor, false);
 
         GuiRect pric = layout.priceInfoBoxRect;
         drawBox(g, rpx + pric.x, rpy + pric.y, pric.width, pric.height);
@@ -236,18 +245,17 @@ private void renderSellSlot(GuiGraphics g, int x, int y, int w, int h, BuyTradeO
             g.drawString(font, "§aСкидка: -" + disc + "%", rpx + pric.x + 6, py + 12, layout.discountTextColor, false);
             py += 24;
         }
-        boolean canAff = ClientCurrencyState.getBalance() >= pr.finalPrice;
-        g.drawString(font, "К оплате: " + (canAff ? "§e" : "§c") + pr.finalPrice + " §7монет", rpx + pric.x + 6, py, layout.priceTextColor, false);
-        g.drawString(font, "§7×" + o.amount + " штук", rpx + pric.x + 6, py + 12, 0xFFAAAAAA, false);
-        if (layout.showStock) {
-            String st = o.infiniteStock ? "§a∞" : (o.stock > 0 ? "§f" + o.stock : "§cНет");
-            g.drawString(font, "§7Остаток: " + st, rpx + pric.x + 6, py + 24, 0xFFAAAAAA, false);
-        }
+       boolean canAff = ClientCurrencyState.getBalance() >= totalCartPrice();
+        g.drawString(font, "Цена за 1: §e" + pr.finalPrice + " §7монет", rpx + pric.x + 6, py, layout.priceTextColor, false);
+        g.drawString(font, "В корзине: §f" + cartCount(o.id), rpx + pric.x + 6, py + 12, 0xFFAAAAAA, false);
+        g.drawString(font, "К оплате: " + (canAff ? "§e" : "§c") + totalCartPrice() + " §7монет", rpx + pric.x + 6, py + 24, layout.priceTextColor, false);
+        g.drawString(font, "Всего позиций: §f" + totalCartItems(), rpx + pric.x + 6, py + 36, 0xFFAAAAAA, false);
 
         GuiRect act = layout.actionBoxRect;
         drawBox(g, rpx + act.x, rpy + act.y, act.width, act.height);
-        boolean inSt = o.infiniteStock || o.stock > 0;
-        if (!canAff)  g.drawString(font, "§cНедостаточно монет",   rpx + act.x + 6, rpy + act.y + 6, layout.errorTextColor, false);
+        boolean inSt = hasAnyInStockInCart();
+        if (totalCartItems() <= 0) g.drawString(font, "§7Добавьте товары кнопкой +1", rpx + act.x + 6, rpy + act.y + 6, 0xFFAAAAAA, false);
+        else if (!canAff)  g.drawString(font, "§cНедостаточно монет",   rpx + act.x + 6, rpy + act.y + 6, layout.errorTextColor, false);
         else if (!inSt) g.drawString(font, "§cТовар закончился",   rpx + act.x + 6, rpy + act.y + 6, layout.errorTextColor, false);
         else            g.drawString(font, "§aДоступно к покупке", rpx + act.x + 6, rpy + act.y + 6, layout.discountTextColor, false);
     }
@@ -298,6 +306,7 @@ private void renderSellSlot(GuiGraphics g, int x, int y, int w, int h, BuyTradeO
     @Override
     public boolean mouseClicked(double mx, double my, int button) {
         if (button == 0) {
+            if (activeTab == 0 && handleBuySlotControls((int) mx, (int) my)) return true;
             int idx = hitTestGrid((int) mx, (int) my);
             if (idx >= 0) { selectedIndex = idx; rebuildWidgets(); return true; }
         }
@@ -307,9 +316,11 @@ private void renderSellSlot(GuiGraphics g, int x, int y, int w, int h, BuyTradeO
     @Override
     public boolean mouseScrolled(double mx, double my, double delta) {
         List<?> offers = activeOffers();
+        int cols = 4;
         int cols = Math.max(1, layout.itemColumns);
-        int total = (offers.size() + cols - 1) / cols;
-        if (total <= layout.visibleRows) return false;
+        int visibleRows = visibleRowsForGrid();
+        if (total <= visibleRows) return false;
+        scrollOffset = Math.max(0, Math.min(scrollOffset - (int) Math.signum(delta), total - visibleRows));
         scrollOffset = Math.max(0, Math.min(scrollOffset - (int) Math.signum(delta), total - layout.visibleRows));
         rebuildWidgets();
         return true;
@@ -318,8 +329,8 @@ private void renderSellSlot(GuiGraphics g, int x, int y, int w, int h, BuyTradeO
     private int hitTestGrid(int mx, int my) {
         GuiRect gr = layout.itemGridRect;
         int sx0 = ox() + gr.x + 2, sy0 = oy() + gr.y + 2;
-        int maxY = oy() + gr.y + gr.height - 2;
-        int cols = Math.max(1, layout.itemColumns);
+        int cols = 4;
+        int sW = slotSize(), sH = slotSize();
         int sW = layout.itemSlotWidth, sH = layout.itemSlotHeight;
         int gX = layout.itemSlotGapX,  gY = layout.itemSlotGapY;
         List<?> offers = activeOffers();
@@ -337,8 +348,15 @@ private void renderSellSlot(GuiGraphics g, int x, int y, int w, int h, BuyTradeO
     // ── Actions ───────────────────────────────────────────────────────────────
 
     private void doBuy() {
-        var sells = npcData.professionData.traderData.sellOffers;
-        if (selectedIndex < 0 || selectedIndex >= sells.size()) return;
+        if (sells.isEmpty()) return;
+        if (totalCartItems() <= 0 || !canAffordCart()) return;
+        for (SellTradeOffer offer : sells) {
+            int qty = cartCount(offer.id);
+            for (int i = 0; i < qty; i++) {
+                ModNetwork.CHANNEL.sendToServer(new BuyTradeOfferPacket(npcUuid, offer.id));
+            }
+        }
+        buyCart.clear();
         ModNetwork.CHANNEL.sendToServer(new BuyTradeOfferPacket(npcUuid, sells.get(selectedIndex).id));
         if (minecraft != null) minecraft.setScreen(null);
     }
@@ -366,6 +384,103 @@ private void renderSellSlot(GuiGraphics g, int x, int y, int w, int h, BuyTradeO
         if (!o.infiniteStock && o.stock <= 0) return false;
         long fp = TradePriceResult.calculate(o.price, o.amount, discounts.effectiveBuyDiscount(o.discountPercent)).finalPrice;
         return ClientCurrencyState.getBalance() >= fp;
+    }
+
+    private int pricePerSingle(SellTradeOffer o) {
+        int disc = discounts.effectiveBuyDiscount(o.discountPercent);
+        return (int) TradePriceResult.calculate(o.price, o.amount, disc).finalPrice;
+    }
+
+    private long totalCartPrice() {
+        var sells = npcData.professionData.traderData.sellOffers;
+        long total = 0;
+        for (SellTradeOffer offer : sells) {
+            int qty = cartCount(offer.id);
+            if (qty <= 0) continue;
+            total += (long) pricePerSingle(offer) * qty;
+        }
+        return total;
+    }
+
+    private int totalCartItems() {
+        return buyCart.values().stream().mapToInt(Integer::intValue).sum();
+    }
+
+    private int cartCount(String offerId) {
+        return Math.max(0, buyCart.getOrDefault(offerId, 0));
+    }
+
+    private boolean canAffordCart() {
+        return ClientCurrencyState.getBalance() >= totalCartPrice();
+    }
+
+    private boolean hasAnyInStockInCart() {
+        for (SellTradeOffer offer : npcData.professionData.traderData.sellOffers) {
+            int qty = cartCount(offer.id);
+            if (qty <= 0) continue;
+            if (offer.infiniteStock || offer.stock > 0) return true;
+        }
+        return false;
+    }
+
+    private boolean handleBuySlotControls(int mx, int my) {
+        List<?> offers = activeOffers();
+        GuiRect gr = layout.itemGridRect;
+        int sx0 = ox() + gr.x + 2, sy0 = oy() + gr.y + 2;
+        int maxY = oy() + gr.y + gr.height - 2;
+        int cols = 4;
+        int sW = slotSize(), sH = slotSize();
+        int gX = layout.itemSlotGapX, gY = layout.itemSlotGapY;
+        int first = scrollOffset * cols;
+        for (int i = first; i < offers.size(); i++) {
+            int row = (i - first) / cols, col = (i - first) % cols;
+            int sx  = sx0 + col * (sW + gX);
+            int sy  = sy0 + row * (sH + gY);
+            if (sy + sH > maxY) break;
+            if (mx < sx || mx >= sx + sW || my < sy || my >= sy + sH) continue;
+            SellTradeOffer offer = (SellTradeOffer) offers.get(i);
+            selectedIndex = i;
+            int controlsTop = sy + sH - 20;
+            if (my >= controlsTop) {
+                if (mx < sx + 24) adjustCart(offer, -1);
+                else if (mx > sx + sW - 24) adjustCart(offer, 1);
+            }
+            rebuildWidgets();
+            return true;
+        }
+        return false;
+    }
+
+    private void adjustCart(SellTradeOffer offer, int delta) {
+        int next = Math.max(0, cartCount(offer.id) + delta);
+        if (next == 0) buyCart.remove(offer.id);
+        else buyCart.put(offer.id, next);
+    }
+
+    private int slotSize() {
+        GuiRect gr = layout.itemGridRect;
+        int cols = 4;
+        int totalGap = layout.itemSlotGapX * (cols - 1);
+        return Math.max(36, (gr.width - 4 - totalGap) / cols);
+    }
+
+    private int visibleRowsForGrid() {
+        int s = slotSize();
+        return Math.max(1, (layout.itemGridRect.height - 4 + layout.itemSlotGapY) / (s + layout.itemSlotGapY));
+    }
+
+    private void renderOfferIcon(GuiGraphics g, String itemId, int x, int y) {
+        renderOfferIcon(g, itemId, x, y, 1.0f);
+    }
+
+    private void renderOfferIcon(GuiGraphics g, String itemId, int x, int y, float scale) {
+        var item = ForgeRegistries.ITEMS.getValue(new ResourceLocation(itemId));
+        if (item == null) return;
+        g.pose().pushPose();
+        g.pose().translate(x, y, 0);
+        g.pose().scale(scale, scale, 1.0f);
+        g.renderItem(new ItemStack(item), 0, 0);
+        g.pose().popPose();
     }
 
 private boolean canSellSelected() {
