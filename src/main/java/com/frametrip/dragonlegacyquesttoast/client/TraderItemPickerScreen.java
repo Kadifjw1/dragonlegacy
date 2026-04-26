@@ -20,9 +20,8 @@ public class TraderItemPickerScreen extends Screen {
 
     private static final int W = 560;
     private static final int H = 360;
-    private static final int COLS = 10;
-    private static final int ROWS = 5;
     private static final int SLOT = 20;
+    private static final int GAP = 2;
 
     private final Screen parent;
     private final BiConsumer<String, String> onSelect;
@@ -31,7 +30,7 @@ public class TraderItemPickerScreen extends Screen {
     private EditBox searchField;
     private final List<Entry> allEntries = new ArrayList<>();
     private final List<Entry> filteredEntries = new ArrayList<>();
-    private int page = 0;
+    private int scrollRow = 0;
 
     private static class Entry {
         final Item item;
@@ -64,19 +63,11 @@ public class TraderItemPickerScreen extends Screen {
         searchField.setMaxLength(100);
         searchField.setValue("");
         searchField.setResponder(v -> {
-            page = 0;
+            scrollRow = 0;
             refilter();
         });
         addRenderableWidget(searchField);
         setInitialFocus(searchField);
-
-        addRenderableWidget(Button.builder(Component.literal("◀"), b -> {
-            if (page > 0) page--;
-        }).bounds(ox + 10, oy + H - 28, 24, 18).build());
-
-        addRenderableWidget(Button.builder(Component.literal("▶"), b -> {
-            if (page < maxPage()) page++;
-        }).bounds(ox + 38, oy + H - 28, 24, 18).build());
 
         addRenderableWidget(Button.builder(Component.literal("Отмена"), b -> {
             if (minecraft != null) minecraft.setScreen(parent);
@@ -110,44 +101,66 @@ public class TraderItemPickerScreen extends Screen {
                 filteredEntries.add(e);
             }
         }
-        if (page > maxPage()) page = maxPage();
+         int maxScroll = Math.max(0, totalRows() - visibleRows());
+        if (scrollRow > maxScroll) scrollRow = maxScroll;
     }
 
     private void jumpToInitiallySelected() {
         if (initiallySelectedId.isBlank()) return;
         for (int i = 0; i < filteredEntries.size(); i++) {
             if (filteredEntries.get(i).id.equalsIgnoreCase(initiallySelectedId)) {
-                page = i / pageSize();
+                scrollRow = i / gridCols();
                 return;
             }
         }
     }
 
-    private int pageSize() {
-        return COLS * ROWS;
+    private int gridLeft() {
+        return ox() + 10;
     }
 
-    private int maxPage() {
+    private int gridTop() {
+        return oy() + 56;
+    }
+
+    private int gridWidth() {
+        return W - 20;
+    }
+
+    private int gridHeight() {
+        return H - 92;
+    }
+
+    private int gridCols() {
+        return Math.max(1, (gridWidth() + GAP) / (SLOT + GAP));
+    }
+
+    private int visibleRows() {
+        return Math.max(1, (gridHeight() + GAP) / (SLOT + GAP));
+    }
+
+    private int totalRows() {
+        int cols = gridCols();
         if (filteredEntries.isEmpty()) return 0;
-        return (filteredEntries.size() - 1) / pageSize();
+        return (filteredEntries.size() + cols - 1) / cols;
     }
 
     @Override
     public boolean mouseClicked(double mx, double my, int btn) {
         if (super.mouseClicked(mx, my, btn)) return true;
 
-        int ox = ox();
-        int oy = oy();
-        int startX = ox + 10;
-        int startY = oy + 60;
-        int indexStart = page * pageSize();
+        int startX = gridLeft();
+        int startY = gridTop();
+        int cols = gridCols();
+        int rows = visibleRows();
+        int indexStart = scrollRow * cols;
 
-        for (int row = 0; row < ROWS; row++) {
-            for (int col = 0; col < COLS; col++) {
-                int x = startX + col * (SLOT + 4);
-                int y = startY + row * (SLOT + 24);
+        for (int row = 0; row < rows; row++) {
+            for (int col = 0; col < cols; col++) {
+                int x = startX + col * (SLOT + GAP);
+                int y = startY + row * (SLOT + GAP);
                 if (mx >= x && mx < x + SLOT && my >= y && my < y + SLOT) {
-                    int idx = indexStart + row * COLS + col;
+                    int idx = indexStart + row * cols + col;
                     if (idx >= 0 && idx < filteredEntries.size()) {
                         Entry e = filteredEntries.get(idx);
                         onSelect.accept(e.id, e.displayName);
@@ -158,6 +171,15 @@ public class TraderItemPickerScreen extends Screen {
             }
         }
         return false;
+    }
+
+    @Override
+    public boolean mouseScrolled(double mx, double my, double delta) {
+        int maxScroll = Math.max(0, totalRows() - visibleRows());
+        if (maxScroll <= 0) return false;
+        int next = scrollRow - (int) Math.signum(delta);
+        scrollRow = Math.max(0, Math.min(next, maxScroll));
+        return true;
     }
 
     @Override
@@ -173,36 +195,38 @@ public class TraderItemPickerScreen extends Screen {
 
         super.render(g, mx, my, pt);
 
-        int startX = ox + 10;
-        int startY = oy + 60;
-        int idxStart = page * pageSize();
+        int startX = gridLeft();
+        int startY = gridTop();
+        int cols = gridCols();
+        int rows = visibleRows();
+        int idxStart = scrollRow * cols;
+        Entry hovered = null;
 
-        for (int row = 0; row < ROWS; row++) {
-            for (int col = 0; col < COLS; col++) {
-                int idx = idxStart + row * COLS + col;
-                int x = startX + col * (SLOT + 4);
-                int y = startY + row * (SLOT + 24);
+        for (int row = 0; row < rows; row++) {
+            for (int col = 0; col < cols; col++) {
+                int idx = idxStart + row * cols + col;
+                int x = startX + col * (SLOT + GAP);
+                int y = startY + row * (SLOT + GAP);
                 g.fill(x, y, x + SLOT, y + SLOT, 0xCC202030);
                 NpcCreatorScreen.brd(g, x, y, SLOT, SLOT, 0xFF444455);
 
                 if (idx < filteredEntries.size()) {
                     Entry e = filteredEntries.get(idx);
                     g.renderItem(new ItemStack(e.item), x + 2, y + 2);
-                    String shortName = trim(e.displayName, 11);
-                    g.drawString(font, shortName, x, y + SLOT + 2, 0xFFAAAAAA, false);
 
                     if (mx >= x && mx < x + SLOT && my >= y && my < y + SLOT) {
                         g.fill(x, y, x + SLOT, y + SLOT, 0x66FFFFFF);
-                        g.drawString(font, "§f" + e.displayName, ox + 10, oy + H - 48, 0xFFE6D7B5, false);
-                        g.drawString(font, "§8" + e.id, ox + 10, oy + H - 38, 0xFF9A9A9A, false);
+                         hovered = e;
                     }
                 }
             }
         }
 
-        g.drawString(font, "§7Найдено: §f" + filteredEntries.size(), ox + 70, oy + H - 23, 0xFF888877, false);
-        g.drawString(font, "§7Стр. §f" + (page + 1) + "§7/§f" + (maxPage() + 1), ox + 170, oy + H - 23, 0xFF888877, false);
-        g.drawString(font, "§8Совет: ищи по названию или ID (включая модовые предметы)", ox + 10, oy + H - 12, 0xFF777777, false);
+        if (hovered != null) {
+            g.renderTooltip(font, Component.literal(hovered.displayName), mx, my);
+        }
+
+        g.drawString(font, "§7Найдено: §f" + filteredEntries.size(), ox + 10, oy + H - 23, 0xFF888877, false);
     }
 
     @Override
@@ -216,10 +240,5 @@ public class TraderItemPickerScreen extends Screen {
 
     private int oy() {
         return (height - H) / 2;
-    }
-
-    private static String trim(String s, int max) {
-        if (s == null) return "";
-        return s.length() > max ? s.substring(0, max - 1) + "…" : s;
     }
 }
