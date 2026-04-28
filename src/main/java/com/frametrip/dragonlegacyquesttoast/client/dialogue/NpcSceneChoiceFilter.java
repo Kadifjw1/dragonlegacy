@@ -1,5 +1,6 @@
 package com.frametrip.dragonlegacyquesttoast.client.dialogue;
 
+import com.frametrip.dragonlegacyquesttoast.client.ClientQuestProgressState;
 import com.frametrip.dragonlegacyquesttoast.server.dialogue.NpcChoiceOption;
 import com.frametrip.dragonlegacyquesttoast.server.dialogue.NpcSceneNode;
 import net.minecraft.client.Minecraft;
@@ -28,8 +29,14 @@ public final class NpcSceneChoiceFilter {
             case NpcSceneNode.COND_TIME_NIGHT   -> lvl != null && lvl.isNight();
             case NpcSceneNode.COND_HAS_ITEM     -> p != null && hasItem(p, param);
             case NpcSceneNode.COND_NOT_HAS_ITEM -> p == null || !hasItem(p, param);
-            // Quest / relation / faction / path conditions are server-authoritative,
-            // so we show the choice by default to avoid hiding content.
+            case NpcSceneNode.COND_QUEST_ACTIVE -> ClientQuestProgressState.isActive(param);
+            case NpcSceneNode.COND_QUEST_COMPLETE -> ClientQuestProgressState.isComplete(param);
+            case NpcSceneNode.COND_QUEST_NOT_TAKEN ->
+                    !ClientQuestProgressState.isActive(param)
+                            && !ClientQuestProgressState.isComplete(param)
+                            && !ClientQuestProgressState.isFailed(param);
+            // Relation / faction / path conditions are server-authoritative,
+            // so we show by default to avoid accidental hiding.
             default -> true;
         };
     }
