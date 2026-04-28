@@ -1,6 +1,11 @@
 package com.frametrip.dragonlegacyquesttoast.client.dialogue;
 
 import com.frametrip.dragonlegacyquesttoast.client.ClientNpcDialogueManager;
+import com.frametrip.dragonlegacyquesttoast.client.ClientPlayerAbilityState;
+import com.frametrip.dragonlegacyquesttoast.client.ClientQuestProgressState;
+import com.frametrip.dragonlegacyquesttoast.network.ModNetwork;
+import com.frametrip.dragonlegacyquesttoast.network.RequestOpenNpcShopPacket;
+import com.frametrip.dragonlegacyquesttoast.network.QuestStateActionPacket;
 import com.frametrip.dragonlegacyquesttoast.server.dialogue.NpcChoiceOption;
 import com.frametrip.dragonlegacyquesttoast.server.dialogue.NpcScene;
 import com.frametrip.dragonlegacyquesttoast.server.dialogue.NpcSceneNode;
@@ -11,6 +16,8 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+
+import java.util.UUID;
 
 /**
  * Client-side runtime controller for NPC scenes.
@@ -26,21 +33,47 @@ public class NpcSceneController {
     private static NpcScene currentScene  = null;
     private static String  pendingNodeId  = null;
     private static boolean previewMode    = false;
+    private static String currentRelation = "NEUTRAL";
+    private static UUID currentNpcUuid = null;
+    private static final java.util.Set<String> talkedSceneKeys = new java.util.HashSet<>();
     
     private NpcSceneController() {}
 
     public static void startScene(String npcName, String sceneId) {
         NpcScene scene = ClientNpcSceneState.get(sceneId);
         if (scene == null) return;
-        startScene(npcName, scene, scene.startNodeId, false);
+         startScene(npcName, scene, scene.startNodeId, false, "NEUTRAL");
+    }
+
+    public static void startScene(String npcName, String sceneId, String relation) {
+        startScene(npcName, sceneId, relation, null);
+    }
+
+    public static void startScene(String npcName, String sceneId, String relation, UUID npcUuid) {
+        NpcScene scene = ClientNpcSceneState.get(sceneId);
+        if (scene == null) return;
+        startScene(npcName, scene, scene.startNodeId, false, relation, npcUuid);
     }
 
     /** Start a (possibly unsaved) scene from the given node, optionally in preview mode. */
     public static void startScene(String npcName, NpcScene scene, String startNodeId, boolean preview) {
+        startScene(npcName, scene, startNodeId, preview, "NEUTRAL");
+    }
+
+    public static void startScene(String npcName, NpcScene scene, String startNodeId, boolean preview,
+                                  String relation) {
+        startScene(npcName, scene, startNodeId, preview, relation, null);
+    }
+
+    public static void startScene(String npcName, NpcScene scene, String startNodeId, boolean preview,
+                                  String relation, UUID npcUuid) {
         if (scene == null) return;
+        finish();
         currentNpcName = npcName == null ? "" : npcName;        
         currentScene   = scene;
         previewMode    = preview;
+        currentRelation = relation == null ? "NEUTRAL" : relation.toUpperCase();
+        currentNpcUuid = npcUuid;
         String start = (startNodeId == null || startNodeId.isEmpty()) ? scene.startNodeId : startNodeId;
         processNode(start);    
     }
@@ -68,12 +101,17 @@ public class NpcSceneController {
         ClientNpcDialogueManager.show(speaker, node.text);
 
         if (node.soundId != null && !node.soundId.isBlank()) playSound(node.soundId);
+        else playSound("minecraft:block.note_block.hat");
+        if (node.animationId != null && !node.animationId.isBlank()) {
+            ClientNpcDialogueManager.show("[анимация]", node.animationId);
+        }
 
         pendingNodeId = node.nextNodeId;
         schedulePending();
     }
 
     private static void processQuestion(NpcSceneNode node) {
+        ClientNpcDialogueManager.clear();
         String speaker = (node.speakerName != null && !node.speakerName.isBlank())
                 ? node.speakerName : currentNpcName;
         Minecraft mc = Minecraft.getInstance();
@@ -127,9 +165,18 @@ public class NpcSceneController {
             case NpcSceneNode.COND_TIME_NIGHT -> lvl != null && lvl.isNight();
             case NpcSceneNode.COND_HAS_ITEM   -> p != null && playerHasItem(p, param);
             case NpcSceneNode.COND_NOT_HAS_ITEM -> p == null || !playerHasItem(p, param);
-            case NpcSceneNode.COND_FIRST_TALK -> true;   // client can't know reliably; default true
-            case NpcSceneNode.COND_RE_TALK    -> false;
-            // Relation/faction/quest/path stages are server-authoritative; assume true to show content.
+            case NpcSceneNode.COND_QUEST_ACTIVE -> ClientQuestProgressState.isActive(param);
+            case NpcSceneNode.COND_QUEST_COMPLETE -> ClientQuestProgressState.isComplete(param);
+            case NpcSceneNode.COND_QUEST_NOT_TAKEN ->
+                    !ClientQuestProgressState.isActive(param)
+                            && !ClientQuestProgressState.isComplete(param)
+                            && !ClientQuestProgressState.isFailed(param);
+            case NpcSceneNode.COND_RELATION ->
+                    param != null && !param.isBlank() && currentRelation.equalsIgnoreCase(param.trim());
+            case NpcSceneNode.COND_HAS_ABILITY -> ClientPlayerAbilityState.hasAbility(param);
+            case NpcSceneNode.COND_FIRST_TALK -> !talkedSceneKeys.contains(sceneTalkKey());
+            case NpcSceneNode.COND_RE_TALK    -> talkedSceneKeys.contains(sceneTalkKey());
+            // Faction/path stage are server-authoritative; assume true.
             default -> true;
         };
     }
@@ -169,12 +216,25 @@ public class NpcSceneController {
         }
         
         switch (actionType) {
-            case NpcSceneNode.ACTION_GIVE_QUEST, NpcSceneNode.ACTION_COMPLETE_QUEST,
-                 NpcSceneNode.ACTION_FAIL_QUEST ->
-                    ClientNpcDialogueManager.show("", labelFor(actionType) + ": " + actionParam);
-            case NpcSceneNode.ACTION_SET_RELATION, NpcSceneNode.ACTION_SET_FACTION_RELATION ->
-                    ClientNpcDialogueManager.show("", labelFor(actionType) + ": " + actionParam);
-            case NpcSceneNode.ACTION_GIVE_ITEM, NpcSceneNode.ACTION_TAKE_ITEM ->
+            case NpcSceneNode.ACTION_GIVE_QUEST -> {
+                ModNetwork.CHANNEL.sendToServer(new QuestStateActionPacket(QuestStateActionPacket.ACTION_ACCEPT, actionParam));
+                ClientNpcDialogueManager.show("", labelFor(actionType) + ": " + actionParam);
+            }
+            case NpcSceneNode.ACTION_COMPLETE_QUEST -> {
+                ModNetwork.CHANNEL.sendToServer(new QuestStateActionPacket(QuestStateActionPacket.ACTION_COMPLETE, actionParam));
+                ClientNpcDialogueManager.show("", labelFor(actionType) + ": " + actionParam);
+            }
+            case NpcSceneNode.ACTION_FAIL_QUEST -> {
+                ModNetwork.CHANNEL.sendToServer(new QuestStateActionPacket(QuestStateActionPacket.ACTION_FAIL, actionParam));
+                ClientNpcDialogueManager.show("", labelFor(actionType) + ": " + actionParam);
+            }
+            case NpcSceneNode.ACTION_OPEN_SHOP -> {
+                if (currentNpcUuid != null) {
+                    ModNetwork.CHANNEL.sendToServer(new RequestOpenNpcShopPacket(currentNpcUuid));
+                }
+            }
+            case NpcSceneNode.ACTION_SET_RELATION, NpcSceneNode.ACTION_SET_FACTION_RELATION,
+                 NpcSceneNode.ACTION_GIVE_ITEM, NpcSceneNode.ACTION_TAKE_ITEM ->
                     ClientNpcDialogueManager.show("", labelFor(actionType) + ": " + actionParam);
             case NpcSceneNode.ACTION_PLAY_SOUND -> playSound(actionParam);
             case NpcSceneNode.ACTION_PLAY_ANIMATION ->
@@ -214,18 +274,30 @@ public class NpcSceneController {
         NpcScene scene = currentScene;
         NpcSceneNode nextNode = scene.getNode(next);
         if (nextNode == null) { finish(); return; }
-        if (nextNode.type.equals(NpcSceneNode.TYPE_SPEECH)) {
+        int delay = nextNode.type.equals(NpcSceneNode.TYPE_SPEECH) ? Math.max(0, nextNode.speechDelayTicks) : 0;
+        if (nextNode.type.equals(NpcSceneNode.TYPE_SPEECH) && delay <= 0) {
             processNode(next);
         } else {
-        NpcSceneTickHandler.scheduleDeferredNode(next);
+        NpcSceneTickHandler.scheduleDeferredNode(next, delay);
         }
     }
 
     private static void finish() {
+        if (!previewMode && currentScene != null && currentScene.id != null && !currentScene.id.isBlank()) {
+            talkedSceneKeys.add(sceneTalkKey());
+        }
+        ClientNpcDialogueManager.clear();
+        NpcSceneTickHandler.clearScheduled();
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.screen instanceof NpcChoiceScreen) {
+            mc.setScreen(null);
+        }
         currentScene   = null;
         currentNpcName = "";
         pendingNodeId  = null;
         previewMode    = false;
+        currentRelation = "NEUTRAL";
+        currentNpcUuid = null;
     }
 
     public static boolean isActive() {
@@ -234,5 +306,9 @@ public class NpcSceneController {
     
     public static boolean isPreview() {
         return previewMode;
+    }
+    
+    private static String sceneTalkKey() {
+        return currentNpcName + "|" + (currentScene == null ? "" : currentScene.id);
     }
 }
