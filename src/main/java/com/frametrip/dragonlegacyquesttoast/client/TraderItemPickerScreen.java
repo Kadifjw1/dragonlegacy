@@ -222,6 +222,8 @@ public class TraderItemPickerScreen extends Screen {
             }
         }
 
+        drawScrollBar(g, ox + W - 8, startY, rows * (SLOT + GAP) - GAP);
+
         if (hovered != null) {
             g.renderTooltip(font, Component.literal(hovered.displayName), mx, my);
         }
@@ -240,5 +242,16 @@ public class TraderItemPickerScreen extends Screen {
 
     private int oy() {
         return (height - H) / 2;
+    }
+    
+     private void drawScrollBar(GuiGraphics g, int x, int y, int h) {
+        int totalRows = totalRows();
+        int visRows = visibleRows();
+        if (totalRows <= visRows) return;
+        g.fill(x, y, x + 3, y + h, 0x55333344);
+        int thumbH = Math.max(14, (int) (h * (visRows / (float) totalRows)));
+        int maxScroll = Math.max(1, totalRows - visRows);
+        int thumbY = y + (int) ((h - thumbH) * (scrollRow / (float) maxScroll));
+        g.fill(x, thumbY, x + 3, thumbY + thumbH, 0xFF9A9ACC);
     }
 }
