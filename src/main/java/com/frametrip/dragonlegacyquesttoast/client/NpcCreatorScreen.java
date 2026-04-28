@@ -166,7 +166,13 @@ public class NpcCreatorScreen extends Screen {
         // ── Bottom bar ────────────────────────────────────────────────────────
         g.fill(ox, oy + H - BOT_H, ox + W, oy + H, 0x99101020);
         brd(g, ox, oy + H - BOT_H, W, BOT_H, 0xFF2A2A44);
-
+        var issues = NpcEditorValidator.validate(editorState.getDraft());
+        long errors = issues.stream().filter(i -> i.error).count();
+        long warns = issues.size() - errors;
+        String v = errors > 0 ? ("§cОшибки: " + errors) : ("§aОшибок нет");
+        if (warns > 0) v += "  §eПредупр.: " + warns;
+        g.drawString(font, v, ox + 8, oy + H - 18, 0xFFCCCCCC, false);
+        
         super.render(g, mx, my, pt);
     }
 
