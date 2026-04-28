@@ -1,5 +1,6 @@
 package com.frametrip.dragonlegacyquesttoast.server.dialogue;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -42,6 +43,10 @@ public final class NpcSceneValidator {
             out.add(new Issue(Level.ERROR, "", "Стартовый узел «" + scene.startNodeId + "» не существует"));
         }
 
+        if (!scene.allowCycles && hasCycle(scene)) {
+            out.add(new Issue(Level.ERROR, "", "Обнаружены циклы, но они запрещены в настройках сцены"));
+        }
+        
         // Track which nodes are reachable from start
         Set<String> reachable = new HashSet<>();
         if (scene.startNodeId != null && ids.contains(scene.startNodeId)) {
@@ -53,8 +58,37 @@ public final class NpcSceneValidator {
             if (!reachable.contains(n.id) && !n.id.equals(scene.startNodeId)) {
                 out.add(new Issue(Level.WARN, n.id, "Узел недостижим из стартового"));
             }
+            if (!scene.allowCycles && hasCycle(scene)) {
+            out.add(new Issue(Level.ERROR, "", "Обнаружены циклы, но они запрещены в настройках сцены"));
+            }
         }
-    return out;
+        
+   return out;
+    }
+
+    private static boolean hasCycle(NpcScene scene) {
+        Set<String> visited = new HashSet<>();
+        Set<String> stack = new HashSet<>();
+        for (NpcSceneNode node : scene.nodes) {
+            if (dfsCycle(scene, node.id, visited, stack)) return true;
+        }
+        return false;
+    }
+
+    private static boolean dfsCycle(NpcScene scene, String nodeId, Set<String> visited, Set<String> stack) {
+        if (stack.contains(nodeId)) return true;
+        if (visited.contains(nodeId)) return false;
+        visited.add(nodeId);
+        stack.add(nodeId);
+        NpcSceneNode node = scene.getNode(nodeId);
+        if (node != null) {
+            for (String next : nextNodes(node)) {
+                if (next == null || next.isEmpty()) continue;
+                if (dfsCycle(scene, next, visited, stack)) return true;
+            }
+        }
+        stack.remove(nodeId);
+        return false;
     }
 
     private static void reach(NpcScene s, String nodeId, Set<String> acc) {
@@ -62,18 +96,29 @@ public final class NpcSceneValidator {
         NpcSceneNode n = s.getNode(nodeId);
         if (n == null) return;
         acc.add(nodeId);
-        switch (n.type) {
-            case NpcSceneNode.TYPE_SPEECH    -> reach(s, n.nextNodeId, acc);
-            case NpcSceneNode.TYPE_ACTION    -> reach(s, n.actionNextNodeId, acc);
-            case NpcSceneNode.TYPE_CONDITION -> {
-                reach(s, n.trueNextNodeId, acc);
-                reach(s, n.falseNextNodeId, acc);
-            }
-            case NpcSceneNode.TYPE_QUESTION  -> {
-                if (n.choices != null) for (NpcChoiceOption o : n.choices) reach(s, o.nextNodeId, acc);
-            }
-            // TYPE_END — terminal
+        for (String next : nextNodes(n)) {
+            reach(s, next, acc);
         }
+    }
+
+    private static List<String> nextNodes(NpcSceneNode n) {
+        List<String> out = new ArrayList<>();
+        switch (n.type) {
+            case NpcSceneNode.TYPE_SPEECH, NpcSceneNode.TYPE_DELAY -> out.add(n.nextNodeId);
+            case NpcSceneNode.TYPE_ACTION -> out.add(n.actionNextNodeId);
+            case NpcSceneNode.TYPE_CONDITION -> {
+               out.add(n.trueNextNodeId);
+                out.add(n.falseNextNodeId);
+            }
+            case NpcSceneNode.TYPE_QUESTION -> {
+                if (n.choices != null) for (NpcChoiceOption o : n.choices) out.add(o.nextNodeId);
+            }
+            case NpcSceneNode.TYPE_BRANCH -> {
+                if (n.branchOptions != null) for (NpcChoiceOption o : n.branchOptions) out.add(o.nextNodeId);
+            }
+            default -> { }
+        }
+         return out;
     }
 
     private static void validateNode(NpcScene s, NpcSceneNode n, Set<String> ids, List<Issue> out) {
@@ -83,10 +128,11 @@ public final class NpcSceneValidator {
                     out.add(new Issue(Level.WARN, n.id, "Пустой текст у фразы"));
                 if (n.speechDelayTicks < 0)
                     out.add(new Issue(Level.ERROR, n.id, "Задержка фразы не может быть отрицательной"));
-                if (n.nextNodeId == null || n.nextNodeId.isEmpty())
-                    out.add(new Issue(Level.ERROR, n.id, "У фразы не задан следующий узел"));
-                if (!n.nextNodeId.isEmpty() && !ids.contains(n.nextNodeId))
-                    out.add(new Issue(Level.ERROR, n.id, "Следующий узел «" + n.nextNodeId + "» не существует"));
+                requireNext(ids, out, n.id, n.nextNodeId, "У фразы не задан следующий узел", "Следующий узел «%s» не существует");
+            }
+            case NpcSceneNode.TYPE_DELAY -> {
+                if (n.delayTicks < 0) out.add(new Issue(Level.ERROR, n.id, "Пауза не может быть отрицательной"));
+                requireNext(ids, out, n.id, n.nextNodeId, "У паузы не задан следующий узел", "Следующий узел «%s» не существует" );
             }
             case NpcSceneNode.TYPE_QUESTION -> {
                 if (n.text == null || n.text.isBlank())
@@ -98,10 +144,21 @@ public final class NpcSceneValidator {
                         NpcChoiceOption o = n.choices.get(i);
                         if (o.text == null || o.text.isBlank())
                             out.add(new Issue(Level.WARN, n.id, "Ответ #" + (i + 1) + ": пустой текст"));
-                        if (o.nextNodeId == null || o.nextNodeId.isEmpty())
-                            out.add(new Issue(Level.ERROR, n.id, "Ответ #" + (i + 1) + ": не задан nextNodeId"));
-                        if (!o.nextNodeId.isEmpty() && !ids.contains(o.nextNodeId))
-                            out.add(new Issue(Level.ERROR, n.id, "Ответ #" + (i + 1) + ": переход в несуществующий узел"));
+                         requireNext(ids, out, n.id, o.nextNodeId,
+                                "Ответ #" + (i + 1) + ": не задан nextNodeId",
+                                "Ответ #" + (i + 1) + ": переход в несуществующий узел");
+                    }
+                }
+            }
+            case NpcSceneNode.TYPE_BRANCH -> {
+                if (n.branchOptions == null || n.branchOptions.isEmpty()) {
+                    out.add(new Issue(Level.ERROR, n.id, "У ветвления нет выходов"));
+                } else {
+                    for (int i = 0; i < n.branchOptions.size(); i++) {
+                        NpcChoiceOption o = n.branchOptions.get(i);
+                        requireNext(ids, out, n.id, o.nextNodeId,
+                                "Ветка #" + (i + 1) + ": не задан переход",
+                                "Ветка #" + (i + 1) + ": переход в несуществующий узел");
                     }
                 }
             }
@@ -110,11 +167,11 @@ public final class NpcSceneValidator {
                     out.add(new Issue(Level.ERROR, n.id, "Тип действия не задан"));
                 if (requiresParam(n.actionType) && (n.actionParam == null || n.actionParam.isBlank()))
                     out.add(new Issue(Level.ERROR, n.id, "Параметр действия обязателен"));
-                if (!NpcSceneNode.ACTION_CLOSE_SCENE.equals(n.actionType)
-                        && (n.actionNextNodeId == null || n.actionNextNodeId.isEmpty()))
-                    out.add(new Issue(Level.ERROR, n.id, "У действия не задан следующий узел"));
-                if (!n.actionNextNodeId.isEmpty() && !ids.contains(n.actionNextNodeId))
-                    out.add(new Issue(Level.ERROR, n.id, "Следующий узел после действия не существует"));
+                if (!NpcSceneNode.ACTION_CLOSE_SCENE.equals(n.actionType)) {
+                    requireNext(ids, out, n.id, n.actionNextNodeId,
+                            "У действия не задан следующий узел",
+                            "Следующий узел после действия не существует");
+                }
             }
             case NpcSceneNode.TYPE_CONDITION -> {
                 if (n.conditionType == null || n.conditionType.isBlank())
@@ -129,6 +186,19 @@ public final class NpcSceneValidator {
             case NpcSceneNode.TYPE_END -> { /* terminal */ }
             default -> out.add(new Issue(Level.ERROR, n.id, "Неизвестный тип узла: " + n.type));
         }
+        
+        if (!NpcSceneNode.TYPE_END.equals(n.type) && nextNodes(n).stream().noneMatch(v -> v != null && !v.isEmpty())) {
+            out.add(new Issue(Level.WARN, n.id, "У узла нет исходящих связей"));
+        }
+    }
+
+    private static void requireNext(Set<String> ids, List<Issue> out, String nodeId, String next,
+                                    String missingMsg, String brokenMsgFmt) {
+        if (next == null || next.isEmpty()) {
+            out.add(new Issue(Level.ERROR, nodeId, missingMsg));
+            return;
+        }
+        if (!ids.contains(next)) out.add(new Issue(Level.ERROR, nodeId, brokenMsgFmt.formatted(next)));
     }
 
     private static boolean requiresParam(String actionType) {
@@ -143,6 +213,13 @@ public final class NpcSceneValidator {
                  NpcSceneNode.ACTION_TAKE_ITEM,
                  NpcSceneNode.ACTION_PLAY_SOUND,
                  NpcSceneNode.ACTION_PLAY_ANIMATION,
+                 NpcSceneNode.ACTION_LOOK_AT,
+                 NpcSceneNode.ACTION_MOVE_TO,
+                 NpcSceneNode.ACTION_CAMERA,
+                 NpcSceneNode.ACTION_EFFECT,
+                 NpcSceneNode.ACTION_EMOTE,
+                 NpcSceneNode.ACTION_TELEPORT,
+                 NpcSceneNode.ACTION_SET_VARIABLE,
                  NpcSceneNode.ACTION_OPEN_SCENE -> true;
             default -> false;
         };
