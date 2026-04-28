@@ -31,12 +31,33 @@ public class NpcScene {
             "Фракция закрыта", "Путь закрыт"
     };
 
+
+    public static final String START_CLICK_NPC = "click_npc";
+    public static final String START_FIRST_TALK = "first_talk";
+    public static final String START_REPEAT_TALK = "repeat_talk";
+    public static final String START_CONDITION = "condition";
+    public static final String START_AFTER_QUEST = "after_quest";
+    public static final String START_AFTER_EVENT = "after_event";
+    public static final String START_BY_TIME = "by_time";
+    public static final String START_BY_RADIUS = "by_radius";
+
+    public static final String[] START_TRIGGER_IDS = {
+            START_CLICK_NPC, START_FIRST_TALK, START_REPEAT_TALK,
+            START_CONDITION, START_AFTER_QUEST, START_AFTER_EVENT,
+            START_BY_TIME, START_BY_RADIUS
+    };
+    
     public String id;
     public String name = "Новая сцена";
     public String type = TYPE_CUSTOM;
     public String description = "";
     public boolean repeatable = true;
     public boolean enabled = true;
+    public String startTriggerType = START_CLICK_NPC;
+    public String startTriggerParam = "";
+    public boolean allowCycles = true;
+    public java.util.Map<String, String> localVariables = new java.util.HashMap<>();
+    public java.util.Set<String> localFlags = new java.util.HashSet<>();
     public String startNodeId = "";
     public List<NpcSceneNode> nodes = new ArrayList<>();
 
@@ -61,6 +82,11 @@ public class NpcScene {
         c.description = this.description;
         c.repeatable  = this.repeatable;
         c.enabled     = this.enabled;
+        c.startTriggerType = this.startTriggerType;
+        c.startTriggerParam = this.startTriggerParam;
+        c.allowCycles = this.allowCycles;
+        c.localVariables = new java.util.HashMap<>(this.localVariables);
+        c.localFlags = new java.util.HashSet<>(this.localFlags);
         c.startNodeId = this.startNodeId;
         c.nodes       = new ArrayList<>();
         for (NpcSceneNode n : this.nodes) c.nodes.add(n.copy());
@@ -87,6 +113,11 @@ public class NpcScene {
             if (nodeId.equals(n.actionNextNodeId)) n.actionNextNodeId = "";
             if (nodeId.equals(n.trueNextNodeId)) n.trueNextNodeId = "";
             if (nodeId.equals(n.falseNextNodeId)) n.falseNextNodeId = "";
+            if (n.branchOptions != null) {
+                for (NpcChoiceOption opt : n.branchOptions) {
+                    if (nodeId.equals(opt.nextNodeId)) opt.nextNodeId = "";
+                }
+            }
             if (n.choices != null) {
                 for (NpcChoiceOption opt : n.choices) {
                     if (nodeId.equals(opt.nextNodeId)) opt.nextNodeId = "";
@@ -104,7 +135,12 @@ public class NpcScene {
             else if (nodeId.equals(n.actionNextNodeId)) out.add(n.id);
             else if (nodeId.equals(n.trueNextNodeId))   out.add(n.id);
             else if (nodeId.equals(n.falseNextNodeId))  out.add(n.id);
-            else if (n.choices != null) {
+            if (n.branchOptions != null) {
+                for (NpcChoiceOption opt : n.branchOptions) {
+                    if (nodeId.equals(opt.nextNodeId)) { out.add(n.id); break; }
+                }
+            }
+            if (n.choices != null) {
                 for (NpcChoiceOption opt : n.choices) {
                     if (nodeId.equals(opt.nextNodeId)) { out.add(n.id); break; }
                 }
