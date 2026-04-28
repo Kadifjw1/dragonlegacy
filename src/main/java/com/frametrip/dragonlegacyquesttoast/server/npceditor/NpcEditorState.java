@@ -47,8 +47,7 @@ public class NpcEditorState {
 
     /** Send to server, apply locally, clear dirty flag. */
     public void save() {
-        if (draftData.displayName == null || draftData.displayName.isBlank())
-            draftData.displayName = "NPC";
+        NpcEditorValidator.sanitize(draftData);
 
         ModNetwork.CHANNEL.sendToServer(
                 new SaveNpcEntityDataPacket(npcEntity.getUUID(), draftData)
