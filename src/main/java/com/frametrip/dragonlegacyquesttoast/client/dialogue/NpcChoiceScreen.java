@@ -31,8 +31,10 @@ public class NpcChoiceScreen extends Screen {
         this.npcName      = npcName;
         this.questionNode = questionNode;
         this.onChoice     = onChoice;
-        for (NpcChoiceOption o : questionNode.choices) {
-            if (NpcSceneChoiceFilter.isAvailable(o)) visibleChoices.add(o);
+        if (questionNode.choices != null) {
+            for (NpcChoiceOption o : questionNode.choices) {
+                if (NpcSceneChoiceFilter.isAvailable(o)) visibleChoices.add(o);
+            }
         }
     }
 
