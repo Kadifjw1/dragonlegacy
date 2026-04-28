@@ -16,6 +16,14 @@ public class QuestDefinition {
     public String giverNpcId;
     public String rewardText;
     public String questType; // "main", "side", "daily"
+    public boolean repeatable = false;
+    public List<String> failConditions = new ArrayList<>();
+    public long rewardCoins = 0;
+    public List<String> rewardItems = new ArrayList<>();
+    public int rewardReputation = 0;
+    public List<String> unlockSceneIds = new ArrayList<>();
+    public List<String> unlockTradeOfferIds = new ArrayList<>();
+    public List<String> unlockAbilityIds = new ArrayList<>();
  
  // ── Title text styling ────────────────────────────────────────────────────
     public boolean titleBold      = false;
@@ -122,6 +130,14 @@ public class QuestDefinition {
         c.giverNpcId  = this.giverNpcId;
         c.rewardText  = this.rewardText;
         c.questType   = this.questType;
+        c.repeatable = this.repeatable;
+        c.failConditions = new ArrayList<>(this.failConditions);
+        c.rewardCoins = this.rewardCoins;
+        c.rewardItems = new ArrayList<>(this.rewardItems);
+        c.rewardReputation = this.rewardReputation;
+        c.unlockSceneIds = new ArrayList<>(this.unlockSceneIds);
+        c.unlockTradeOfferIds = new ArrayList<>(this.unlockTradeOfferIds);
+        c.unlockAbilityIds = new ArrayList<>(this.unlockAbilityIds);
  
         c.titleBold      = this.titleBold;
         c.titleItalic    = this.titleItalic;
