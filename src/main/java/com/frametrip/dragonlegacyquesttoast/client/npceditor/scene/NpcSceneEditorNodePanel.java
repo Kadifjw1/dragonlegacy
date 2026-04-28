@@ -166,11 +166,20 @@ final class NpcSceneEditorNodePanel {
         scr.nodeSoundBox.setHint(Component.literal("minecraft:…").withStyle(s -> s.withColor(0xFF555566)));
         scr.addRenderableWidget(scr.nodeSoundBox);
 
-        cycleNodeNext(scr, x + 8, y + 70, COL3_W - 16,
+        scr.nodeDelayBox = new EditBox(font, x + 8, y + 66, (COL3_W - 16) / 2 - 2, 14,
+                Component.literal("Задержка (тики)"));
+        scr.nodeDelayBox.setMaxLength(5);
+        scr.nodeDelayBox.setValue(String.valueOf(Math.max(0, n.speechDelayTicks)));
+        scr.addRenderableWidget(scr.nodeDelayBox);
+
+        scr.addRenderableWidget(Button.builder(Component.literal("§7Тиков: 20 = 1 сек"),
+                b -> {}).bounds(x + 8 + (COL3_W - 16) / 2 + 2, y + 66, (COL3_W - 16) / 2 - 2, 14).build());
+
+        cycleNodeNext(scr, x + 8, y + 84, COL3_W - 16,
                 "→ Следующий", n.nextNodeId,
                 id -> { scr.pullAllFields(); n.nextNodeId = id; scr.rebuildAll(); });
 
-        renderIncomingHint(scr, x + 8, y + 92, n.id);
+        renderIncomingHint(scr, x + 8, y + 106, n.id);   
     }
 
     // ── Action editor ──────────────────────────────────────────────────────
