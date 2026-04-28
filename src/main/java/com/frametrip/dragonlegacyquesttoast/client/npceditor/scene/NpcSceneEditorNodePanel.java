@@ -23,7 +23,7 @@ final class NpcSceneEditorNodePanel {
 
     static void init(NpcSceneEditorScreen scr, int ox, int oy) {
         if (scr.draftScene == null) return;
-        int x = ox + PAD + COL1_W + COL_GAP + COL2_W + COL_GAP;
+        int x = ox + PAD + COL1_W + COL_GAP + PALETTE_W + COL_GAP + CANVAS_W + COL_GAP;
         int y = oy + TOP_H + 4 + 14; // leave room for header
 
         if (scr.selectedNodeId.isEmpty()) {
@@ -43,6 +43,8 @@ final class NpcSceneEditorNodePanel {
             case NpcSceneNode.TYPE_QUESTION  -> NpcSceneEditorChoicePanel.initQuestion(scr, x, y, n);
             case NpcSceneNode.TYPE_ACTION    -> initAction(scr, x, y, n);
             case NpcSceneNode.TYPE_CONDITION -> initCondition(scr, x, y, n);
+            case NpcSceneNode.TYPE_DELAY     -> initDelay(scr, x, y, n);
+            case NpcSceneNode.TYPE_BRANCH    -> initBranch(scr, x, y, n);
             case NpcSceneNode.TYPE_END       -> initEnd(scr, x, y);
             default -> {}
         }
@@ -50,7 +52,7 @@ final class NpcSceneEditorNodePanel {
 
     static void render(NpcSceneEditorScreen scr, GuiGraphics g, int ox, int oy, int mx, int my) {
         var font = Minecraft.getInstance().font;
-        int x = ox + PAD + COL1_W + COL_GAP + COL2_W + COL_GAP;
+        int x = ox + PAD + COL1_W + COL_GAP + PALETTE_W + COL_GAP + CANVAS_W + COL_GAP;
         int y = oy + TOP_H + 4;
         int h = H - TOP_H - BOT_H - 8;
 
@@ -123,6 +125,21 @@ final class NpcSceneEditorNodePanel {
         cycleNodeNext(scr, x + 8, y + 92, COL3_W - 16,
                 "★ Старт", s.startNodeId,
                 id -> { scr.pullAllFields(); s.startNodeId = id; scr.rebuildAll(); });
+
+        int sti = indexOf(NpcScene.START_TRIGGER_IDS, s.startTriggerType);
+        scr.addRenderableWidget(Button.builder(
+                Component.literal("◀▶ Старт: " + NpcScene.typeLabel(s.type) + " / " + s.startTriggerType),
+                b -> {
+                    scr.pullAllFields();
+                    s.startTriggerType = NpcScene.START_TRIGGER_IDS[(sti + 1) % NpcScene.START_TRIGGER_IDS.length];
+                    scr.rebuildAll();
+                }
+        ).bounds(x + 8, y + 108, COL3_W - 16, 14).build());
+
+        scr.addRenderableWidget(Button.builder(
+                Component.literal(s.allowCycles ? "§6Циклы разрешены" : "§aЦиклы запрещены"),
+                b -> { scr.pullAllFields(); s.allowCycles = !s.allowCycles; scr.rebuildAll(); }
+        ).bounds(x + 8, y + 124, COL3_W - 16, 14).build());
     }
 
     // ── Speech editor ──────────────────────────────────────────────────────
@@ -206,13 +223,40 @@ final class NpcSceneEditorNodePanel {
         if (NpcSceneNode.ACTION_GIVE_QUEST.equals(n.actionType)
                 || NpcSceneNode.ACTION_COMPLETE_QUEST.equals(n.actionType)
                 || NpcSceneNode.ACTION_FAIL_QUEST.equals(n.actionType)) {
-            initQuestPicker(scr, x + 8, y + 48, COL3_W - 16,
-                    n.actionParam, id -> n.actionParam = id);
+            NpcSceneSelectorComponents.addSelector(scr, x + 8, y + 48, COL3_W - 16, "Квест",
+                    n.actionParam, NpcSceneSelectorComponents.questOptions(),
+                    id -> n.actionParam = id, null);
         }
 
         if (NpcSceneNode.ACTION_OPEN_SCENE.equals(n.actionType)) {
-            initScenePicker(scr, x + 8, y + 48, COL3_W - 16,
-                    n.actionParam, id -> n.actionParam = id);
+            NpcSceneSelectorComponents.addSelector(scr, x + 8, y + 48, COL3_W - 16, "Сцена",
+                    n.actionParam, NpcSceneSelectorComponents.sceneOptions(),
+                    id -> n.actionParam = id, null);
+        }
+
+        if (NpcSceneNode.ACTION_GIVE_ITEM.equals(n.actionType)
+                || NpcSceneNode.ACTION_TAKE_ITEM.equals(n.actionType)) {
+            NpcSceneSelectorComponents.addSelector(scr, x + 8, y + 48, COL3_W - 16, "Предмет",
+                    n.actionParam, NpcSceneSelectorComponents.itemOptions(),
+                    id -> n.actionParam = id, null);
+        }
+
+        if (NpcSceneNode.ACTION_PLAY_ANIMATION.equals(n.actionType)) {
+            NpcSceneSelectorComponents.addSelector(scr, x + 8, y + 48, COL3_W - 16, "Анимация",
+                    n.actionParam, NpcSceneSelectorComponents.animationOptions(),
+                    id -> n.actionParam = id, null);
+        }
+
+        if (NpcSceneNode.ACTION_SET_FACTION_RELATION.equals(n.actionType)) {
+            NpcSceneSelectorComponents.addSelector(scr, x + 8, y + 48, COL3_W - 16, "Фракция",
+                    n.actionParam, NpcSceneSelectorComponents.factionOptions(),
+                    id -> n.actionParam = id, null);
+        }
+
+        if (NpcSceneNode.ACTION_LOOK_AT.equals(n.actionType) || NpcSceneNode.ACTION_MOVE_TO.equals(n.actionType)) {
+            NpcSceneSelectorComponents.addSelector(scr, x + 8, y + 48, COL3_W - 16, "NPC",
+                    n.actionParam, NpcSceneSelectorComponents.npcOptions(),
+                    id -> n.actionParam = id, null);
         }
 
         if (NpcSceneNode.ACTION_SET_RELATION.equals(n.actionType)) {
@@ -259,8 +303,22 @@ final class NpcSceneEditorNodePanel {
         if (NpcSceneNode.COND_QUEST_ACTIVE.equals(n.conditionType)
                 || NpcSceneNode.COND_QUEST_COMPLETE.equals(n.conditionType)
                 || NpcSceneNode.COND_QUEST_NOT_TAKEN.equals(n.conditionType)) {
-            initQuestPicker(scr, x + 8, y + 48, COL3_W - 16,
-                    n.conditionParam, id -> n.conditionParam = id);
+            NpcSceneSelectorComponents.addSelector(scr, x + 8, y + 48, COL3_W - 16, "Квест",
+                    n.conditionParam, NpcSceneSelectorComponents.questOptions(),
+                    id -> n.conditionParam = id, null);
+        }
+
+        if (NpcSceneNode.COND_HAS_ITEM.equals(n.conditionType)
+                || NpcSceneNode.COND_NOT_HAS_ITEM.equals(n.conditionType)) {
+            NpcSceneSelectorComponents.addSelector(scr, x + 8, y + 48, COL3_W - 16, "Предмет",
+                    n.conditionParam, NpcSceneSelectorComponents.itemOptions(),
+                    id -> n.conditionParam = id, null);
+        }
+
+        if (NpcSceneNode.COND_FACTION.equals(n.conditionType)) {
+            NpcSceneSelectorComponents.addSelector(scr, x + 8, y + 48, COL3_W - 16, "Фракция",
+                    n.conditionParam, NpcSceneSelectorComponents.factionOptions(),
+                    id -> n.conditionParam = id, null);
         }
 
         cycleNodeNext(scr, x + 8, y + 70, COL3_W - 16,
@@ -274,6 +332,53 @@ final class NpcSceneEditorNodePanel {
         renderIncomingHint(scr, x + 8, y + 110, n.id);
     }
 
+    
+    private static void initDelay(NpcSceneEditorScreen scr, int x, int y, NpcSceneNode n) {
+        var font = Minecraft.getInstance().font;
+        scr.nodeDelayBox = new EditBox(font, x + 8, y + 8, COL3_W - 16, 16, Component.literal("Пауза (тики)"));
+        scr.nodeDelayBox.setMaxLength(5);
+        scr.nodeDelayBox.setValue(String.valueOf(Math.max(0, n.delayTicks)));
+        scr.addRenderableWidget(scr.nodeDelayBox);
+
+        cycleNodeNext(scr, x + 8, y + 28, COL3_W - 16,
+                "→ Следующий", n.nextNodeId,
+                id -> { scr.pullAllFields(); n.nextNodeId = id; scr.rebuildAll(); });
+    }
+
+    private static void initBranch(NpcSceneEditorScreen scr, int x, int y, NpcSceneNode n) {
+        if (n.branchOptions == null) n.branchOptions = new java.util.ArrayList<>();
+        scr.addRenderableWidget(Button.builder(Component.literal("+ Добавить ветку"), b -> {
+            scr.pullAllFields();
+            var o = new com.frametrip.dragonlegacyquesttoast.server.dialogue.NpcChoiceOption();
+            o.text = "Ветка " + (n.branchOptions.size() + 1);
+            o.actionParam = "1";
+            n.branchOptions.add(o);
+            scr.rebuildAll();
+        }).bounds(x + 8, y + 8, COL3_W - 16, 14).build());
+
+        int rowY = y + 26;
+        for (int i = 0; i < Math.min(5, n.branchOptions.size()); i++) {
+            var o = n.branchOptions.get(i);
+            final int idx = i;
+            scr.addRenderableWidget(Button.builder(Component.literal("⇢ " + o.text + " (w=" + (o.actionParam == null ? "1" : o.actionParam) + ")"), b -> {
+                scr.pullAllFields();
+                cycleChoiceTarget(scr, n, idx);
+                scr.rebuildAll();
+            }).bounds(x + 8, rowY, COL3_W - 16, 14).build());
+            rowY += 16;
+        }
+    }
+
+    private static void cycleChoiceTarget(NpcSceneEditorScreen scr, NpcSceneNode n, int choiceIndex) {
+        if (n.branchOptions == null || choiceIndex < 0 || choiceIndex >= n.branchOptions.size()) return;
+        var nodes = scr.draftScene.nodes;
+        var opt = n.branchOptions.get(choiceIndex);
+        int cur = -1;
+        for (int i = 0; i < nodes.size(); i++) if (nodes.get(i).id.equals(opt.nextNodeId)) { cur = i; break; }
+        int next = (cur + 1) % (nodes.size() + 1);
+        opt.nextNodeId = next >= nodes.size() ? "" : nodes.get(next).id;
+    }
+    
     // ── End editor ─────────────────────────────────────────────────────────
     private static void initEnd(NpcSceneEditorScreen scr, int x, int y) {
         scr.addRenderableWidget(Button.builder(
@@ -334,6 +439,13 @@ final class NpcSceneEditorNodePanel {
                  NpcSceneNode.ACTION_TAKE_ITEM -> "minecraft:diamond[*count]";
             case NpcSceneNode.ACTION_PLAY_SOUND -> "minecraft:entity.villager.yes";
             case NpcSceneNode.ACTION_PLAY_ANIMATION -> "ID анимации";
+             case NpcSceneNode.ACTION_LOOK_AT -> "player|x,y,z";
+            case NpcSceneNode.ACTION_MOVE_TO -> "x,y,z,speed";
+            case NpcSceneNode.ACTION_CAMERA -> "preset/id";
+            case NpcSceneNode.ACTION_EFFECT -> "particle:id";
+            case NpcSceneNode.ACTION_EMOTE -> "emote_id";
+            case NpcSceneNode.ACTION_TELEPORT -> "x,y,z";
+            case NpcSceneNode.ACTION_SET_VARIABLE -> "name=value";
             case NpcSceneNode.ACTION_OPEN_SCENE -> "ID сцены";
             default -> "";
         };
