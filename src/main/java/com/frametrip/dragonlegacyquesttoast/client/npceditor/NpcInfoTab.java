@@ -1,5 +1,6 @@
 package com.frametrip.dragonlegacyquesttoast.client.npceditor;
 
+import com.frametrip.dragonlegacyquesttoast.client.NpcAppearancePresetManager;
 import com.frametrip.dragonlegacyquesttoast.client.NpcLayeredSkinManager;
 import com.frametrip.dragonlegacyquesttoast.client.NpcSkinManager;
 import com.frametrip.dragonlegacyquesttoast.entity.NpcEntityData;
@@ -22,7 +23,10 @@ public class NpcInfoTab implements NpcEditorTab {
 
     // sub-page: 0=skin 1=layers 2=bodyparts
     private int subPage = 0;
+    private int presetIndex = -1;
+    private int roleStyleIndex = 0;
     private EditBox nameField;
+    private static final String[] ROLE_STYLES = {"Торговец", "Страж", "Кузнец", "Маг", "Житель", "Босс"};
 
     @Override
     public void init(Consumer<AbstractWidget> add, Runnable rebuild,
@@ -55,6 +59,9 @@ public class NpcInfoTab implements NpcEditorTab {
             case 1 -> initLayers(add, rebuild, state, d, rx, oy, rw);
             case 2 -> initParts(add, rebuild, state, d, rx, oy, rw);
         }
+        
+        initPresets(add, rebuild, state, d, rx, oy, rw);
+        initRoleStyles(add, rebuild, state, d, rx, oy, rw);
     }
 
     private void initSkin(Consumer<AbstractWidget> add, Runnable rb,
@@ -147,6 +154,60 @@ public class NpcInfoTab implements NpcEditorTab {
         }
     }
 
+    private void initPresets(Consumer<AbstractWidget> add, Runnable rb,
+                             NpcEditorState state, NpcEntityData d, int rx, int oy, int rw) {
+        int y = oy + 220;
+        var presets = NpcAppearancePresetManager.getAll();
+        if (!presets.isEmpty()) {
+            if (presetIndex < 0 || presetIndex >= presets.size()) presetIndex = 0;
+            add.accept(Button.builder(Component.literal("◀ Пресет"), b -> {
+                presetIndex = Math.floorMod(presetIndex - 1, presets.size());
+                rb.run();
+            }).bounds(rx, y, 80, 14).build());
+            add.accept(Button.builder(Component.literal("Применить"), b -> {
+                pullFields(state);
+                NpcAppearancePresetManager.applyPreset(presets.get(presetIndex), d);
+                state.markDirty();
+                rb.run();
+            }).bounds(rx + 84, y, 76, 14).build());
+            add.accept(Button.builder(Component.literal("Пресет ▶"), b -> {
+                presetIndex = Math.floorMod(presetIndex + 1, presets.size());
+                rb.run();
+            }).bounds(rx + 164, y, 80, 14).build());
+        }
+        add.accept(Button.builder(Component.literal("+ Сохранить как пресет"), b -> {
+            pullFields(state);
+            NpcAppearancePresetManager.savePreset(d.displayName + " look", d);
+            presetIndex = Math.max(0, NpcAppearancePresetManager.getAll().size() - 1);
+            rb.run();
+        }).bounds(rx + 248, y, rw - 248, 14).build());
+    }
+
+    private void initRoleStyles(Consumer<AbstractWidget> add, Runnable rb,
+                                NpcEditorState state, NpcEntityData d, int rx, int oy, int rw) {
+        int y = oy + 256;
+        add.accept(Button.builder(Component.literal("◀ Роль"), b -> {
+            roleStyleIndex = Math.floorMod(roleStyleIndex - 1, ROLE_STYLES.length);
+            rb.run();
+        }).bounds(rx, y, 72, 14).build());
+        add.accept(Button.builder(Component.literal("Применить: " + ROLE_STYLES[roleStyleIndex]), b -> {
+            pullFields(state);
+            applyRoleStyle(d, ROLE_STYLES[roleStyleIndex]);
+            state.markDirty();
+            rb.run();
+        }).bounds(rx + 76, y, 140, 14).build());
+        add.accept(Button.builder(Component.literal("Роль ▶"), b -> {
+            roleStyleIndex = Math.floorMod(roleStyleIndex + 1, ROLE_STYLES.length);
+            rb.run();
+        }).bounds(rx + 220, y, 72, 14).build());
+        add.accept(Button.builder(Component.literal("🎲 Случайно"), b -> {
+            pullFields(state);
+            randomizeLook(d);
+            state.markDirty();
+            rb.run();
+        }).bounds(rx + 296, y, rw - 296, 14).build());
+    }
+
     @Override
     public void render(GuiGraphics g, NpcEditorState state, int rx, int oy, int rw, int mx, int my) {
         var font = Minecraft.getInstance().font;
@@ -172,6 +233,12 @@ public class NpcInfoTab implements NpcEditorTab {
             case 1 -> renderLayers(g, d, rx, oy);
             case 2 -> renderParts(g, d, rx, oy);
         }
+        
+        var presets = NpcAppearancePresetManager.getAll();
+        String pLabel = presets.isEmpty() ? "нет пресетов" :
+                presets.get(Math.max(0, Math.min(presetIndex, presets.size() - 1))).name;
+        g.drawString(font, "§8Пресеты: §f" + pLabel, rx + 4, oy + 238, 0xFF777788, false);
+        g.drawString(font, "§8Стиль роли: §f" + ROLE_STYLES[roleStyleIndex], rx + 4, oy + 272, 0xFF777788, false);
     }
 
     private void renderSkin(GuiGraphics g, NpcEntityData d, int rx, int oy) {
@@ -215,5 +282,39 @@ public class NpcInfoTab implements NpcEditorTab {
 
     static void sectionCard(GuiGraphics g, int x, int y, int w, int h, String title) {
         NpcEditorUtils.sectionCard(g, x, y, w, h, title, ACCENT);
+    }
+    
+    private static void randomizeLook(NpcEntityData d) {
+        java.util.Random r = new java.util.Random();
+        for (Map.Entry<String, String[]> e : NpcProfile.PART_OPTIONS.entrySet()) {
+            d.bodyParts.put(e.getKey(), r.nextInt(Math.max(1, e.getValue().length)));
+        }
+        for (String layer : NpcEntityData.TEXTURE_LAYERS) {
+            List<String> opts = NpcLayeredSkinManager.getAvailable(layer);
+            if (!opts.isEmpty()) d.textureLayers.put(layer, opts.get(r.nextInt(opts.size())));
+        }
+    }
+
+    private static void applyRoleStyle(NpcEntityData d, String role) {
+        switch (role) {
+            case "Страж" -> {
+                d.bodyParts.put("eyes", 1);
+                d.textureLayers.put("top", "none");
+                d.textureLayers.put("accessory", "none");
+            }
+            case "Кузнец" -> {
+                d.bodyParts.put("torso", 1);
+                d.bodyParts.put("rightArm", 3);
+            }
+            case "Маг" -> {
+                d.bodyParts.put("eyes", 3);
+                d.textureLayers.put("overlay", "none");
+            }
+            case "Босс" -> {
+                d.bodyParts.put("mouth", 4);
+                d.bodyParts.put("eyes", 1);
+            }
+            default -> {}
+        }
     }
 }
