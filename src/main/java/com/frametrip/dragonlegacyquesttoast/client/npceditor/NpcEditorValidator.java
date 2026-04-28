@@ -2,8 +2,8 @@ package com.frametrip.dragonlegacyquesttoast.client.npceditor;
 
 import com.frametrip.dragonlegacyquesttoast.client.ClientDialogueState;
 import com.frametrip.dragonlegacyquesttoast.client.ClientFactionState;
-import com.frametrip.dragonlegacyquesttoast.client.ClientNpcSceneState;
 import com.frametrip.dragonlegacyquesttoast.client.ClientQuestState;
+import com.frametrip.dragonlegacyquesttoast.client.dialogue.ClientNpcSceneState;
 import com.frametrip.dragonlegacyquesttoast.entity.NpcEntityData;
 
 import java.util.ArrayList;
