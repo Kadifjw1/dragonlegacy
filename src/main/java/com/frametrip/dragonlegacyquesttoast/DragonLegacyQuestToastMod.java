@@ -2,6 +2,7 @@
 package com.frametrip.dragonlegacyquesttoast;
 
 import com.frametrip.dragonlegacyquesttoast.client.NpcDialogueOverlay;
+import com.frametrip.dragonlegacyquesttoast.client.NpcAppearancePresetManager;
 import com.frametrip.dragonlegacyquesttoast.client.NpcLayeredSkinManager;
 import com.frametrip.dragonlegacyquesttoast.client.NpcSkinManager;
 import com.frametrip.dragonlegacyquesttoast.client.QuestToastOverlay;
@@ -17,6 +18,7 @@ import com.frametrip.dragonlegacyquesttoast.network.SyncFactionsPacket;
 import com.frametrip.dragonlegacyquesttoast.network.SyncNpcProfilesPacket;
 import com.frametrip.dragonlegacyquesttoast.network.SyncNpcScenesPacket;
 import com.frametrip.dragonlegacyquesttoast.network.SyncPlayerCurrencyPacket;
+import com.frametrip.dragonlegacyquesttoast.network.SyncQuestProgressPacket;
 import com.frametrip.dragonlegacyquesttoast.network.SyncQuestsPacket;
 import com.frametrip.dragonlegacyquesttoast.registry.ModCreativeTabs;
 import com.frametrip.dragonlegacyquesttoast.registry.ModEntities;
@@ -29,6 +31,7 @@ import com.frametrip.dragonlegacyquesttoast.server.IceAbilityHandler;
 import com.frametrip.dragonlegacyquesttoast.server.NpcProfileManager;
 import com.frametrip.dragonlegacyquesttoast.server.PlayerAbilityManager;
 import com.frametrip.dragonlegacyquesttoast.server.QuestManager;
+import com.frametrip.dragonlegacyquesttoast.server.QuestProgressManager;
 import com.frametrip.dragonlegacyquesttoast.server.StormAbilityHandler;
 import com.frametrip.dragonlegacyquesttoast.server.QuestLogicHandler;
 import com.frametrip.dragonlegacyquesttoast.server.VoidAbilityHandler;
@@ -98,6 +101,7 @@ public class DragonLegacyQuestToastMod {
     private void onClientSetup(FMLClientSetupEvent event) {
         NpcSkinManager.init();
         NpcLayeredSkinManager.init();
+        NpcAppearancePresetManager.load();
     }
 
     private void registerOverlays(RegisterGuiOverlaysEvent event) {
@@ -126,6 +130,12 @@ public class DragonLegacyQuestToastMod {
                 new SyncAbilitiesPacket(abilities, disabled, points));
         ModNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player),
                 new SyncQuestsPacket(QuestManager.getAll()));
+        ModNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player),
+                new SyncQuestProgressPacket(
+                        QuestProgressManager.getAllProgress(player.getUUID()),
+                        QuestProgressManager.getActive(player.getUUID()),
+                        QuestProgressManager.getCompleted(player.getUUID()),
+                        QuestProgressManager.getFailed(player.getUUID())));
         ModNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player),
                 new SyncDialoguesPacket(DialogueManager.getAll()));
         ModNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player),
