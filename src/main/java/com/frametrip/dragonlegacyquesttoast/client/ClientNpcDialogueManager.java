@@ -209,6 +209,14 @@ public class ClientNpcDialogueManager {
         return text != null && !text.isEmpty();
     }
 
+    /** Immediately hide current dialogue bar and clear queued pages. */
+    public static void clear() {
+        QUEUE.clear();
+        npcName = "";
+        text = "";
+        age = 0;
+    }
+
     public static int getTotalTicks() {
         return fadeInTicks + stayTicks + fadeOutTicks;
     }
