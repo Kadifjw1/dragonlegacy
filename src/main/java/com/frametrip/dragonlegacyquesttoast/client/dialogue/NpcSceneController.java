@@ -90,6 +90,8 @@ public class NpcSceneController {
             case NpcSceneNode.TYPE_QUESTION  -> processQuestion(node);
             case NpcSceneNode.TYPE_ACTION    -> processAction(node);
             case NpcSceneNode.TYPE_CONDITION -> processCondition(node);
+            case NpcSceneNode.TYPE_DELAY     -> processDelay(node);
+            case NpcSceneNode.TYPE_BRANCH    -> processBranch(node);
             case NpcSceneNode.TYPE_END       -> finish();
             default                          -> finish();
         }
@@ -153,6 +155,46 @@ public class NpcSceneController {
         processNode(result ? node.trueNextNodeId : node.falseNextNodeId);
     }
 
+    
+    private static void processDelay(NpcSceneNode node) {
+        int delay = Math.max(0, node.delayTicks);
+        if (delay <= 0) {
+            processNode(node.nextNodeId);
+            return;
+        }
+        pendingNodeId = node.nextNodeId;
+        NpcSceneTickHandler.scheduleDeferredNode(pendingNodeId, delay);
+        pendingNodeId = null;
+    }
+
+    private static void processBranch(NpcSceneNode node) {
+        if (node.branchOptions == null || node.branchOptions.isEmpty()) {
+            finish();
+            return;
+        }
+        int total = 0;
+        for (NpcChoiceOption option : node.branchOptions) {
+            int weight = parseWeight(option.actionParam);
+            total += Math.max(1, weight);
+        }
+        int roll = Minecraft.getInstance().level == null
+                ? new java.util.Random().nextInt(Math.max(1, total))
+                : Minecraft.getInstance().level.random.nextInt(Math.max(1, total));
+        for (NpcChoiceOption option : node.branchOptions) {
+            roll -= Math.max(1, parseWeight(option.actionParam));
+            if (roll < 0) {
+                processNode(option.nextNodeId);
+                return;
+            }
+        }
+        processNode(node.branchOptions.get(0).nextNodeId);
+    }
+
+    private static int parseWeight(String raw) {
+        try { return Integer.parseInt(raw == null || raw.isBlank() ? "1" : raw.trim()); }
+        catch (Exception ignored) { return 1; }
+    }
+    
     // ── Condition evaluator (client-side approximations) ────────────────────
 
     private static boolean evaluateCondition(String type, String param) {
@@ -206,6 +248,13 @@ public class NpcSceneController {
                 case NpcSceneNode.ACTION_TAKE_ITEM            -> "⏵ Забран предмет";
                 case NpcSceneNode.ACTION_PLAY_SOUND           -> "⏵ Звук";
                 case NpcSceneNode.ACTION_PLAY_ANIMATION       -> "⏵ Анимация";
+                case NpcSceneNode.ACTION_LOOK_AT              -> "⏵ LookAt";
+                case NpcSceneNode.ACTION_MOVE_TO              -> "⏵ Move";
+                case NpcSceneNode.ACTION_CAMERA               -> "⏵ Камера";
+                case NpcSceneNode.ACTION_EFFECT               -> "⏵ Эффект";
+                case NpcSceneNode.ACTION_EMOTE                -> "⏵ Эмоция";
+                case NpcSceneNode.ACTION_TELEPORT             -> "⏵ Телепорт";
+                case NpcSceneNode.ACTION_SET_VARIABLE         -> "⏵ Переменная";
                 case NpcSceneNode.ACTION_OPEN_SCENE           -> "⏵ Переход в сцену";
                 case NpcSceneNode.ACTION_CLOSE_SCENE          -> "⏵ Завершение сцены";
                 default                                       -> "⏵ " + actionType;
@@ -239,6 +288,11 @@ public class NpcSceneController {
             case NpcSceneNode.ACTION_PLAY_SOUND -> playSound(actionParam);
             case NpcSceneNode.ACTION_PLAY_ANIMATION ->
                     ClientNpcDialogueManager.show("", "Анимация: " + actionParam);
+            case NpcSceneNode.ACTION_LOOK_AT, NpcSceneNode.ACTION_MOVE_TO,
+                 NpcSceneNode.ACTION_CAMERA, NpcSceneNode.ACTION_EFFECT,
+                 NpcSceneNode.ACTION_EMOTE, NpcSceneNode.ACTION_TELEPORT,
+                 NpcSceneNode.ACTION_SET_VARIABLE ->
+                    ClientNpcDialogueManager.show("", labelFor(actionType) + ": " + actionParam);
             // OPEN_SCENE / CLOSE_SCENE are handled in processAction() flow.
             default -> {}
         }
