@@ -49,13 +49,17 @@ public class QuestStateActionPacket {
             }
 
             if (!changed) return;
-            ModNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> sender),
+
+            ModNetwork.CHANNEL.send(
+                    PacketDistributor.PLAYER.with(() -> sender),
                     new SyncQuestProgressPacket(
                             QuestProgressManager.getAllProgress(sender.getUUID()),
                             QuestProgressManager.getActive(sender.getUUID()),
                             QuestProgressManager.getCompleted(sender.getUUID()),
                             QuestProgressManager.getFailed(sender.getUUID())
-                    ));
+                    )
+            );
         });
         c.setPacketHandled(true);
     }
+}
