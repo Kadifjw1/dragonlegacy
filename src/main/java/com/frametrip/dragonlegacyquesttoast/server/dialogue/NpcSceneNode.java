@@ -30,6 +30,7 @@ public class NpcSceneNode {
     public static final String ACTION_TAKE_ITEM            = "take_item";
     public static final String ACTION_PLAY_SOUND           = "play_sound";
     public static final String ACTION_PLAY_ANIMATION       = "play_animation";
+    public static final String ACTION_OPEN_SHOP            = "open_shop";
     public static final String ACTION_OPEN_SCENE           = "open_scene";
     public static final String ACTION_CLOSE_SCENE          = "close_scene";
 
@@ -38,6 +39,7 @@ public class NpcSceneNode {
             ACTION_SET_RELATION, ACTION_SET_FACTION_RELATION,
             ACTION_GIVE_ITEM, ACTION_TAKE_ITEM,
             ACTION_PLAY_SOUND, ACTION_PLAY_ANIMATION,
+            ACTION_OPEN_SHOP,
             ACTION_OPEN_SCENE, ACTION_CLOSE_SCENE
     };
     public static final String[] ACTION_LABELS = {
@@ -45,6 +47,7 @@ public class NpcSceneNode {
             "Отношение к игроку", "Отношение фракции",
             "Выдать предмет", "Забрать предмет",
             "Проиграть звук", "Проиграть анимацию",
+            "Открыть магазин",
             "Открыть сцену", "Закрыть сцену"
     };
 
@@ -101,6 +104,7 @@ public class NpcSceneNode {
     public String emotion     = "NEUTRAL";
     public String animationId = "";
     public String soundId     = "";
+    public int speechDelayTicks = 0;
 
     // speech / action: transition after execution
     public String nextNodeId = "";
@@ -133,12 +137,13 @@ public class NpcSceneNode {
         c.emotion         = this.emotion;
         c.animationId     = this.animationId;
         c.soundId         = this.soundId;
+        c.speechDelayTicks = this.speechDelayTicks;
         c.nextNodeId      = this.nextNodeId;
         c.choices         = new ArrayList<>();
         if (this.choices != null) for (NpcChoiceOption o : this.choices) c.choices.add(o.copy());
         c.actionType      = this.actionType;
         c.actionParam     = this.actionParam;
-        c.nextNodeId     = this.nextNodeId;
+        c.actionNextNodeId = this.actionNextNodeId;        
         c.conditionType   = this.conditionType;
         c.conditionParam  = this.conditionParam;
         c.trueNextNodeId  = this.trueNextNodeId;
