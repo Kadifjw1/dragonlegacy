@@ -9,17 +9,33 @@ import com.frametrip.dragonlegacyquesttoast.client.ClientNpcDialogueManager;
 public class NpcSceneTickHandler {
 
     private static String deferredNodeId = null;
+    private static int deferredDelay = 0;
 
     public static void scheduleDeferredNode(String nodeId) {
+        scheduleDeferredNode(nodeId, 0);
+    }
+
+    public static void scheduleDeferredNode(String nodeId, int delayTicks) {
         deferredNodeId = nodeId;
+        deferredDelay = Math.max(0, delayTicks);
+    }
+
+    public static void clearScheduled() {
+        deferredNodeId = null;
+        deferredDelay = 0;
     }
 
     /** Called every client tick. */
     public static void tick() {
         if (deferredNodeId == null) return;
+        if (deferredDelay > 0) {
+            deferredDelay--;
+            return;
+        }
         if (!ClientNpcDialogueManager.isActive()) {
             String node = deferredNodeId;
             deferredNodeId = null;
+            deferredDelay = 0;
             NpcSceneController.processNode(node);
         }
     }
