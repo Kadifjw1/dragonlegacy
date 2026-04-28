@@ -42,12 +42,14 @@ public class ModNetwork {
         CHANNEL.registerMessage(packetId++, SyncNpcProfilesPacket.class,     SyncNpcProfilesPacket::encode,     SyncNpcProfilesPacket::decode,     SyncNpcProfilesPacket::handle);
         CHANNEL.registerMessage(packetId++, SaveNpcProfilePacket.class,      SaveNpcProfilePacket::encode,      SaveNpcProfilePacket::decode,      SaveNpcProfilePacket::handle);
         CHANNEL.registerMessage(packetId++, SyncQuestProgressPacket.class,  SyncQuestProgressPacket::encode,  SyncQuestProgressPacket::decode,  SyncQuestProgressPacket::handle);
+        CHANNEL.registerMessage(packetId++, QuestStateActionPacket.class,  QuestStateActionPacket::encode,  QuestStateActionPacket::decode,  QuestStateActionPacket::handle);
         CHANNEL.registerMessage(packetId++, SaveNpcEntityDataPacket.class,  SaveNpcEntityDataPacket::encode,  SaveNpcEntityDataPacket::decode,  SaveNpcEntityDataPacket::handle);
         CHANNEL.registerMessage(packetId++, SyncFactionsPacket.class,       SyncFactionsPacket::encode,       SyncFactionsPacket::decode,       SyncFactionsPacket::handle);
         CHANNEL.registerMessage(packetId++, SaveFactionPacket.class,        SaveFactionPacket::encode,        SaveFactionPacket::decode,        SaveFactionPacket::handle);
         CHANNEL.registerMessage(packetId++, SaveNpcScenePacket.class,       SaveNpcScenePacket::encode,       SaveNpcScenePacket::decode,       SaveNpcScenePacket::handle);
         CHANNEL.registerMessage(packetId++, SyncNpcScenesPacket.class,      SyncNpcScenesPacket::encode,      SyncNpcScenesPacket::decode,      SyncNpcScenesPacket::handle);
         CHANNEL.registerMessage(packetId++, NpcStartScenePacket.class,      NpcStartScenePacket::encode,      NpcStartScenePacket::decode,      NpcStartScenePacket::handle);
+        CHANNEL.registerMessage(packetId++, RequestOpenNpcShopPacket.class, RequestOpenNpcShopPacket::encode, RequestOpenNpcShopPacket::decode, RequestOpenNpcShopPacket::handle);
         CHANNEL.registerMessage(packetId++, SyncPlayerCurrencyPacket.class, SyncPlayerCurrencyPacket::encode, SyncPlayerCurrencyPacket::decode, SyncPlayerCurrencyPacket::handle);
         CHANNEL.registerMessage(packetId++, BuyTradeOfferPacket.class,      BuyTradeOfferPacket::encode,      BuyTradeOfferPacket::decode,      BuyTradeOfferPacket::handle);
         CHANNEL.registerMessage(packetId++, SellToNpcPacket.class,          SellToNpcPacket::encode,          SellToNpcPacket::decode,          SellToNpcPacket::handle);
