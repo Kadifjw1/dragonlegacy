@@ -82,6 +82,7 @@ public class NpcSceneEditorScreen extends Screen {
     public EditBox nodeSpeakerBox;
     public EditBox nodeAnimBox;
     public EditBox nodeSoundBox;
+    public EditBox nodeDelayBox;
     public EditBox nodeActionParamBox;
     public EditBox nodeCondParamBox;
     public EditBox choiceTextBox;
@@ -147,6 +148,10 @@ public NpcSceneEditorScreen(NpcCreatorScreen parent, NpcEditorState npcState) {
                 if (nodeSpeakerBox != null)      n.speakerName    = nodeSpeakerBox.getValue();
                 if (nodeAnimBox != null)         n.animationId    = nodeAnimBox.getValue();
                 if (nodeSoundBox != null)        n.soundId        = nodeSoundBox.getValue();
+                if (nodeDelayBox != null) {
+                    try { n.speechDelayTicks = Math.max(0, Integer.parseInt(nodeDelayBox.getValue().trim())); }
+                    catch (Exception ignored) {}
+                }
                 if (nodeActionParamBox != null)  n.actionParam    = nodeActionParamBox.getValue();
                 if (nodeCondParamBox != null)    n.conditionParam = nodeCondParamBox.getValue();
                 if (!editingChoiceId.isEmpty() && n.choices != null) {
@@ -291,6 +296,13 @@ public NpcSceneEditorScreen(NpcCreatorScreen parent, NpcEditorState npcState) {
     public void runPreview(String startNodeId) {
         pullAllFields();
         if (draftScene == null) return;
+        issues = NpcSceneValidator.validate(draftScene);
+        boolean hasErrors = issues.stream().anyMatch(i -> i.level == NpcSceneValidator.Level.ERROR);
+        if (hasErrors) {
+            issueScroll = 0;
+            rebuildAll();
+            return;
+        }
         Minecraft mc = Minecraft.getInstance();
         // Close this screen so the overlay is visible
         mc.setScreen(null);
