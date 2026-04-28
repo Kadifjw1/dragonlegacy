@@ -21,7 +21,9 @@ public class QuestProgressManager {
  
     private static class PlayerProgress {
         Map<String, Integer> progress  = new HashMap<>();
+        Set<String>          active    = new HashSet<>();
         Set<String>          completed = new HashSet<>();
+        Set<String>          failed    = new HashSet<>();
     }
  
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
@@ -49,9 +51,29 @@ public class QuestProgressManager {
         return pp == null ? Collections.emptySet() : new HashSet<>(pp.completed);
     }
  
+    public static Set<String> getActive(UUID playerId) {
+        PlayerProgress pp = data.get(playerId.toString());
+        return pp == null ? Collections.emptySet() : new HashSet<>(pp.active);
+    }
+
+    public static Set<String> getFailed(UUID playerId) {
+        PlayerProgress pp = data.get(playerId.toString());
+        return pp == null ? Collections.emptySet() : new HashSet<>(pp.failed);
+    }
+ 
     public static boolean isCompleted(UUID playerId, String questId) {
         PlayerProgress pp = data.get(playerId.toString());
         return pp != null && pp.completed.contains(questId);
+    }
+ 
+   public static boolean isActive(UUID playerId, String questId) {
+        PlayerProgress pp = data.get(playerId.toString());
+        return pp != null && pp.active.contains(questId);
+    }
+
+    public static boolean isFailed(UUID playerId, String questId) {
+        PlayerProgress pp = data.get(playerId.toString());
+        return pp != null && pp.failed.contains(questId);
     }
  
     // ── Progress updates ──────────────────────────────────────────────────────
@@ -62,16 +84,19 @@ public class QuestProgressManager {
      */
     public static boolean increment(UUID playerId, String questId, int amount) {
         if (isCompleted(playerId, questId)) return false;
+        if (isFailed(playerId, questId)) return false;
  
         QuestDefinition quest = QuestManager.get(questId);
         if (quest == null) return false;
  
         PlayerProgress pp = data.computeIfAbsent(playerId.toString(), k -> new PlayerProgress());
+        pp.active.add(questId);
         int current = pp.progress.getOrDefault(questId, 0) + amount;
         pp.progress.put(questId, current);
  
         int required = quest.getRequiredCount();
         if (current >= required) {
+            pp.active.remove(questId);
             pp.completed.add(questId);
             pp.progress.put(questId, required);
             save();
@@ -85,16 +110,39 @@ public class QuestProgressManager {
     public static boolean complete(UUID playerId, String questId) {
         if (isCompleted(playerId, questId)) return false;
         PlayerProgress pp = data.computeIfAbsent(playerId.toString(), k -> new PlayerProgress());
+        pp.active.add(questId);
+        pp.failed.remove(questId);
+        pp.active.remove(questId);
         pp.completed.add(questId);
         save();
         return true;
+    }
+ 
+public static boolean accept(UUID playerId, String questId) {
+        if (questId == null || questId.isBlank()) return false;
+        if (isCompleted(playerId, questId) || isFailed(playerId, questId)) return false;
+        PlayerProgress pp = data.computeIfAbsent(playerId.toString(), k -> new PlayerProgress());
+        boolean changed = pp.active.add(questId);
+        if (changed) save();
+        return changed;
+    }
+
+    public static boolean fail(UUID playerId, String questId) {
+        if (questId == null || questId.isBlank()) return false;
+        PlayerProgress pp = data.computeIfAbsent(playerId.toString(), k -> new PlayerProgress());
+        boolean changed = pp.active.remove(questId);
+        changed = pp.failed.add(questId) || changed;
+        if (changed) save();
+        return changed;
     }
  
     public static void reset(UUID playerId, String questId) {
         PlayerProgress pp = data.get(playerId.toString());
         if (pp != null) {
             pp.progress.remove(questId);
+            pp.active.remove(questId);
             pp.completed.remove(questId);
+            pp.failed.remove(questId);
             save();
         }
     }
