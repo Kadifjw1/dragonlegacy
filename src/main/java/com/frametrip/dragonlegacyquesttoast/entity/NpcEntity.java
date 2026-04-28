@@ -131,8 +131,7 @@ public class NpcEntity extends PathfinderMob {
                     if (scene != null) {
                         ModNetwork.CHANNEL.send(
                                 PacketDistributor.PLAYER.with(() -> sp),
-                                new NpcStartScenePacket(data.displayName, data.sceneId)
-                        );
+                                new NpcStartScenePacket(data.displayName, data.sceneId, data.playerRelation, this.getUUID())                        );
                     }
                 } else if (!data.dialogueId.isEmpty()) {
                     DialogueDefinition dlg = DialogueManager.get(data.dialogueId);
