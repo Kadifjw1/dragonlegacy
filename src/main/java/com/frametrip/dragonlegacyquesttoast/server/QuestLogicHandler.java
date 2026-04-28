@@ -217,6 +217,7 @@ public class QuestLogicHandler {
         for (QuestDefinition q : all) {
             if (!logicType.equals(q.questLogicType)) continue;
             if (QuestProgressManager.isCompleted(playerId, q.id)) continue;
+            if (QuestProgressManager.isFailed(playerId, q.id)) continue;
             consumer.accept(q);
         }
     }
@@ -242,7 +243,9 @@ public class QuestLogicHandler {
             net.minecraftforge.network.PacketDistributor.PLAYER.with(() -> player),
             new SyncQuestProgressPacket(
                 QuestProgressManager.getAllProgress(uid),
-                QuestProgressManager.getCompleted(uid)
+                QuestProgressManager.getActive(uid),
+                QuestProgressManager.getCompleted(uid),
+                QuestProgressManager.getFailed(uid)
             )
         );
     }
