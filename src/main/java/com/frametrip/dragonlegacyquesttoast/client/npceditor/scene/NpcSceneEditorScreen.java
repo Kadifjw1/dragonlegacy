@@ -42,9 +42,11 @@ public class NpcSceneEditorScreen extends Screen {
     public static final int BOT_H = 116;
     public static final int PAD = 8;
     public static final int COL1_W = 140;          // scene list
-    public static final int COL2_W = 140;          // node list
+    public static final int PALETTE_W = 134;
+    public static final int COL2_W = PALETTE_W; // legacy alias
     public static final int COL_GAP = 4;
-    public static final int COL3_W = W - PAD * 2 - COL1_W - COL2_W - COL_GAP * 2;
+    public static final int CANVAS_W = 214;
+    public static final int COL3_W = W - PAD * 2 - COL1_W - PALETTE_W - CANVAS_W - COL_GAP * 3;
 
     // ── Colors ─────────────────────────────────────────────────────────────
     public static final int ACCENT_SCENE  = 0xFF44CC88;
@@ -70,9 +72,23 @@ public class NpcSceneEditorScreen extends Screen {
     public String sceneFilter = "all"; // all | quest | repeatable | with_questions | errors
     public int sceneScroll = 0;
     public int nodeScroll = 0;
+    public float canvasPanX = 0f;
+    public float canvasPanY = 0f;
+    public float canvasZoom = 1.0f;
+    public boolean canvasPanning = false;
+    public boolean canvasDraggingNode = false;
+    public double lastMouseX = 0;
+    public double lastMouseY = 0;
     public int issueScroll = 0;
     public List<NpcSceneValidator.Issue> issues = new ArrayList<>();
     public String templateId = NpcSceneTemplates.TPL_EMPTY;
+    public int editorLevel = 1; // 1: simple, 2: extended, 3: advanced
+    public boolean readOnlyMode = false;
+    public String nodeSearch = "";
+    public int autoLayoutMode = 0; // 0 vertical, 1 horizontal, 2 compact, 3 free
+    public boolean catStartOpen = true;
+    public boolean catLogicOpen = true;
+    public boolean catStagingOpen = true;
 
     // EditBox references — pulled into the draft before any rebuild
     public EditBox sceneSearchBox;
@@ -88,6 +104,7 @@ public class NpcSceneEditorScreen extends Screen {
     public EditBox choiceTextBox;
     public EditBox choiceCondParamBox;
     public EditBox choiceActionParamBox;
+    public EditBox nodeSearchBox;
 
 public NpcSceneEditorScreen(NpcCreatorScreen parent, NpcEditorState npcState) {
         super(Component.literal("Редактор сцен NPC"));
@@ -117,10 +134,18 @@ public NpcSceneEditorScreen(NpcCreatorScreen parent, NpcEditorState npcState) {
             saveDraftToServer();
             rebuildAll();
         }).bounds(ox + W - 180, oy + 4, 80, 18).build());
+        addRenderableWidget(Button.builder(Component.literal("L" + editorLevel), b -> {
+            editorLevel = editorLevel >= 3 ? 1 : editorLevel + 1;
+            rebuildAll();
+        }).bounds(ox + W - 268, oy + 4, 34, 18).build());
+        addRenderableWidget(Button.builder(Component.literal(readOnlyMode ? "👁 Read" : "✎ Edit"), b -> {
+            readOnlyMode = !readOnlyMode;
+            rebuildAll();
+        }).bounds(ox + W - 354, oy + 4, 82, 18).build());
 
         // Zone columns and bottom panel
         NpcSceneEditorSceneList.init(this, ox, oy);
-        NpcSceneEditorNodeList.init(this, ox, oy);
+        NpcSceneEditorCanvas.init(this, ox, oy);
         NpcSceneEditorNodePanel.init(this, ox, oy);
         NpcSceneEditorDiagPanel.init(this, ox, oy);
     }
@@ -139,6 +164,7 @@ public NpcSceneEditorScreen(NpcCreatorScreen parent, NpcEditorState npcState) {
 
     public void pullAllFields() {
         if (sceneSearchBox != null) sceneSearch = sceneSearchBox.getValue();
+        if (nodeSearchBox != null) nodeSearch = nodeSearchBox.getValue();
         if (draftScene != null) {
             if (sceneNameBox != null) draftScene.name        = sceneNameBox.getValue();
             if (sceneDescBox != null) draftScene.description = sceneDescBox.getValue();
@@ -149,8 +175,11 @@ public NpcSceneEditorScreen(NpcCreatorScreen parent, NpcEditorState npcState) {
                 if (nodeAnimBox != null)         n.animationId    = nodeAnimBox.getValue();
                 if (nodeSoundBox != null)        n.soundId        = nodeSoundBox.getValue();
                 if (nodeDelayBox != null) {
-                    try { n.speechDelayTicks = Math.max(0, Integer.parseInt(nodeDelayBox.getValue().trim())); }
-                    catch (Exception ignored) {}
+                    try {
+                        int parsed = Math.max(0, Integer.parseInt(nodeDelayBox.getValue().trim()));
+                        if (NpcSceneNode.TYPE_DELAY.equals(n.type)) n.delayTicks = parsed;
+                        else n.speechDelayTicks = parsed;
+                    } catch (Exception ignored) {}
                 }
                 if (nodeActionParamBox != null)  n.actionParam    = nodeActionParamBox.getValue();
                 if (nodeCondParamBox != null)    n.conditionParam = nodeCondParamBox.getValue();
@@ -186,7 +215,7 @@ public NpcSceneEditorScreen(NpcCreatorScreen parent, NpcEditorState npcState) {
 
         // Zones
         NpcSceneEditorSceneList.render(this, g, ox, oy, mx, my);
-        NpcSceneEditorNodeList.render(this, g, ox, oy, mx, my);
+        NpcSceneEditorCanvas.render(this, g, ox, oy, mx, my);
         NpcSceneEditorNodePanel.render(this, g, ox, oy, mx, my);
         NpcSceneEditorDiagPanel.render(this, g, ox, oy, mx, my);
 
@@ -318,15 +347,15 @@ public NpcSceneEditorScreen(NpcCreatorScreen parent, NpcEditorState npcState) {
         int zonesH = H - TOP_H - BOT_H - 8;
         if (my >= zonesY && my <= zonesY + zonesH) {
             int sceneX = ox + PAD;
-            int nodeX  = sceneX + COL1_W + COL_GAP;
-            int editX  = nodeX + COL2_W + COL_GAP;
+            int paletteX  = sceneX + COL1_W + COL_GAP;
+            int canvasX  = paletteX + PALETTE_W + COL_GAP;
+            int editX  = canvasX + CANVAS_W + COL_GAP;
             int dir = -(int) Math.signum(delta);
             if (mx >= sceneX && mx <= sceneX + COL1_W) {
                 sceneScroll = Math.max(0, sceneScroll + dir);
                 return true;
-            } else if (mx >= nodeX && mx <= nodeX + COL2_W) {
-                nodeScroll = Math.max(0, nodeScroll + dir);
-                return true;
+            } else if (mx >= paletteX && mx <= editX) {
+                if (NpcSceneEditorCanvas.mouseScrolled(this, mx, my, delta, ox, oy)) return true;
             } else if (mx >= editX && mx <= editX + COL3_W) {
                 // future: scroll editor when overflowing
             }
@@ -340,6 +369,26 @@ public NpcSceneEditorScreen(NpcCreatorScreen parent, NpcEditorState npcState) {
         return super.mouseScrolled(mx, my, delta);
     }
 
+    
+    @Override
+    public boolean mouseClicked(double mx, double my, int button) {
+        int ox = ox(), oy = oy();
+        if (NpcSceneEditorCanvas.mouseClicked(this, mx, my, button, ox, oy)) return true;
+        return super.mouseClicked(mx, my, button);
+    }
+
+    @Override
+    public boolean mouseDragged(double mx, double my, int button, double dx, double dy) {
+        if (NpcSceneEditorCanvas.mouseDragged(this, mx, my, button)) return true;
+        return super.mouseDragged(mx, my, button, dx, dy);
+    }
+
+    @Override
+    public boolean mouseReleased(double mx, double my, int button) {
+        if (NpcSceneEditorCanvas.mouseReleased(this)) return true;
+        return super.mouseReleased(mx, my, button);
+    }
+            
     @Override public boolean isPauseScreen() { return false; }
 
     @Override
@@ -365,6 +414,8 @@ public NpcSceneEditorScreen(NpcCreatorScreen parent, NpcEditorState npcState) {
             case NpcSceneNode.TYPE_QUESTION  -> COLOR_QUESTION;
             case NpcSceneNode.TYPE_ACTION    -> COLOR_ACTION;
             case NpcSceneNode.TYPE_CONDITION -> COLOR_CONDITION;
+            case NpcSceneNode.TYPE_DELAY     -> 0xFF9999AA;
+            case NpcSceneNode.TYPE_BRANCH    -> 0xFFBB66FF;
             case NpcSceneNode.TYPE_END       -> COLOR_END;
             default -> 0xFFCCCCCC;
         };
