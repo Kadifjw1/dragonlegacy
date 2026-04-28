@@ -81,6 +81,10 @@ public final class NpcSceneValidator {
             case NpcSceneNode.TYPE_SPEECH -> {
                 if (n.text == null || n.text.isBlank())
                     out.add(new Issue(Level.WARN, n.id, "Пустой текст у фразы"));
+                if (n.speechDelayTicks < 0)
+                    out.add(new Issue(Level.ERROR, n.id, "Задержка фразы не может быть отрицательной"));
+                if (n.nextNodeId == null || n.nextNodeId.isEmpty())
+                    out.add(new Issue(Level.ERROR, n.id, "У фразы не задан следующий узел"));
                 if (!n.nextNodeId.isEmpty() && !ids.contains(n.nextNodeId))
                     out.add(new Issue(Level.ERROR, n.id, "Следующий узел «" + n.nextNodeId + "» не существует"));
             }
@@ -94,6 +98,8 @@ public final class NpcSceneValidator {
                         NpcChoiceOption o = n.choices.get(i);
                         if (o.text == null || o.text.isBlank())
                             out.add(new Issue(Level.WARN, n.id, "Ответ #" + (i + 1) + ": пустой текст"));
+                        if (o.nextNodeId == null || o.nextNodeId.isEmpty())
+                            out.add(new Issue(Level.ERROR, n.id, "Ответ #" + (i + 1) + ": не задан nextNodeId"));
                         if (!o.nextNodeId.isEmpty() && !ids.contains(o.nextNodeId))
                             out.add(new Issue(Level.ERROR, n.id, "Ответ #" + (i + 1) + ": переход в несуществующий узел"));
                     }
@@ -104,6 +110,9 @@ public final class NpcSceneValidator {
                     out.add(new Issue(Level.ERROR, n.id, "Тип действия не задан"));
                 if (requiresParam(n.actionType) && (n.actionParam == null || n.actionParam.isBlank()))
                     out.add(new Issue(Level.ERROR, n.id, "Параметр действия обязателен"));
+                if (!NpcSceneNode.ACTION_CLOSE_SCENE.equals(n.actionType)
+                        && (n.actionNextNodeId == null || n.actionNextNodeId.isEmpty()))
+                    out.add(new Issue(Level.ERROR, n.id, "У действия не задан следующий узел"));
                 if (!n.actionNextNodeId.isEmpty() && !ids.contains(n.actionNextNodeId))
                     out.add(new Issue(Level.ERROR, n.id, "Следующий узел после действия не существует"));
             }
