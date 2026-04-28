@@ -11,13 +11,15 @@ public class NpcSceneNode {
     public static final String TYPE_QUESTION  = "question";
     public static final String TYPE_ACTION    = "action";
     public static final String TYPE_CONDITION = "condition";
+    public static final String TYPE_DELAY     = "delay";
+    public static final String TYPE_BRANCH    = "branch";
     public static final String TYPE_END       = "end";
 
     public static final String[] TYPE_IDS = {
-            TYPE_SPEECH, TYPE_QUESTION, TYPE_ACTION, TYPE_CONDITION, TYPE_END
+        TYPE_SPEECH, TYPE_QUESTION, TYPE_ACTION, TYPE_CONDITION, TYPE_DELAY, TYPE_BRANCH, TYPE_END
     };
     public static final String[] TYPE_LABELS = {
-            "Фраза", "Вопрос", "Действие", "Условие", "Конец"
+            "Фраза", "Вопрос", "Действие", "Условие", "Пауза", "Ветвление", "Конец"
     };
     
 // ── Action types ─────────────────────────────────────────────────────────
@@ -30,6 +32,13 @@ public class NpcSceneNode {
     public static final String ACTION_TAKE_ITEM            = "take_item";
     public static final String ACTION_PLAY_SOUND           = "play_sound";
     public static final String ACTION_PLAY_ANIMATION       = "play_animation";
+    public static final String ACTION_LOOK_AT              = "look_at";
+    public static final String ACTION_MOVE_TO              = "move_to";
+    public static final String ACTION_CAMERA               = "camera";
+    public static final String ACTION_EFFECT               = "effect";
+    public static final String ACTION_EMOTE                = "emote";
+    public static final String ACTION_TELEPORT             = "teleport";
+    public static final String ACTION_SET_VARIABLE         = "set_variable";
     public static final String ACTION_OPEN_SHOP            = "open_shop";
     public static final String ACTION_OPEN_SCENE           = "open_scene";
     public static final String ACTION_CLOSE_SCENE          = "close_scene";
@@ -39,6 +48,7 @@ public class NpcSceneNode {
             ACTION_SET_RELATION, ACTION_SET_FACTION_RELATION,
             ACTION_GIVE_ITEM, ACTION_TAKE_ITEM,
             ACTION_PLAY_SOUND, ACTION_PLAY_ANIMATION,
+            ACTION_LOOK_AT, ACTION_MOVE_TO, ACTION_CAMERA, ACTION_EFFECT, ACTION_EMOTE, ACTION_TELEPORT, ACTION_SET_VARIABLE,
             ACTION_OPEN_SHOP,
             ACTION_OPEN_SCENE, ACTION_CLOSE_SCENE
     };
@@ -47,6 +57,7 @@ public class NpcSceneNode {
             "Отношение к игроку", "Отношение фракции",
             "Выдать предмет", "Забрать предмет",
             "Проиграть звук", "Проиграть анимацию",
+            "Повернуть NPC", "Движение NPC", "Камера", "Эффект", "Эмоция", "Телепорт", "Переменная",
             "Открыть магазин",
             "Открыть сцену", "Закрыть сцену"
     };
@@ -95,6 +106,10 @@ public class NpcSceneNode {
     public String id;
     public String type = TYPE_SPEECH;
 
+    // editor layout position
+    public int canvasX = 0;
+    public int canvasY = 0;
+    
     // speech / question text
     public String text = "";
 
@@ -123,6 +138,10 @@ public class NpcSceneNode {
     public String trueNextNodeId  = "";
     public String falseNextNodeId = "";
 
+    // delay / branch
+    public int delayTicks = 20;
+    public java.util.List<NpcChoiceOption> branchOptions = new java.util.ArrayList<>();
+
     public NpcSceneNode() {
         this.id = UUID.randomUUID().toString().substring(0, 8);
     }
@@ -131,6 +150,8 @@ public class NpcSceneNode {
         NpcSceneNode c = new NpcSceneNode();
         c.id              = this.id;
         c.type            = this.type;
+        c.canvasX         = this.canvasX;
+        c.canvasY         = this.canvasY;
         c.text            = this.text;
         c.speakerName     = this.speakerName;
         c.displayMode     = this.displayMode;
@@ -148,6 +169,9 @@ public class NpcSceneNode {
         c.conditionParam  = this.conditionParam;
         c.trueNextNodeId  = this.trueNextNodeId;
         c.falseNextNodeId = this.falseNextNodeId;
+        c.delayTicks      = this.delayTicks;
+        c.branchOptions   = new java.util.ArrayList<>();
+        if (this.branchOptions != null) for (NpcChoiceOption o : this.branchOptions) c.branchOptions.add(o.copy());
         return c;
     }
 
@@ -160,6 +184,8 @@ public class NpcSceneNode {
                     + (actionParam.isEmpty() ? "" : ": " + truncate(actionParam, 20));
             case TYPE_CONDITION -> "❖ " + condLabel(conditionType)
                     + (conditionParam.isEmpty() ? "" : ": " + truncate(conditionParam, 18));
+                case TYPE_DELAY     -> "⏳ Пауза: " + Math.max(0, delayTicks) + " тиков";
+            case TYPE_BRANCH    -> "⑂ Ветвление (" + (branchOptions == null ? 0 : branchOptions.size()) + ")";
             case TYPE_END       -> "■ Конец";
             default             -> id;
         };
