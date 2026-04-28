@@ -8,6 +8,7 @@ public final class NpcSceneTemplates {
     public static final String TPL_SIMPLE          = "simple";
     public static final String TPL_WITH_QUESTION   = "with_question";
     public static final String TPL_QUEST_OFFER     = "quest_offer";
+    public static final String TPL_QUEST_PROGRESS  = "quest_progress";
     public static final String TPL_QUEST_COMPLETE  = "quest_complete";
     public static final String TPL_REFUSAL         = "refusal";
     public static final String TPL_REPEATABLE      = "repeatable";
@@ -15,7 +16,7 @@ public final class NpcSceneTemplates {
 
     public static final String[] TEMPLATE_IDS = {
             TPL_EMPTY, TPL_GREETING, TPL_SIMPLE, TPL_WITH_QUESTION,
-            TPL_QUEST_OFFER, TPL_QUEST_COMPLETE, TPL_REFUSAL,
+            TPL_QUEST_OFFER, TPL_QUEST_PROGRESS, TPL_QUEST_COMPLETE, TPL_REFUSAL,
             TPL_REPEATABLE, TPL_HOSTILE_WARNING
     };
     public static final String[] TEMPLATE_LABELS = {
@@ -24,6 +25,7 @@ public final class NpcSceneTemplates {
             "Простой разговор",
             "Разговор с вопросом",
             "Выдача квеста",
+            "Прогресс квеста",
             "Завершение квеста",
             "Отказ",
             "Повторяемый разговор",
@@ -38,6 +40,7 @@ public final class NpcSceneTemplates {
             case TPL_SIMPLE          -> simple();
             case TPL_WITH_QUESTION   -> withQuestion();
             case TPL_QUEST_OFFER     -> questOffer();
+            case TPL_QUEST_PROGRESS  -> questProgress();
             case TPL_QUEST_COMPLETE  -> questComplete();
             case TPL_REFUSAL         -> refusal();
             case TPL_REPEATABLE      -> repeatable();
@@ -146,6 +149,25 @@ public final class NpcSceneTemplates {
         praise.nextNodeId = complete.id;
         complete.actionNextNodeId = reward.id;
         reward.nextNodeId = end.id;
+        return s;
+    }
+    
+ private static NpcScene questProgress() {
+        NpcScene s = new NpcScene();
+        s.name = "Прогресс квеста";
+        s.type = NpcScene.TYPE_QUEST_PROGRESS;
+        NpcSceneNode cond = s.addNode(NpcSceneNode.TYPE_CONDITION);
+        cond.conditionType = NpcSceneNode.COND_QUEST_COMPLETE;
+        cond.conditionParam = "";
+        NpcSceneNode done = s.addNode(NpcSceneNode.TYPE_SPEECH);
+        done.text = "Вижу, ты уже всё выполнил. Отличная работа.";
+        NpcSceneNode inProgress = s.addNode(NpcSceneNode.TYPE_SPEECH);
+        inProgress.text = "Продолжай, ты близок к цели.";
+        NpcSceneNode end = s.addNode(NpcSceneNode.TYPE_END);
+        cond.trueNextNodeId = done.id;
+        cond.falseNextNodeId = inProgress.id;
+        done.nextNodeId = end.id;
+        inProgress.nextNodeId = end.id;
         return s;
     }
 
