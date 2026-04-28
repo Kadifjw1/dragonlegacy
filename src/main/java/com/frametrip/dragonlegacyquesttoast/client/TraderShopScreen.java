@@ -173,6 +173,7 @@ public class TraderShopScreen extends Screen {
             if (activeTab == 0) renderBuySlot(g, sx, sy, sW, sH, (SellTradeOffer) offers.get(i), sel);
             else renderSellSlot(g, sx, sy, sW, sH, (BuyTradeOffer) offers.get(i), sel);
         }
+            drawGridScrollbar(g, ox, oy, offers.size(), cols);
     }
 
     private void renderBuySlot(GuiGraphics g, int x, int y, int w, int h, SellTradeOffer o, boolean sel) {
@@ -202,22 +203,18 @@ public class TraderShopScreen extends Screen {
     private void renderSellSlot(GuiGraphics g, int x, int y, int w, int h, BuyTradeOffer o, boolean sel) {
         g.fill(x, y, x + w, y + h, sel ? layout.slotSelBgColor : layout.slotBgColor);
         NpcCreatorScreen.brd(g, x, y, w, h, sel ? layout.slotSelBdrColor : layout.slotBdrColor);
+        int controlsH = 20;
+        int previewSize = Math.max(16, h - controlsH - 8);
+        int previewX = x + (w - previewSize) / 2;
+        int previewY = y + 4;
+        drawBox(g, previewX, previewY, previewSize, previewSize);
+        renderOfferIcon(g, o.itemId, previewX + (previewSize - 16) / 2, previewY + (previewSize - 16) / 2);
 
-        if (layout.showItemName) {
-            g.drawString(font, o.customName.isBlank() ? "§8" + o.itemId : "§f" + o.customName,
-                    x + 6, y + 6, layout.titleTextColor, false);
-        }
-
-        int has = countInInventory(o.itemId);
-        g.drawString(font, "У вас: " + (has >= o.requiredAmount ? "§f" : "§c") + has + " §7/ §f" + o.requiredAmount,
-                x + 6, y + 17, 0xFFAAAAAA, false);
-
-        if (layout.showItemPrice) {
-            int bon = discounts.effectiveSellBonus(o.bonusPercent);
-            long fr = TradeRewardResult.calculate(o.reward, 1, bon).finalReward;
-            String bonPart = bon > 0 ? " §a(+" + bon + "%)" : "";
-            g.drawString(font, "§7Награда: §e" + fr + " §7монет" + bonPart, x + 6, y + 28, 0xFFAAAAAA, false);
-        }
+       int bon = discounts.effectiveSellBonus(o.bonusPercent);
+        long fr = TradeRewardResult.calculate(o.reward, 1, bon).finalReward;
+        int cy = y + h - controlsH;
+        g.fill(x + 2, cy, x + w - 2, cy + controlsH - 2, 0x33000000);
+        g.drawCenteredString(font, Component.literal("§e+" + fr), x + (w / 2), cy + 6, layout.priceTextColor);
     }
 
     private void renderRightPanel(GuiGraphics g, int ox, int oy) {
@@ -262,6 +259,7 @@ public class TraderShopScreen extends Screen {
         g.drawString(font, "В корзине: §f" + cartCount(o.id), rpx + pric.x + 6, py + 12, 0xFFAAAAAA, false);
         g.drawString(font, "К оплате: " + (canAff ? "§e" : "§c") + totalCartPrice() + " §7монет", rpx + pric.x + 6, py + 24, layout.priceTextColor, false);
         g.drawString(font, "Всего позиций: §f" + totalCartItems(), rpx + pric.x + 6, py + 36, 0xFFAAAAAA, false);
+        g.drawString(font, "Разных товаров: §f" + buyCart.size(), rpx + pric.x + 6, py + 48, 0xFFAAAAAA, false);
 
         GuiRect act = layout.actionBoxRect;
         drawBox(g, rpx + act.x, rpy + act.y, act.width, act.height);
@@ -281,6 +279,7 @@ public class TraderShopScreen extends Screen {
     private void renderSellDetail(GuiGraphics g, int rpx, int rpy, BuyTradeOffer o) {
         GuiRect prev = layout.previewItemBoxRect;
         drawBox(g, rpx + prev.x, rpy + prev.y, prev.width, prev.height);
+        renderOfferIcon(g, o.itemId, rpx + prev.x + (prev.width - 32) / 2, rpy + prev.y + 10, 2.0f);
 
         g.drawString(font, "§f§l" + (o.customName.isBlank() ? o.itemId : o.customName),
                 rpx + prev.x + 6, rpy + prev.y + 8, layout.titleTextColor, false);
@@ -509,6 +508,23 @@ public class TraderShopScreen extends Screen {
     private int visibleRowsForGrid() {
         int s = slotSize();
         return Math.max(1, (layout.itemGridRect.height - 4 + layout.itemSlotGapY) / (s + layout.itemSlotGapY));
+    }
+
+    private void drawGridScrollbar(GuiGraphics g, int ox, int oy, int totalItems, int cols) {
+        int visibleRows = visibleRowsForGrid();
+        int totalRows = (int) Math.ceil(totalItems / (double) Math.max(1, cols));
+        if (totalRows <= visibleRows) return;
+
+        GuiRect gr = layout.itemGridRect;
+        int barX = ox + gr.x + gr.width - 5;
+        int barY = oy + gr.y + 2;
+        int barH = gr.height - 4;
+        g.fill(barX, barY, barX + 3, barY + barH, 0x55333344);
+
+        int thumbH = Math.max(16, (int) (barH * (visibleRows / (float) totalRows)));
+        int maxOffset = Math.max(1, totalRows - visibleRows);
+        int thumbY = barY + (int) ((barH - thumbH) * (scrollOffset / (float) maxOffset));
+        g.fill(barX, thumbY, barX + 3, thumbY + thumbH, 0xFF8A8AAA);
     }
 
     private void renderOfferIcon(GuiGraphics g, String itemId, int x, int y) {
