@@ -50,6 +50,9 @@ public class MainHubMenuScreen extends Screen {
  
         addBtn("Создать квест", col2X, col2Y, 180, () ->
             mc().setScreen(new QuestCreatorScreen(this)));
+
+      addBtn("Журнал квестов", col2X, col2Y + 78, 180, () ->
+            mc().setScreen(new QuestJournalScreen(this)));
  
         addBtn("Диалоги NPC", col2X, col2Y + 26, 180, () ->
             mc().setScreen(new DialogueCreatorScreen(this)));
@@ -118,8 +121,8 @@ public class MainHubMenuScreen extends Screen {
  
         // Секция: Контент
         int col2X = ox + 216;
-        g.fill(col2X, col1Y, col2X + 188, col1Y + 104, COL_PANEL);
-        drawBorder(g, col2X, col1Y, 188, 104, COL_DIVIDER);
+        g.fill(col2X, col1Y, col2X + 188, col1Y + 130, COL_PANEL);
+        drawBorder(g, col2X, col1Y, 188, 130, COL_DIVIDER);
         g.drawString(font, "КОНТЕНТ", col2X + 6, col1Y + 5, COL_SECTION, false);
  
         // Секция: Настройки
