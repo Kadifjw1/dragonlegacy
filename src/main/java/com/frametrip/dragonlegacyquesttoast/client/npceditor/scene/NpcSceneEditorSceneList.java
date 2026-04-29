@@ -20,8 +20,8 @@ final class NpcSceneEditorSceneList {
 
     private NpcSceneEditorSceneList() {}
 
-    private static final int ROW_H = 18;
-    private static final int VISIBLE_ROWS = 11;
+    private static final int ROW_H = 22;
+    private static final int VISIBLE_ROWS = 14;
     private static final String[] FILTERS = {"all", "quest", "repeatable", "with_questions", "errors"};
     private static final String[] FILTER_LABELS = {
             "Все", "Квесты", "Повторяемые", "С вопросами", "С ошибками"
@@ -62,7 +62,7 @@ final class NpcSceneEditorSceneList {
             boolean selected = scr.draftScene != null && s.id.equals(scr.draftScene.id);
             String prefix = selected ? "§e▶ " : "  ";
             String name = s.name == null ? s.id : s.name;
-            if (name.length() > 14) name = name.substring(0, 14) + "…";
+            if (name.length() > 18) name = name.substring(0, 18) + "…";
             // brief indicators: quests / errors
             String marks = "";
             if (NpcSceneValidator.validate(s).stream().anyMatch(is -> is.level == NpcSceneValidator.Level.ERROR))
@@ -73,7 +73,7 @@ final class NpcSceneEditorSceneList {
 
             final NpcScene captured = s;
             scr.addRenderableWidget(Button.builder(
-                    Component.literal(prefix + "§f" + name + " §7" + marks),
+                    Component.literal(prefix + "§f" + name + " §8#" + s.id + " §7" + marks),
                     b -> {
                         scr.pullAllFields();
                         scr.selectScene(captured);
@@ -139,7 +139,7 @@ final class NpcSceneEditorSceneList {
         g.fill(x, y, x + COL1_W, y + h, 0xAA131320);
         g.fill(x, y, x + COL1_W, y + 1, ACCENT_SCENE);
         NpcEditorUtils.brd(g, x, y, COL1_W, h, 0xFF2A2A44);
-        g.drawString(font, "§l§7СЦЕНЫ", x + 4, y + 3, ACCENT_SCENE, false);
+        g.drawString(font, "§l§7СЦЕНЫ NPC", x + 4, y + 3, ACCENT_SCENE, false);
 
         int total = scr.filteredScenes().size();
         if (total > VISIBLE_ROWS) {
