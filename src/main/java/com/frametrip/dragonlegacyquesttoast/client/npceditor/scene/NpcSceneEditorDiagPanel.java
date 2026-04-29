@@ -22,9 +22,9 @@ final class NpcSceneEditorDiagPanel {
         int y = oy + H - BOT_H + 4;
 
         // Action buttons row
-        int btnW = 140;
+        int btnW = 128;
         int gap = 4;
-        scr.addRenderableWidget(Button.builder(Component.literal("✓ Проверить сцену"), b -> {
+        scr.addRenderableWidget(Button.builder(Component.literal("✓ Проверить"), b -> {
             scr.pullAllFields();
             scr.runDiagnostics();
             scr.rebuildAll();
@@ -35,21 +35,44 @@ final class NpcSceneEditorDiagPanel {
             scr.runPreview(null);
         }).bounds(x + btnW + gap, y, btnW, 16).build());
 
-        scr.addRenderableWidget(Button.builder(Component.literal("▶▷ С текущего узла"), b -> {
+        scr.addRenderableWidget(Button.builder(Component.literal("▶▷ Тест узла"), b -> {
             scr.pullAllFields();
             String start = scr.selectedNodeId.isEmpty()
                     ? (scr.draftScene == null ? null : scr.draftScene.startNodeId)
                     : scr.selectedNodeId;
             scr.runPreview(start);
-        }).bounds(x + (btnW + gap) * 2, y, btnW + 6, 16).build());
+        }).bounds(x + (btnW + gap) * 2, y, btnW, 16).build());
+
+        scr.addRenderableWidget(Button.builder(Component.literal("↺ Автовыравнивание"), b -> {
+            scr.autoLayoutMode = 0;
+            NpcSceneEditorCanvas.runAutoLayout(scr);
+            scr.rebuildAll();
+        }).bounds(x + (btnW + gap) * 3, y, btnW + 14, 16).build());
+
+        scr.addRenderableWidget(Button.builder(Component.literal("⌖ Центр графа"), b -> {
+            scr.canvasPanX = 0;
+            scr.canvasPanY = 0;
+            scr.canvasZoom = 1.0f;
+        }).bounds(x + (btnW + gap) * 4 + 14, y, btnW - 10, 16).build());
 
         // Counts at right
         int errorN = (int) scr.issues.stream().filter(i -> i.level == NpcSceneValidator.Level.ERROR).count();
         int warnN  = (int) scr.issues.stream().filter(i -> i.level == NpcSceneValidator.Level.WARN).count();
+        int nodeN = scr.draftScene == null ? 0 : scr.draftScene.nodes.size();
+        int edgeN = scr.draftScene == null ? 0 : scr.draftScene.nodes.stream().mapToInt(n -> {
+            if (n.nextNodeId != null && !n.nextNodeId.isBlank()) return 1;
+            if (n.actionNextNodeId != null && !n.actionNextNodeId.isBlank()) return 1;
+            int out = 0;
+            if (n.trueNextNodeId != null && !n.trueNextNodeId.isBlank()) out++;
+            if (n.falseNextNodeId != null && !n.falseNextNodeId.isBlank()) out++;
+            if (n.choices != null) out += (int) n.choices.stream().filter(c -> c.nextNodeId != null && !c.nextNodeId.isBlank()).count();
+            if (n.branchOptions != null) out += (int) n.branchOptions.stream().filter(c -> c.nextNodeId != null && !c.nextNodeId.isBlank()).count();
+            return out;
+        }).sum();
         scr.addRenderableWidget(Button.builder(
-                Component.literal("§cОшибок: " + errorN + "  §eПредупр.: " + warnN),
+                Component.literal("§cОшибки: " + errorN + "  §eПредупр.: " + warnN + "  §bУзлы: " + nodeN + "  §dВетки: " + edgeN),
                 b -> {}
-        ).bounds(x + w - 180, y, 180, 16).build());
+        ).bounds(x + w - 278, y, 278, 16).build());
     }
 
     static void render(NpcSceneEditorScreen scr, GuiGraphics g, int ox, int oy, int mx, int my) {
