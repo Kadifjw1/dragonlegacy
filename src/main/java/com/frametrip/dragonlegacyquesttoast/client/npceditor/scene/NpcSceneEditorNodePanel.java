@@ -69,7 +69,7 @@ final class NpcSceneEditorNodePanel {
             return;
         }
         if (scr.selectedNodeId.isEmpty()) {
-            title = "§l§7СВОЙСТВА СЦЕНЫ";
+            title = "§l§7КАРТОЧКА СЦЕНЫ";
         } else if (!scr.editingChoiceId.isEmpty()) {
             title = "§l§7ОТВЕТ";
         } else {
@@ -152,12 +152,8 @@ final class NpcSceneEditorNodePanel {
         scr.nodeTextBox.setValue(n.text);
         scr.addRenderableWidget(scr.nodeTextBox);
 
-        scr.nodeSpeakerBox = new EditBox(font, x + 8, y + 30, (COL3_W - 16) / 2 - 2, 14,
-                Component.literal("Говорящий"));
-        scr.nodeSpeakerBox.setMaxLength(48);
-        scr.nodeSpeakerBox.setValue(n.speakerName);
-        scr.nodeSpeakerBox.setHint(Component.literal("Имя…").withStyle(s -> s.withColor(0xFF555566)));
-        scr.addRenderableWidget(scr.nodeSpeakerBox);
+        NpcSceneSelectorComponents.addSelector(scr, x + 8, y + 30, (COL3_W - 16) / 2 - 2, "NPC",
+                n.speakerName, NpcSceneSelectorComponents.npcOptions(), id -> n.speakerName = id, null);
 
         int ei = indexOf(NpcSceneNode.EMOTION_IDS, n.emotion);
         scr.addRenderableWidget(Button.builder(
@@ -169,19 +165,11 @@ final class NpcSceneEditorNodePanel {
                 }
         ).bounds(x + 8 + (COL3_W - 16) / 2 + 2, y + 30, (COL3_W - 16) / 2 - 2, 14).build());
 
-        scr.nodeAnimBox = new EditBox(font, x + 8, y + 48, (COL3_W - 16) / 2 - 2, 14,
-                Component.literal("Анимация"));
-        scr.nodeAnimBox.setMaxLength(64);
-        scr.nodeAnimBox.setValue(n.animationId);
-        scr.nodeAnimBox.setHint(Component.literal("ID анимации").withStyle(s -> s.withColor(0xFF555566)));
-        scr.addRenderableWidget(scr.nodeAnimBox);
+        NpcSceneSelectorComponents.addSelector(scr, x + 8, y + 48, (COL3_W - 16) / 2 - 2, "Анимация",
+                n.animationId, NpcSceneSelectorComponents.animationOptions(), id -> n.animationId = id, null);
 
-        scr.nodeSoundBox = new EditBox(font, x + 8 + (COL3_W - 16) / 2 + 2, y + 48,
-                (COL3_W - 16) / 2 - 2, 14, Component.literal("Звук"));
-        scr.nodeSoundBox.setMaxLength(64);
-        scr.nodeSoundBox.setValue(n.soundId);
-        scr.nodeSoundBox.setHint(Component.literal("minecraft:…").withStyle(s -> s.withColor(0xFF555566)));
-        scr.addRenderableWidget(scr.nodeSoundBox);
+        NpcSceneSelectorComponents.addSelector(scr, x + 8 + (COL3_W - 16) / 2 + 2, y + 48,
+                (COL3_W - 16) / 2 - 2, "Звук", n.soundId, soundOptions(), id -> n.soundId = id, null);
 
         scr.nodeDelayBox = new EditBox(font, x + 8, y + 66, (COL3_W - 16) / 2 - 2, 14,
                 Component.literal("Задержка (тики)"));
@@ -428,6 +416,16 @@ final class NpcSceneEditorNodePanel {
         return 0;
     }
 
+    
+    private static java.util.List<NpcSceneSelectorComponents.SelectorOption> soundOptions() {
+        return java.util.List.of(
+                new NpcSceneSelectorComponents.SelectorOption("minecraft:entity.villager.ambient", "Villager ambient", "minecraft"),
+                new NpcSceneSelectorComponents.SelectorOption("minecraft:entity.player.levelup", "Level up", "minecraft"),
+                new NpcSceneSelectorComponents.SelectorOption("minecraft:block.note_block.pling", "Pling", "minecraft"),
+                new NpcSceneSelectorComponents.SelectorOption("minecraft:entity.experience_orb.pickup", "Pickup", "minecraft")
+        );
+    }
+    
     private static Component actionHint(String type) {
         String h = switch (type) {
             case NpcSceneNode.ACTION_GIVE_QUEST,
