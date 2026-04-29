@@ -166,12 +166,23 @@ final class NpcSceneEditorChoicePanel {
                 }
         ).bounds(x + 8, y + 82, COL3_W - 16, 14).build());
 
-        scr.choiceCondParamBox = new EditBox(font, x + 8, y + 100, COL3_W - 16, 14,
-                Component.literal("Параметр условия"));
-        scr.choiceCondParamBox.setMaxLength(160);
-        scr.choiceCondParamBox.setValue(choice.conditionParam);
-        scr.choiceCondParamBox.setHint(Component.literal("…").withStyle(s -> s.withColor(0xFF555566)));
-        scr.addRenderableWidget(scr.choiceCondParamBox);
+        if (NpcSceneNode.COND_QUEST_ACTIVE.equals(choice.conditionType)
+                || NpcSceneNode.COND_QUEST_COMPLETE.equals(choice.conditionType)
+                || NpcSceneNode.COND_QUEST_NOT_TAKEN.equals(choice.conditionType)) {
+            NpcSceneSelectorComponents.addSelector(scr, x + 8, y + 100, COL3_W - 16, "Квест", choice.conditionParam,
+                    NpcSceneSelectorComponents.questOptions(), id -> choice.conditionParam = id, null);
+        } else if (NpcSceneNode.COND_HAS_ITEM.equals(choice.conditionType)
+                || NpcSceneNode.COND_NOT_HAS_ITEM.equals(choice.conditionType)) {
+            NpcSceneSelectorComponents.addSelector(scr, x + 8, y + 100, COL3_W - 16, "Предмет", choice.conditionParam,
+                    NpcSceneSelectorComponents.itemOptions(), id -> choice.conditionParam = id, null);
+        } else {
+            scr.choiceCondParamBox = new EditBox(font, x + 8, y + 100, COL3_W - 16, 14,
+                    Component.literal("Параметр условия"));
+            scr.choiceCondParamBox.setMaxLength(160);
+            scr.choiceCondParamBox.setValue(choice.conditionParam);
+            scr.choiceCondParamBox.setHint(Component.literal("…").withStyle(s -> s.withColor(0xFF555566)));
+            scr.addRenderableWidget(scr.choiceCondParamBox);
+        }
 
         // ── Action on choose ──────────────────────────────────────────────
         scr.addRenderableWidget(Button.builder(
@@ -191,12 +202,26 @@ final class NpcSceneEditorChoicePanel {
                 }
         ).bounds(x + 8, y + 134, COL3_W - 16, 14).build());
 
-        scr.choiceActionParamBox = new EditBox(font, x + 8, y + 152, COL3_W - 16, 14,
-                Component.literal("Параметр действия"));
-        scr.choiceActionParamBox.setMaxLength(160);
-        scr.choiceActionParamBox.setValue(choice.actionParam);
-        scr.choiceActionParamBox.setHint(Component.literal("…").withStyle(s -> s.withColor(0xFF555566)));
-        scr.addRenderableWidget(scr.choiceActionParamBox);
+        if (NpcSceneNode.ACTION_GIVE_QUEST.equals(choice.actionType)
+                || NpcSceneNode.ACTION_COMPLETE_QUEST.equals(choice.actionType)
+                || NpcSceneNode.ACTION_FAIL_QUEST.equals(choice.actionType)) {
+            NpcSceneSelectorComponents.addSelector(scr, x + 8, y + 152, COL3_W - 16, "Квест", choice.actionParam,
+                    NpcSceneSelectorComponents.questOptions(), id -> choice.actionParam = id, null);
+        } else if (NpcSceneNode.ACTION_OPEN_SCENE.equals(choice.actionType)) {
+            NpcSceneSelectorComponents.addSelector(scr, x + 8, y + 152, COL3_W - 16, "Сцена", choice.actionParam,
+                    NpcSceneSelectorComponents.sceneOptions(), id -> choice.actionParam = id, null);
+        } else if (NpcSceneNode.ACTION_GIVE_ITEM.equals(choice.actionType)
+                || NpcSceneNode.ACTION_TAKE_ITEM.equals(choice.actionType)) {
+            NpcSceneSelectorComponents.addSelector(scr, x + 8, y + 152, COL3_W - 16, "Предмет", choice.actionParam,
+                    NpcSceneSelectorComponents.itemOptions(), id -> choice.actionParam = id, null);
+        } else {
+            scr.choiceActionParamBox = new EditBox(font, x + 8, y + 152, COL3_W - 16, 14,
+                    Component.literal("Параметр действия"));
+            scr.choiceActionParamBox.setMaxLength(160);
+            scr.choiceActionParamBox.setValue(choice.actionParam);
+            scr.choiceActionParamBox.setHint(Component.literal("…").withStyle(s -> s.withColor(0xFF555566)));
+            scr.addRenderableWidget(scr.choiceActionParamBox);
+        }
     }
 
     private static String[] withEmpty(String[] arr) {
