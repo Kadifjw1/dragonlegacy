@@ -37,15 +37,15 @@ import java.util.List;
 public class NpcSceneEditorScreen extends Screen {
 
     // ── Layout ─────────────────────────────────────────────────────────────
-    public static final int W = 780, H = 560;
+    public static final int W = 980, H = 620;
     public static final int TOP_H = 28;
     public static final int BOT_H = 116;
     public static final int PAD = 8;
-    public static final int COL1_W = 140;          // scene list
-    public static final int PALETTE_W = 134;
+    public static final int COL1_W = 186;
+    public static final int PALETTE_W = 190;
     public static final int COL2_W = PALETTE_W; // legacy alias
-    public static final int COL_GAP = 4;
-    public static final int CANVAS_W = 214;
+    public static final int COL_GAP = 6;
+    public static final int CANVAS_W = 360;
     public static final int COL3_W = W - PAD * 2 - COL1_W - PALETTE_W - CANVAS_W - COL_GAP * 3;
 
     // ── Colors ─────────────────────────────────────────────────────────────
@@ -86,6 +86,7 @@ public class NpcSceneEditorScreen extends Screen {
     public boolean readOnlyMode = false;
     public String nodeSearch = "";
     public int autoLayoutMode = 0; // 0 vertical, 1 horizontal, 2 compact, 3 free
+    public String editorMode = "structure"; // structure | props | test
     public boolean catStartOpen = true;
     public boolean catLogicOpen = true;
     public boolean catStagingOpen = true;
@@ -143,6 +144,15 @@ public NpcSceneEditorScreen(NpcCreatorScreen parent, NpcEditorState npcState) {
             rebuildAll();
         }).bounds(ox + W - 354, oy + 4, 82, 18).build());
 
+        addRenderableWidget(Button.builder(Component.literal(modeLabel(editorMode)), b -> {
+            editorMode = switch (editorMode) {
+                case "props" -> "test";
+                case "test" -> "structure";
+                default -> "props";
+            };
+            rebuildAll();
+        }).bounds(ox + W - 470, oy + 4, 112, 18).build());
+        
         // Zone columns and bottom panel
         NpcSceneEditorSceneList.init(this, ox, oy);
         NpcSceneEditorCanvas.init(this, ox, oy);
@@ -408,6 +418,14 @@ public NpcSceneEditorScreen(NpcCreatorScreen parent, NpcEditorState npcState) {
         g.fill(x+w-1, y,     x + w, y + h, c);
     }
 
+    public static String modeLabel(String mode) {
+        return switch (mode) {
+            case "props" -> "Режим: Свойства";
+            case "test" -> "Режим: Тест";
+            default -> "Режим: Структура";
+        };
+    }
+    
     public static int colorOfNodeType(String type) {
         return switch (type) {
             case NpcSceneNode.TYPE_SPEECH    -> COLOR_SPEECH;
