@@ -12,14 +12,19 @@ import static com.frametrip.dragonlegacyquesttoast.client.npceditor.scene.NpcSce
 final class NpcSceneEditorCanvas {
     private NpcSceneEditorCanvas() {}
 
-    private static final int NODE_W = 116;
-    private static final int NODE_H = 42;
-
+    private static final int NODE_W = 152;
+    private static final int NODE_H = 58;
+    
     static void init(NpcSceneEditorScreen scr, int ox, int oy) {
         if (scr.draftScene == null) return;
         int palX = paletteX(ox), palY = zoneY(oy);
         int x = canvasX(ox), y = zoneY(oy);
-        int by = palY + 16;
+        
+        scr.addRenderableWidget(net.minecraft.client.gui.components.Button.builder(
+                net.minecraft.network.chat.Component.literal("⊞ Шаблон ветки"), b -> quickTemplate(scr)
+        ).bounds(palX + 4, palY + 16, 126, 14).build());
+
+        int by = palY + 34;
         addSectionTitle(scr, palX + 4, by, "Старт / Диалог", scr.catStartOpen, () -> {
             scr.catStartOpen = !scr.catStartOpen;
             scr.rebuildAll();
@@ -96,17 +101,19 @@ final class NpcSceneEditorCanvas {
         ).bounds(x + 134, y + 16, 42, 14).build());
 
         int actY = y + zoneH() - 14;
-        scr.addRenderableWidget(net.minecraft.client.gui.components.Button.builder(
-                net.minecraft.network.chat.Component.literal("⎘ Дубль"), b -> duplicateSelected(scr)
-        ).bounds(x + 4, actY, 64, 14).build());
-        scr.addRenderableWidget(net.minecraft.client.gui.components.Button.builder(
-                net.minecraft.network.chat.Component.literal("🗑 Удалить"), b -> deleteSelected(scr)
-        ).bounds(x + 70, actY, 64, 14).build());
-        scr.addRenderableWidget(net.minecraft.client.gui.components.Button.builder(
-                net.minecraft.network.chat.Component.literal("★ Старт"), b -> {
-                    if (!scr.selectedNodeId.isEmpty()) scr.draftScene.startNodeId = scr.selectedNodeId;
-                }
-        ).bounds(x + 136, actY, 64, 14).build());
+        if (!"test".equals(scr.editorMode)) {
+            scr.addRenderableWidget(net.minecraft.client.gui.components.Button.builder(
+                    net.minecraft.network.chat.Component.literal("⎘ Дубль"), b -> duplicateSelected(scr)
+            ).bounds(x + 4, actY, 64, 14).build());
+            scr.addRenderableWidget(net.minecraft.client.gui.components.Button.builder(
+                    net.minecraft.network.chat.Component.literal("🗑 Удалить"), b -> deleteSelected(scr)
+            ).bounds(x + 70, actY, 64, 14).build());
+            scr.addRenderableWidget(net.minecraft.client.gui.components.Button.builder(
+                    net.minecraft.network.chat.Component.literal("★ Старт"), b -> {
+                        if (!scr.selectedNodeId.isEmpty()) scr.draftScene.startNodeId = scr.selectedNodeId;
+                    }
+            ).bounds(x + 136, actY, 64, 14).build());
+        }
     }
 
     static void render(NpcSceneEditorScreen scr, GuiGraphics g, int ox, int oy, int mx, int my) {
@@ -119,7 +126,8 @@ final class NpcSceneEditorCanvas {
         int x = canvasX(ox), y = zoneY(oy), w = CANVAS_W, h = zoneH();
         g.fill(x, y, x + w, y + h, 0xAA0F1018);
         brd(g, x, y, w, h, 0xFF2A2A44);
-        g.drawString(font, "§lCanvas " + (scr.readOnlyMode ? "§8[READ]" : "§a[EDIT]"), x + 4, y + 4, ACCENT_NODE, false);
+        g.drawString(font, "§lCanvas-конструктор " + (scr.readOnlyMode ? "§8[READ]" : "§a[EDIT]"), x + 4, y + 4, ACCENT_NODE, false);
+        g.drawString(font, "§8" + NpcSceneEditorScreen.modeLabel(scr.editorMode), x + 182, y + 4, 0xFF6A7899, false);
 
         if (scr.draftScene == null) return;
 
@@ -149,7 +157,7 @@ final class NpcSceneEditorCanvas {
             NpcSceneNode hit = findNodeAt(scr, mx, my, x, y);
             if (hit != null) {
                 scr.selectedNodeId = hit.id;
-                scr.canvasDraggingNode = !scr.readOnlyMode;
+                scr.canvasDraggingNode = !scr.readOnlyMode && "structure".equals(scr.editorMode);
                 scr.lastMouseX = mx;
                 scr.lastMouseY = my;
                 return true;
@@ -221,8 +229,11 @@ final class NpcSceneEditorCanvas {
             brd(g, sx, sy, w, h, node.id.equals(scr.selectedNodeId) ? 0xFFFFFFFF : 0xFF334466);
         }
         var font = Minecraft.getInstance().font;
-        g.drawString(font, NpcSceneNode.typeLabel(node.type), sx + 4, sy + 4, col, false);
-        g.drawString(font, node.displayLabel(), sx + 4, sy + 16, 0xFFDDE2FF, false);
+        g.drawString(font, typeIcon(node.type) + " " + NpcSceneNode.typeLabel(node.type), sx + 4, sy + 4, col, false);
+        String line1 = summaryLine1(node);
+        String line2 = summaryLine2(node);
+        g.drawString(font, line1, sx + 4, sy + 18, 0xFFDDE2FF, false);
+        if (!line2.isBlank()) g.drawString(font, line2, sx + 4, sy + 29, 0xFFB9C5E8, false);
         g.drawString(font, "#" + node.id, sx + 4, sy + h - 10, 0xFF8899BB, false);
     }
 
@@ -339,6 +350,10 @@ final class NpcSceneEditorCanvas {
         ).bounds(x, y, 126, 10).build());
     }
 
+    static void runAutoLayout(NpcSceneEditorScreen scr) {
+        autoLayout(scr);
+    }
+    
     private static void autoLayout(NpcSceneEditorScreen scr) {
         if (scr.draftScene == null) return;
         int i = 0;
@@ -425,5 +440,66 @@ final class NpcSceneEditorCanvas {
             default -> "Layout: Вертик.";
         };
     }
+
+    private static void quickTemplate(NpcSceneEditorScreen scr) {
+        if (scr.draftScene == null || scr.readOnlyMode) return;
+        NpcSceneNode speech = scr.draftScene.addNode(NpcSceneNode.TYPE_SPEECH);
+        speech.text = "Новая реплика";
+        speech.canvasX = 60;
+        speech.canvasY = 40;
+        NpcSceneNode question = scr.draftScene.addNode(NpcSceneNode.TYPE_QUESTION);
+        question.text = "Выберите ответ";
+        question.canvasX = 260;
+        question.canvasY = 40;
+        speech.nextNodeId = question.id;
+        NpcChoiceOption choice = new NpcChoiceOption();
+        choice.text = "Продолжить";
+        NpcSceneNode end = scr.draftScene.addNode(NpcSceneNode.TYPE_END);
+        end.canvasX = 460;
+        end.canvasY = 40;
+        choice.nextNodeId = end.id;
+        question.choices.add(choice);
+        scr.selectedNodeId = question.id;
+        scr.rebuildAll();
+    }
+
+    private static String typeIcon(String type) {
+        return switch (type) {
+            case NpcSceneNode.TYPE_SPEECH -> "💬";
+            case NpcSceneNode.TYPE_QUESTION -> "❓";
+            case NpcSceneNode.TYPE_ACTION -> "⚡";
+            case NpcSceneNode.TYPE_CONDITION -> "◆";
+            case NpcSceneNode.TYPE_DELAY -> "⏳";
+            case NpcSceneNode.TYPE_BRANCH -> "⑂";
+            case NpcSceneNode.TYPE_END -> "■";
+            default -> "•";
+        };
+    }
+
+    private static String summaryLine1(NpcSceneNode node) {
+        return switch (node.type) {
+            case NpcSceneNode.TYPE_SPEECH -> crop(node.speakerName == null || node.speakerName.isBlank() ? "NPC" : node.speakerName, 22);
+            case NpcSceneNode.TYPE_QUESTION -> crop(node.text == null || node.text.isBlank() ? "(пустой вопрос)" : node.text, 22);
+            case NpcSceneNode.TYPE_ACTION -> crop(NpcSceneNode.actionLabel(node.actionType), 22);
+            case NpcSceneNode.TYPE_CONDITION -> crop(NpcSceneNode.condLabel(node.conditionType), 22);
+            default -> crop(node.displayLabel(), 22);
+        };
+    }
+
+    private static String summaryLine2(NpcSceneNode node) {
+        return switch (node.type) {
+            case NpcSceneNode.TYPE_SPEECH -> crop(node.text == null ? "" : node.text, 22);
+            case NpcSceneNode.TYPE_QUESTION -> "Ответов: " + (node.choices == null ? 0 : node.choices.size());
+            case NpcSceneNode.TYPE_ACTION -> crop(node.actionParam == null || node.actionParam.isBlank() ? "без параметра" : node.actionParam, 22);
+            case NpcSceneNode.TYPE_CONDITION -> crop(node.conditionParam == null || node.conditionParam.isBlank() ? "без параметра" : node.conditionParam, 22);
+            default -> "";
+        };
+    }
+
+    private static String crop(String value, int max) {
+        if (value == null) return "";
+        return value.length() > max ? value.substring(0, max) + "…" : value;
+    }
+    
     private record Edge(String toNodeId, String label, int color) {}
 }
