@@ -19,6 +19,8 @@ public class ModCreativeTabs {
                 .icon(() -> ModItems.NPC_SPAWNER.get().getDefaultInstance())
                 .displayItems((params, output) -> {
                     output.accept(ModItems.NPC_SPAWNER.get());
+                    output.accept(ModItems.LEGACY_COIN.get());
+                    output.accept(ModItems.TRAVELER_JOURNAL.get());
                 })
                 .build()
         );
