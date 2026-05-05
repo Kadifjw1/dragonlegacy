@@ -3,6 +3,7 @@ package com.frametrip.dragonlegacyquesttoast.registry;
 import com.frametrip.dragonlegacyquesttoast.DragonLegacyQuestToastMod;
 import com.frametrip.dragonlegacyquesttoast.item.LegacyCoinItem;
 import com.frametrip.dragonlegacyquesttoast.item.NpcSpawnerItem;
+import com.frametrip.dragonlegacyquesttoast.item.TravelerJournalItem;
 import net.minecraft.world.item.Item;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -21,5 +22,11 @@ public class ModItems {
     public static final RegistryObject<Item> LEGACY_COIN =
         ITEMS.register("legacy_coin", () ->
             new LegacyCoinItem(new Item.Properties().stacksTo(64))
+        );
+
+ 
+    public static final RegistryObject<Item> TRAVELER_JOURNAL =
+        ITEMS.register("traveler_journal", () ->
+            new TravelerJournalItem(new Item.Properties().stacksTo(1))
         );
 }
