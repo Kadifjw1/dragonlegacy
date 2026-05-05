@@ -24,7 +24,6 @@ public class ModItems {
             new LegacyCoinItem(new Item.Properties().stacksTo(64))
         );
 
- 
     public static final RegistryObject<Item> TRAVELER_JOURNAL =
         ITEMS.register("traveler_journal", () ->
             new TravelerJournalItem(new Item.Properties().stacksTo(1))
