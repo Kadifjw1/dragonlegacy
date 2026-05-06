@@ -35,7 +35,11 @@ import com.frametrip.dragonlegacyquesttoast.server.QuestProgressManager;
 import com.frametrip.dragonlegacyquesttoast.server.StormAbilityHandler;
 import com.frametrip.dragonlegacyquesttoast.server.QuestLogicHandler;
 import com.frametrip.dragonlegacyquesttoast.server.VoidAbilityHandler;
+import com.frametrip.dragonlegacyquesttoast.server.building.BuildingTemplateManager;
+import com.frametrip.dragonlegacyquesttoast.server.building.NpcBuildingManager;
+import com.frametrip.dragonlegacyquesttoast.server.chat.NpcChatHandler;
 import com.frametrip.dragonlegacyquesttoast.server.dialogue.NpcSceneManager;
+import com.frametrip.dragonlegacyquesttoast.server.stealth.NpcDetectionHandler;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RegisterGuiOverlaysEvent;
@@ -70,6 +74,7 @@ public class DragonLegacyQuestToastMod {
         NpcProfileManager.load();
         FactionManager.load();
         NpcSceneManager.load();
+        BuildingTemplateManager.load();
 
         MinecraftForge.EVENT_BUS.addListener(this::registerCommands);
         MinecraftForge.EVENT_BUS.addListener(this::onPlayerLogin);
@@ -83,6 +88,15 @@ public class DragonLegacyQuestToastMod {
         // Currency events (auto-deposit coins)
         MinecraftForge.EVENT_BUS.register(new CurrencyEvents());
 
+        // NPC building tick handler
+        MinecraftForge.EVENT_BUS.register(new NpcBuildingManager());
+
+        // NPC chat trigger handler
+        MinecraftForge.EVENT_BUS.register(new NpcChatHandler());
+
+        // NPC stealth / guard detection handler
+        MinecraftForge.EVENT_BUS.register(new NpcDetectionHandler());
+        
         // Trader restock tick
         MinecraftForge.EVENT_BUS.register(new TraderManager());
 
