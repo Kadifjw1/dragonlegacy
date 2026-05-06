@@ -2,6 +2,7 @@ package com.frametrip.dragonlegacyquesttoast.client;
 
 import com.frametrip.dragonlegacyquesttoast.client.npceditor.*;
 import com.frametrip.dragonlegacyquesttoast.client.npceditor.NpcProfessionTab;
+import com.frametrip.dragonlegacyquesttoast.client.npceditor.NpcBuildingTab;
 import com.frametrip.dragonlegacyquesttoast.entity.NpcEntity;
 import com.frametrip.dragonlegacyquesttoast.entity.NpcEntityData;
 import net.minecraft.client.gui.GuiGraphics;
@@ -36,21 +37,29 @@ public class NpcCreatorScreen extends Screen {
 
     // ── Tab definitions ───────────────────────────────────────────────────────
     private static final String[] TAB_LABELS = {
-            "  Информация", "  Взаимодействие", "  Анимация", "  Отношения", "  Профессия"
+            "  Информация", "  Взаимодействие", "  Анимация ▸",
+            "  Отношения", "  Профессия", "  Строительство",
+            "  Модель", "  Стелс"
     };
     private static final int[] TAB_ACCENT = {
             NpcInfoTab.ACCENT,
             NpcInteractionTab.ACCENT,
-            NpcAnimationTab.ACCENT,
+            NpcAnimationEditorTab.ACCENT,
             NpcRelationsTab.ACCENT,
-            NpcProfessionTab.ACCENT    
+            NpcProfessionTab.ACCENT,
+            NpcBuildingTab.ACCENT,
+            NpcModelTab.ACCENT,
+            NpcStealthTab.ACCENT    
     };
     private static final NpcEditorTab[] TAB_INSTANCES = {
             new NpcInfoTab(),
             new NpcInteractionTab(),
-            new NpcAnimationTab(),
-             new NpcRelationsTab(),
-            new NpcProfessionTab()
+            new NpcAnimationEditorTab(),
+            new NpcRelationsTab(),
+            new NpcProfessionTab(),
+            new NpcBuildingTab(),
+            new NpcModelTab(),
+            new NpcStealthTab()
     };
 
     // ── State ─────────────────────────────────────────────────────────────────
