@@ -48,6 +48,16 @@ final class NpcSceneEditorCanvas {
                 addNodeButton(scr, palX + 4, by, "+ Branch", NpcSceneNode.TYPE_BRANCH); by += 18;
             }
         }
+        if (scr.editorLevel >= 2) {
+            addSectionTitle(scr, palX + 4, by, "Квесты / Предметы", false, null);
+            by += 12;
+            addActionNodeButton(scr, palX + 4, by, "+ Выдать квест", NpcSceneNode.ACTION_GIVE_QUEST); by += 16;
+            addActionNodeButton(scr, palX + 4, by, "+ Взять предмет", NpcSceneNode.ACTION_GIVE_ITEM); by += 16;
+            addActionNodeButton(scr, palX + 4, by, "+ Стройка", NpcSceneNode.ACTION_START_BUILDING); by += 16;
+            addActionNodeButton(scr, palX + 4, by, "+ Тревога ▲", NpcSceneNode.ACTION_RAISE_ALARM); by += 16;
+            addActionNodeButton(scr, palX + 4, by, "+ Тревога ▼", NpcSceneNode.ACTION_LOWER_ALARM); by += 16;
+            addActionNodeButton(scr, palX + 4, by, "+ Стелс-миссия", NpcSceneNode.ACTION_START_STEALTH); by += 18;
+        }
         if (scr.editorLevel >= 3) {
             addSectionTitle(scr, palX + 4, by, "Постановка", scr.catStagingOpen, () -> {
                 scr.catStagingOpen = !scr.catStagingOpen;
@@ -56,6 +66,8 @@ final class NpcSceneEditorCanvas {
             by += 12;
             if (scr.catStagingOpen) {
                 addActionNodeButton(scr, palX + 4, by, "+ Animation", NpcSceneNode.ACTION_PLAY_ANIMATION); by += 16;
+                addActionNodeButton(scr, palX + 4, by, "+ AnimState", NpcSceneNode.ACTION_PLAY_ANIM_STATE); by += 16;
+                addActionNodeButton(scr, palX + 4, by, "+ StopAnim", NpcSceneNode.ACTION_STOP_ANIMATION); by += 16;
                 addActionNodeButton(scr, palX + 4, by, "+ LookAt", NpcSceneNode.ACTION_LOOK_AT); by += 16;
                 addActionNodeButton(scr, palX + 4, by, "+ Move", NpcSceneNode.ACTION_MOVE_TO); by += 16;
                 addActionNodeButton(scr, palX + 4, by, "+ Camera", NpcSceneNode.ACTION_CAMERA); by += 16;
@@ -213,20 +225,21 @@ final class NpcSceneEditorCanvas {
         int sy = y + (int) (scr.canvasPanY + node.canvasY * scr.canvasZoom);
         int w = (int) (NODE_W * scr.canvasZoom);
         int h = (int) (NODE_H * scr.canvasZoom);
-        int col = colorOfNodeType(node.type);
-        if (node.id.equals(scr.draftScene.startNodeId)) col = 0xFF44CC88;
-        if (node.id.equals(scr.draftScene.startNodeId)) {
-            drawRoundedRect(g, sx, sy, w, h, 6, 0xCC11131D, node.id.equals(scr.selectedNodeId) ? 0xFFFFFFFF : 0xFF334466);
+        boolean isStart = node.id.equals(scr.draftScene.startNodeId);
+        int col = isStart ? 0xFF44CC88 : colorOfNodeType(node.type);
+        boolean sel = node.id.equals(scr.selectedNodeId);
+        if (isStart) {
+            drawRoundedRect(g, sx, sy, w, h, 6, 0xCC11131D, sel ? 0xFFFFFFFF : 0xFF334466);
             g.fill(sx + 4, sy, sx + w - 4, sy + 2, col);
         } else if (NpcSceneNode.TYPE_CONDITION.equals(node.type)) {
-            drawDiamond(g, sx, sy, w, h, 0xCC11131D, node.id.equals(scr.selectedNodeId) ? 0xFFFFFFFF : 0xFF334466);
+            drawDiamond(g, sx, sy, w, h, 0xCC11131D, sel ? 0xFFFFFFFF : 0xFF334466);
         } else if (NpcSceneNode.TYPE_END.equals(node.type)) {
             g.fill(sx, sy + h / 3, sx + w, sy + h - h / 3, 0xCC11131D);
-            brd(g, sx, sy + h / 3, w, h / 3, node.id.equals(scr.selectedNodeId) ? 0xFFFFFFFF : 0xFF334466);
+            brd(g, sx, sy + h / 3, w, h / 3, sel ? 0xFFFFFFFF : 0xFF334466);
         } else {
             g.fill(sx, sy, sx + w, sy + h, 0xCC11131D);
             g.fill(sx, sy, sx + w, sy + 2, col);
-            brd(g, sx, sy, w, h, node.id.equals(scr.selectedNodeId) ? 0xFFFFFFFF : 0xFF334466);
+            brd(g, sx, sy, w, h, sel ? 0xFFFFFFFF : 0xFF334466);
         }
         var font = Minecraft.getInstance().font;
         g.drawString(font, typeIcon(node.type) + " " + NpcSceneNode.typeLabel(node.type), sx + 4, sy + 4, col, false);
@@ -345,8 +358,10 @@ final class NpcSceneEditorCanvas {
                 }).bounds(x, y, 126, 14).build());
     }
     private static void addSectionTitle(NpcSceneEditorScreen scr, int x, int y, String title, boolean open, Runnable onToggle) {
+        String label = (onToggle != null ? (open ? "▼ " : "▶ ") : "— ") + title;
         scr.addRenderableWidget(net.minecraft.client.gui.components.Button.builder(
-                net.minecraft.network.chat.Component.literal((open ? "▼ " : "▶ ") + title), b -> onToggle.run()
+                net.minecraft.network.chat.Component.literal(label),
+                b -> { if (onToggle != null) onToggle.run(); }
         ).bounds(x, y, 126, 10).build());
     }
 
