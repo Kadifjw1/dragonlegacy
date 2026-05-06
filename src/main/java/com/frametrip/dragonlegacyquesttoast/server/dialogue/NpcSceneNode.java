@@ -42,6 +42,18 @@ public class NpcSceneNode {
     public static final String ACTION_OPEN_SHOP            = "open_shop";
     public static final String ACTION_OPEN_SCENE           = "open_scene";
     public static final String ACTION_CLOSE_SCENE          = "close_scene";
+    public static final String ACTION_START_BUILDING       = "start_building";
+
+    // ── Chat / Stealth / Animation actions ──────────────────────────────────
+    public static final String ACTION_PLAY_ANIM_STATE      = "play_anim_state";
+    public static final String ACTION_STOP_ANIMATION       = "stop_animation";
+    public static final String ACTION_WAIT_ANIM_END        = "wait_anim_end";
+    public static final String ACTION_SET_IDLE_ANIMATION   = "set_idle_animation";
+    public static final String ACTION_RAISE_ALARM          = "raise_alarm";
+    public static final String ACTION_LOWER_ALARM          = "lower_alarm";
+    public static final String ACTION_START_STEALTH        = "start_stealth_mission";
+    public static final String ACTION_MISSION_FAIL_ALERT   = "mission_fail_if_alert";
+    public static final String ACTION_MISSION_SUCCESS      = "mission_success_if_unseen";
 
     public static final String[] ACTION_IDS = {
             ACTION_GIVE_QUEST, ACTION_COMPLETE_QUEST, ACTION_FAIL_QUEST,
@@ -50,7 +62,11 @@ public class NpcSceneNode {
             ACTION_PLAY_SOUND, ACTION_PLAY_ANIMATION,
             ACTION_LOOK_AT, ACTION_MOVE_TO, ACTION_CAMERA, ACTION_EFFECT, ACTION_EMOTE, ACTION_TELEPORT, ACTION_SET_VARIABLE,
             ACTION_OPEN_SHOP,
-            ACTION_OPEN_SCENE, ACTION_CLOSE_SCENE
+            ACTION_OPEN_SCENE, ACTION_CLOSE_SCENE,
+            ACTION_START_BUILDING,
+            ACTION_PLAY_ANIM_STATE, ACTION_STOP_ANIMATION, ACTION_WAIT_ANIM_END, ACTION_SET_IDLE_ANIMATION,
+            ACTION_RAISE_ALARM, ACTION_LOWER_ALARM, ACTION_START_STEALTH,
+            ACTION_MISSION_FAIL_ALERT, ACTION_MISSION_SUCCESS
     };
     public static final String[] ACTION_LABELS = {
             "Выдать квест", "Завершить квест", "Провалить квест",
@@ -59,7 +75,11 @@ public class NpcSceneNode {
             "Проиграть звук", "Проиграть анимацию",
             "Повернуть NPC", "Движение NPC", "Камера", "Эффект", "Эмоция", "Телепорт", "Переменная",
             "Открыть магазин",
-            "Открыть сцену", "Закрыть сцену"
+            "Открыть сцену", "Закрыть сцену",
+            "Начать строительство",
+            "Анимация по состоянию", "Стоп анимация", "Ждать конец анимации", "Анимация стойки",
+            "Поднять тревогу", "Снять тревогу", "Начать стелс-миссию",
+            "Провал при тревоге", "Успех без обнаружения"
     };
 
     // ── Condition types ──────────────────────────────────────────────────────
@@ -76,6 +96,17 @@ public class NpcSceneNode {
     public static final String COND_HAS_ABILITY     = "has_ability";
     public static final String COND_FIRST_TALK      = "first_talk";
     public static final String COND_RE_TALK         = "re_talk";
+    // Stealth conditions
+    public static final String COND_DETECTION_LEVEL = "detection_level";
+    public static final String COND_ALERT_STATE     = "alert_state";
+    public static final String COND_IN_ZONE         = "in_zone";
+    public static final String COND_NOT_DETECTED    = "not_detected";
+    // Chat condition
+    public static final String COND_CHAT_MESSAGE    = "chat_message";
+
+    // Special start types (used as TYPE_ACTION with these as actionType)
+    public static final String START_ON_CHAT        = "start_on_chat";
+    public static final String WAIT_FOR_CHAT        = "wait_for_chat";
 
     public static final String[] COND_IDS = {
             COND_QUEST_ACTIVE, COND_QUEST_COMPLETE, COND_QUEST_NOT_TAKEN,
@@ -83,7 +114,10 @@ public class NpcSceneNode {
             COND_RELATION, COND_FACTION,
             COND_TIME_DAY, COND_TIME_NIGHT,
             COND_PATH_STAGE, COND_HAS_ABILITY,
-            COND_FIRST_TALK, COND_RE_TALK
+            COND_FIRST_TALK, COND_RE_TALK,
+            COND_DETECTION_LEVEL, COND_ALERT_STATE,
+            COND_IN_ZONE, COND_NOT_DETECTED,
+            COND_CHAT_MESSAGE
     };
     public static final String[] COND_LABELS = {
             "Квест активен", "Квест завершён", "Квест не взят",
@@ -91,7 +125,10 @@ public class NpcSceneNode {
             "Отношение к игроку", "Фракция",
             "Сейчас день", "Сейчас ночь",
             "Стадия пути", "Есть способность",
-            "Первый разговор", "Повторный разговор"
+            "Первый разговор", "Повторный разговор",
+            "Уровень обнаружения", "Состояние тревоги",
+            "Игрок в зоне", "Не обнаружен",
+            "Сообщение в чат"
     };
 
     // ── Emotions ─────────────────────────────────────────────────────────────
