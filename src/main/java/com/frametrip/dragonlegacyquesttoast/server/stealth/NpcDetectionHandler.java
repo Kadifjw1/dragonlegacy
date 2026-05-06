@@ -150,7 +150,7 @@ public class NpcDetectionHandler {
             float noiseFactor = 0f;
             if (speed > 0.1)       noiseFactor = 0.3f; // walking
             if (speed > 0.2)       noiseFactor = 0.5f; // sprinting
-            if (!player.isOnGround()) noiseFactor += 0.3f; // falling
+            if (!player.onGround()) noiseFactor += 0.3f; // falling
             if (player.isSprinting()) noiseFactor += 0.2f;
 
             float distFactor = 1f - (float)(dist / cfg.hearingRadius);
