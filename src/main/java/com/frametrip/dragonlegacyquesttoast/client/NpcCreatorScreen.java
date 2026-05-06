@@ -5,6 +5,8 @@ import com.frametrip.dragonlegacyquesttoast.client.npceditor.NpcProfessionTab;
 import com.frametrip.dragonlegacyquesttoast.client.npceditor.NpcBuildingTab;
 import com.frametrip.dragonlegacyquesttoast.entity.NpcEntity;
 import com.frametrip.dragonlegacyquesttoast.entity.NpcEntityData;
+import com.frametrip.dragonlegacyquesttoast.network.DeleteNpcPacket;
+import com.frametrip.dragonlegacyquesttoast.network.ModNetwork;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
@@ -16,25 +18,28 @@ import net.minecraft.world.entity.Pose;
 import java.util.function.Consumer;
 
 /**
- * Refactored NPC editor screen.
+ * NPC editor screen.
  *
  * Layout:
  *   [Left sidebar: tabs]  [Center: active tab content]  [Right: 3D preview + summary]
  *
- * Top bar shows NPC name, dirty indicator, Save / Reset / Close buttons.
+ * Top bar shows NPC name, dirty indicator, Reset / Close buttons.
+ * Changes are saved automatically (debounced every 60 ticks, and on close).
  * Each tab is a separate NpcEditorTab component.
  */
 public class NpcCreatorScreen extends Screen {
 
     // ── Layout constants ──────────────────────────────────────────────────────
-    private static final int W         = 740;
-    private static final int H         = 470;
-    private static final int SIDEBAR_W = 132;
-    private static final int PREVIEW_W = 210;
+    private static final int W         = 760;
+    private static final int H         = 500;
+    private static final int SIDEBAR_W = 140;
+    private static final int PREVIEW_W = 220;
     private static final int CONTENT_W = W - SIDEBAR_W - PREVIEW_W;
     private static final int TOP_H     = 28;
     private static final int BOT_H     = 28;
 
+    private static final int AUTOSAVE_TICKS = 60;
+    
     // ── Tab definitions ───────────────────────────────────────────────────────
     private static final String[] TAB_LABELS = {
             "  Информация", "  Взаимодействие", "  Анимация ▸",
@@ -64,7 +69,8 @@ public class NpcCreatorScreen extends Screen {
 
     // ── State ─────────────────────────────────────────────────────────────────
     private final NpcEditorState editorState;
-    private int activeTab = 0;
+    private int activeTab   = 0;
+    private int dirtyTicks  = 0;
 
     public NpcCreatorScreen(NpcEntity entity) {
         super(Component.literal("Настройка NPC"));
@@ -80,17 +86,22 @@ public class NpcCreatorScreen extends Screen {
         int rx = ox + SIDEBAR_W + 8;
         int rw = CONTENT_W - 16;
 
-        // Top bar: Save / Reset / Close
+        // Top bar: Delete / Reset / Close (no Save button — autosave handles saving)
         int topBtnY = oy + 5;
-        addRenderableWidget(Button.builder(Component.literal("💾 Сохранить"), b -> save())
-                .bounds(ox + W - 210, topBtnY, 80, 18).build());
+        addRenderableWidget(Button.builder(Component.literal("§c✕ Удалить NPC"), b -> {
+                    ModNetwork.CHANNEL.sendToServer(
+                            new DeleteNpcPacket(editorState.getEntity().getUUID()));
+                    onClose();
+                })
+                .bounds(ox + W - 200, topBtnY, 80, 18).build());
         addRenderableWidget(Button.builder(Component.literal("↺ Сбросить"), b -> {
                     editorState.reset();
+                    dirtyTicks = 0;
                     rebuildWidgets();
                 })
-                .bounds(ox + W - 126, topBtnY, 70, 18).build());
+                .bounds(ox + W - 116, topBtnY, 70, 18).build());
         addRenderableWidget(Button.builder(Component.literal("✕ Закрыть"),
-                b -> onClose()).bounds(ox + W - 52, topBtnY, 46, 18).build());
+                b -> onClose()).bounds(ox + W - 42, topBtnY, 38, 18).build());
 
         // Sidebar: tab buttons
         for (int i = 0; i < TAB_LABELS.length; i++) {
@@ -136,9 +147,12 @@ public class NpcCreatorScreen extends Screen {
         String npcName = editorState.getDraft().displayName;
         g.drawString(font, "§8»  §7" + npcName, ox + 120, oy + 9, 0xFFAAAAAA, false);
 
-        // Dirty indicator
+        // Autosave indicator
         if (editorState.isDirty()) {
-            g.drawString(font, "§e● §7Несохранённые изменения", ox + W - 340, oy + 9, 0xFFEECC44, false);
+           int pct = Math.min(100, dirtyTicks * 100 / AUTOSAVE_TICKS);
+            g.drawString(font, "§e● §7Автосохранение " + pct + "%", ox + W - 260, oy + 9, 0xFFEECC44, false);
+        } else {
+            g.drawString(font, "§a✔ §7Сохранено", ox + W - 160, oy + 9, 0xFF44EE66, false);
         }
 
         // ── Sidebar ───────────────────────────────────────────────────────────
@@ -200,9 +214,11 @@ public class NpcCreatorScreen extends Screen {
             entity.setCustomName(Component.literal(draft.displayName));
             entity.setPose("CROUCHING".equals(draft.idlePose) ? Pose.CROUCHING : Pose.STANDING);
 
+            // Center in the top 60% of the preview panel, large scale
             int cx = panelX + PREVIEW_W / 2;
-            int cy = oy + H - 100;
-            InventoryScreen.renderEntityInInventoryFollowsMouse(g, cx, cy, 52, mx, my, entity);
+            int cy = oy + TOP_H + (int)((H - TOP_H) * 0.55);
+            int scale = 80;
+            InventoryScreen.renderEntityInInventoryFollowsMouse(g, cx, cy, scale, mx, my, entity);
         } finally {
             entity.setNpcData(backup);
             entity.setCustomName(Component.literal(backup.displayName));
@@ -215,7 +231,8 @@ public class NpcCreatorScreen extends Screen {
     private void renderSummary(GuiGraphics g, int px, int oy) {
         NpcEntityData d = editorState.getDraft();
         int sx = px + 6;
-        int sy = oy + H - 100 + 60;
+        // Summary starts in bottom ~35% of the panel
+        int sy = oy + TOP_H + (int)((H - TOP_H) * 0.62);
 
         g.fill(px + 2, sy - 4, px + PREVIEW_W - 2, sy - 3, 0xFF333344);
         g.drawString(font, "§7§lСводка:", sx, sy, 0xFF888877, false);
@@ -272,15 +289,32 @@ public class NpcCreatorScreen extends Screen {
         return super.mouseClicked(mx, my, btn);
     }
 
+    // ── Tick / autosave ───────────────────────────────────────────────────────
+
+    @Override
+    public void tick() {
+        super.tick();
+        if (editorState.isDirty()) {
+            dirtyTicks++;
+            if (dirtyTicks >= AUTOSAVE_TICKS) {
+                save();
+            }
+        } else {
+            dirtyTicks = 0;
+        }
+    }
+
     // ── Actions ───────────────────────────────────────────────────────────────
 
     private void save() {
         TAB_INSTANCES[activeTab].pullFields(editorState);
         editorState.save();
+        dirtyTicks = 0;
     }
 
     @Override
     public void onClose() {
+        if (editorState.isDirty()) save();
         if (minecraft != null) minecraft.setScreen(null);
     }
 
