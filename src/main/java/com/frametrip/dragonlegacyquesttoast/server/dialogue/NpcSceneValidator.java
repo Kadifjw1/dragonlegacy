@@ -1,6 +1,5 @@
 package com.frametrip.dragonlegacyquesttoast.server.dialogue;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -55,15 +54,12 @@ public final class NpcSceneValidator {
 
         for (NpcSceneNode n : scene.nodes) {
             validateNode(scene, n, ids, out);
-            if (!reachable.contains(n.id) && !n.id.equals(scene.startNodeId)) {
+            if (!reachable.contains(n.id)) {
                 out.add(new Issue(Level.WARN, n.id, "Узел недостижим из стартового"));
-            }
-            if (!scene.allowCycles && hasCycle(scene)) {
-            out.add(new Issue(Level.ERROR, "", "Обнаружены циклы, но они запрещены в настройках сцены"));
             }
         }
         
-   return out;
+       return out;
     }
 
     private static boolean hasCycle(NpcScene scene) {
@@ -220,7 +216,8 @@ public final class NpcSceneValidator {
                  NpcSceneNode.ACTION_EMOTE,
                  NpcSceneNode.ACTION_TELEPORT,
                  NpcSceneNode.ACTION_SET_VARIABLE,
-                 NpcSceneNode.ACTION_OPEN_SCENE -> true;
+                 NpcSceneNode.ACTION_OPEN_SCENE,
+                 NpcSceneNode.ACTION_START_BUILDING -> true;
             default -> false;
         };
     }
