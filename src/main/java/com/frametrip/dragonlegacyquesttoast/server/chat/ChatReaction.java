@@ -14,3 +14,4 @@ public class ChatReaction {
         c.param2 = this.param2;
         return c;
     }
+}
