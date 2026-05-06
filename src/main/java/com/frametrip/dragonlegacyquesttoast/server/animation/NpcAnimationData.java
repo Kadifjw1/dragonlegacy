@@ -1,7 +1,12 @@
 package com.frametrip.dragonlegacyquesttoast.server.animation;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public class NpcAnimationData {
@@ -60,6 +65,67 @@ public class NpcAnimationData {
         }
         sb.append("      }\n    }\n  }\n}");
         return sb.toString();
+    }
+
+    /**
+     * Parse a GeckoLib animation JSON string (from clipboard) into a new NpcAnimationData.
+     * Returns null if parsing fails.
+     */
+    public static NpcAnimationData fromGeckoLibJson(String json) {
+        try {
+            JsonObject root = JsonParser.parseString(json).getAsJsonObject();
+            JsonObject animations = root.getAsJsonObject("animations");
+            if (animations == null || animations.size() == 0) return null;
+
+            Map.Entry<String, JsonElement> firstEntry = animations.entrySet().iterator().next();
+            String animKey = firstEntry.getKey();
+            JsonObject animObj = firstEntry.getValue().getAsJsonObject();
+
+            NpcAnimationData data = new NpcAnimationData();
+            // Extract name from key like "animation.npc.walk"
+            String[] parts = animKey.split("\\.");
+            data.name = parts.length > 0 ? parts[parts.length - 1] : animKey;
+
+            if (animObj.has("loop"))
+                data.loop = animObj.get("loop").getAsBoolean();
+            if (animObj.has("animation_length"))
+                data.durationTicks = animObj.get("animation_length").getAsFloat() * 20f;
+
+            data.ensureBones();
+
+            JsonObject bonesObj = animObj.getAsJsonObject("bones");
+            if (bonesObj != null) {
+                for (Map.Entry<String, JsonElement> boneEntry : bonesObj.entrySet()) {
+                    String boneName = boneEntry.getKey();
+                    JsonObject boneData = boneEntry.getValue().getAsJsonObject();
+                    AnimationBone bone = data.getBone(boneName);
+
+                    for (String channel : new String[]{"rotation", "position"}) {
+                        JsonObject channelObj = boneData.getAsJsonObject(channel);
+                        if (channelObj == null) continue;
+                        List<AnimationKeyframe> frames = "rotation".equals(channel)
+                                ? bone.rotationFrames : bone.positionFrames;
+                        frames.clear();
+                        for (Map.Entry<String, JsonElement> kfEntry : channelObj.entrySet()) {
+                            float tick = Float.parseFloat(kfEntry.getKey()) * 20f;
+                            JsonElement val = kfEntry.getValue();
+                            float x = 0, y = 0, z = 0;
+                            if (val.isJsonArray()) {
+                                var arr = val.getAsJsonArray();
+                                if (arr.size() >= 1) x = arr.get(0).getAsFloat();
+                                if (arr.size() >= 2) y = arr.get(1).getAsFloat();
+                                if (arr.size() >= 3) z = arr.get(2).getAsFloat();
+                            }
+                            frames.add(new AnimationKeyframe(tick, x, y, z));
+                        }
+                        frames.sort((a, b) -> Float.compare(a.tick, b.tick));
+                    }
+                }
+            }
+            return data;
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     private void appendKeyframeChannel(StringBuilder sb, String channel, List<AnimationKeyframe> frames) {
