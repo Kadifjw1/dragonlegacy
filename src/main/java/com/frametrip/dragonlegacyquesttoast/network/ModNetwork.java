@@ -58,5 +58,7 @@ public class ModNetwork {
         CHANNEL.registerMessage(packetId++, SaveTraderLayoutPacket.class,        SaveTraderLayoutPacket::encode,        SaveTraderLayoutPacket::decode,        SaveTraderLayoutPacket::handle);
         CHANNEL.registerMessage(packetId++, SaveTraderDiscountsPacket.class,     SaveTraderDiscountsPacket::encode,     SaveTraderDiscountsPacket::decode,     SaveTraderDiscountsPacket::handle);
         CHANNEL.registerMessage(packetId++, ApplyTraderLayoutPresetPacket.class, ApplyTraderLayoutPresetPacket::encode, ApplyTraderLayoutPresetPacket::decode, ApplyTraderLayoutPresetPacket::handle);
+        CHANNEL.registerMessage(packetId++, NpcBuildingActionPacket.class, NpcBuildingActionPacket::encode, NpcBuildingActionPacket::decode, NpcBuildingActionPacket::handle);
+        CHANNEL.registerMessage(packetId++, SyncNpcBuildingStatePacket.class, SyncNpcBuildingStatePacket::encode, SyncNpcBuildingStatePacket::decode, SyncNpcBuildingStatePacket::handle);
     }
 }
