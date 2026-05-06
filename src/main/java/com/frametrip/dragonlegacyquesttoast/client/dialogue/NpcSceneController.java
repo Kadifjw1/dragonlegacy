@@ -4,6 +4,7 @@ import com.frametrip.dragonlegacyquesttoast.client.ClientNpcDialogueManager;
 import com.frametrip.dragonlegacyquesttoast.client.ClientPlayerAbilityState;
 import com.frametrip.dragonlegacyquesttoast.client.ClientQuestProgressState;
 import com.frametrip.dragonlegacyquesttoast.network.ModNetwork;
+import com.frametrip.dragonlegacyquesttoast.network.NpcBuildingActionPacket;
 import com.frametrip.dragonlegacyquesttoast.network.RequestOpenNpcShopPacket;
 import com.frametrip.dragonlegacyquesttoast.network.QuestStateActionPacket;
 import com.frametrip.dragonlegacyquesttoast.server.dialogue.NpcChoiceOption;
@@ -257,6 +258,7 @@ public class NpcSceneController {
                 case NpcSceneNode.ACTION_SET_VARIABLE         -> "⏵ Переменная";
                 case NpcSceneNode.ACTION_OPEN_SCENE           -> "⏵ Переход в сцену";
                 case NpcSceneNode.ACTION_CLOSE_SCENE          -> "⏵ Завершение сцены";
+                case NpcSceneNode.ACTION_START_BUILDING       -> "⏵ Начало строительства";
                 default                                       -> "⏵ " + actionType;
             };
             String extra = (actionParam == null || actionParam.isBlank()) ? "" : ": " + actionParam;
@@ -293,6 +295,13 @@ public class NpcSceneController {
                  NpcSceneNode.ACTION_EMOTE, NpcSceneNode.ACTION_TELEPORT,
                  NpcSceneNode.ACTION_SET_VARIABLE ->
                     ClientNpcDialogueManager.show("", labelFor(actionType) + ": " + actionParam);
+                case NpcSceneNode.ACTION_START_BUILDING -> {
+                if (currentNpcUuid != null && actionParam != null && !actionParam.isBlank()) {
+                    ModNetwork.CHANNEL.sendToServer(
+                            new NpcBuildingActionPacket(currentNpcUuid, "start", actionParam, 0, 0, 0));
+                    ClientNpcDialogueManager.show("", "Строительство начато: " + actionParam);
+                }
+            }
             // OPEN_SCENE / CLOSE_SCENE are handled in processAction() flow.
             default -> {}
         }
