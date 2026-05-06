@@ -2,6 +2,10 @@ package com.frametrip.dragonlegacyquesttoast.entity;
 
 import com.frametrip.dragonlegacyquesttoast.profession.NpcProfessionData;
 import com.frametrip.dragonlegacyquesttoast.server.NpcProfile;
+import com.frametrip.dragonlegacyquesttoast.server.building.NpcBuildingData;
+import com.frametrip.dragonlegacyquesttoast.server.chat.NpcChatConfig;
+import com.frametrip.dragonlegacyquesttoast.server.model.NpcModelConfig;
+import com.frametrip.dragonlegacyquesttoast.server.stealth.StealthConfig;
  
 import java.util.*;
  
@@ -32,6 +36,18 @@ public class NpcEntityData {
  
     // — Profession —
     public NpcProfessionData professionData = new NpcProfessionData();
+ 
+    // — Building —
+    public NpcBuildingData buildingData = new NpcBuildingData();
+
+    // — Chat Triggers —
+    public NpcChatConfig chatConfig = new NpcChatConfig();
+
+    // — Model Profile —
+    public NpcModelConfig modelConfig = new NpcModelConfig();
+
+    // — Stealth / Guard —
+    public StealthConfig stealthConfig = new StealthConfig();
  
     // ── Pose labels (for UI) ──────────────────────────────────────────────────
     public static final String[] IDLE_POSES       = {"STANDING", "CROUCHING"};
@@ -81,6 +97,10 @@ public class NpcEntityData {
         c.bodyYaw           = this.bodyYaw;
         c.playerRelation    = this.playerRelation;
         c.professionData    = this.professionData != null ? this.professionData.copy() : new NpcProfessionData();
+        c.buildingData      = this.buildingData   != null ? this.buildingData.copy()   : new NpcBuildingData();
+        c.chatConfig        = this.chatConfig     != null ? this.chatConfig.copy()     : new NpcChatConfig();
+        c.modelConfig       = this.modelConfig    != null ? this.modelConfig.copy()    : new NpcModelConfig();
+        c.stealthConfig     = this.stealthConfig  != null ? this.stealthConfig.copy()  : new StealthConfig();
 
         return c;
     }
