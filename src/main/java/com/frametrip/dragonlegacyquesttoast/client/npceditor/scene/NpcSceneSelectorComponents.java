@@ -105,4 +105,12 @@ final class NpcSceneSelectorComponents {
         if (out.size() > 400) return out.subList(0, 400); // lightweight in editor UI
         return out;
     }
+    
+    static List<SelectorOption> buildingOptions() {
+        List<SelectorOption> out = new ArrayList<>();
+        com.frametrip.dragonlegacyquesttoast.server.building.BuildingTemplateManager.getAll()
+                .forEach(t -> out.add(new SelectorOption(t.id, t.name, t.categoryLabel())));
+        out.sort(Comparator.comparing(SelectorOption::title));
+        return out;
+    }
 }
