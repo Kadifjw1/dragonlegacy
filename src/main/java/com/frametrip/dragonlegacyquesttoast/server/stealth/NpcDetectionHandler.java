@@ -58,8 +58,6 @@ public class NpcDetectionHandler {
             }
         }
 
-        GuardState prevState = rt.state;
-
         if (highestDetection <= 0f) {
             // Nobody detectable
             if (rt.state == GuardState.ALARM || rt.state == GuardState.SEARCHING) {
@@ -76,12 +74,12 @@ public class NpcDetectionHandler {
                 }
             }
         } else if (highestDetection < 0.4f) {
-            if (rt.state == GuardState.CALM) {
+            if (rt.state == GuardState.CALM && nearestDetected != null) {
                 transition(npc, rt, GuardState.SUSPICIOUS, cfg);
                 rt.suspectPlayer = nearestDetected.getUUID();
             }
         } else if (highestDetection < 0.8f) {
-            if (rt.state == GuardState.CALM || rt.state == GuardState.SUSPICIOUS) {
+            if ((rt.state == GuardState.CALM || rt.state == GuardState.SUSPICIOUS) && nearestDetected != null) {
                 transition(npc, rt, GuardState.INVESTIGATING, cfg);
                 rt.suspectPlayer = nearestDetected.getUUID();
             }
@@ -90,25 +88,35 @@ public class NpcDetectionHandler {
             if (rt.state != GuardState.ALARM) {
                 transition(npc, rt, GuardState.DETECTED, cfg);
                 rt.alarmStartTick = now;
+
                 if (nearestDetected != null) {
-                    StealthMissionManager.notifyDetection(nearestDetected.getUUID(), npc.getUUID());
+                    final ServerPlayer targetPlayer = nearestDetected;
+
+                    StealthMissionManager.notifyDetection(targetPlayer.getUUID(), npc.getUUID());
+
                     if (!cfg.detectSceneId.isBlank()) {
                         ModNetwork.CHANNEL.send(
-                                PacketDistributor.PLAYER.with(() -> nearestDetected),
-                                new NpcStartScenePacket(npc.getNpcData().displayName,
-                                        cfg.detectSceneId, "NEUTRAL", npc.getUUID()));
+                                PacketDistributor.PLAYER.with(() -> targetPlayer),
+                                new NpcStartScenePacket(
+                                        npc.getNpcData().displayName,
+                                        cfg.detectSceneId,
+                                        "NEUTRAL",
+                                        npc.getUUID()
+                                )
+                        );
                     }
                 }
+
                 transition(npc, rt, GuardState.ALARM, cfg);
             }
         }
 
-  rt.prevDetectionLevel = highestDetection;
+        rt.prevDetectionLevel = highestDetection;
     }
 
     /** Compute a 0–1 detection value for this player by this NPC. */
     private float computeDetection(NpcEntity npc, ServerPlayer player,
-                                    StealthConfig cfg, ServerLevel level) {
+                                   StealthConfig cfg, ServerLevel level) {
         double dist = npc.distanceTo(player);
         if (dist > cfg.visionRadius && dist > cfg.hearingRadius) return 0f;
 
@@ -116,9 +124,9 @@ public class NpcDetectionHandler {
 
         // Vision check
         if (dist <= cfg.visionRadius) {
-            Vec3 npcEye    = npc.getEyePosition();
+            Vec3 npcEye = npc.getEyePosition();
             Vec3 playerPos = player.getEyePosition();
-            Vec3 toPlayer  = playerPos.subtract(npcEye).normalize();
+            Vec3 toPlayer = playerPos.subtract(npcEye).normalize();
             Vec3 npcForward = Vec3.directionFromRotation(npc.getXRot(), npc.getYRot());
 
             double dot = toPlayer.dot(npcForward);
@@ -132,13 +140,18 @@ public class NpcDetectionHandler {
                         .getType() == net.minecraft.world.phys.HitResult.Type.MISS;
 
                 if (los) {
-                    float distFactor = 1f - (float)(dist / cfg.visionRadius);
+                    float distFactor = 1f - (float) (dist / cfg.visionRadius);
+
                     // Light level affects detectability
-                    int lightLevel = level.getBrightness(LightLayer.BLOCK,
-                            BlockPos.containing(player.position()));
+                    int lightLevel = level.getBrightness(
+                            LightLayer.BLOCK,
+                            BlockPos.containing(player.position())
+                    );
                     float lightFactor = 0.3f + 0.7f * (lightLevel / 15f);
+
                     // Moving players more visible
                     float moveFactor = player.getDeltaMovement().lengthSqr() > 0.001 ? 1.2f : 1.0f;
+
                     score = Math.max(score, distFactor * lightFactor * moveFactor * cfg.sensitivity);
                 }
             }
@@ -148,12 +161,13 @@ public class NpcDetectionHandler {
         if (dist <= cfg.hearingRadius) {
             double speed = player.getDeltaMovement().lengthSqr();
             float noiseFactor = 0f;
-            if (speed > 0.1)       noiseFactor = 0.3f; // walking
-            if (speed > 0.2)       noiseFactor = 0.5f; // sprinting
+
+            if (speed > 0.1) noiseFactor = 0.3f; // walking
+            if (speed > 0.2) noiseFactor = 0.5f; // sprinting
             if (!player.onGround()) noiseFactor += 0.3f; // falling
             if (player.isSprinting()) noiseFactor += 0.2f;
 
-            float distFactor = 1f - (float)(dist / cfg.hearingRadius);
+            float distFactor = 1f - (float) (dist / cfg.hearingRadius);
             score = Math.max(score, noiseFactor * distFactor * cfg.sensitivity);
         }
 
@@ -162,9 +176,9 @@ public class NpcDetectionHandler {
 
     private void transition(NpcEntity npc, GuardRuntime rt, GuardState newState, StealthConfig cfg) {
         if (rt.state == newState) return;
-        rt.state          = newState;
+        rt.state = newState;
         rt.stateStartTick = npc.level().getGameTime();
-        LOG.debug("[NpcDetectionHandler] NPC {} → {}", npc.getUUID(), newState);
+        LOG.debug("[NpcDetectionHandler] NPC {} -> {}", npc.getUUID(), newState);
     }
 
     public static GuardState getGuardState(UUID npcId) {
@@ -174,10 +188,10 @@ public class NpcDetectionHandler {
 
     /** Per-NPC mutable runtime (not persisted). */
     private static class GuardRuntime {
-        GuardState state      = GuardState.CALM;
-        long stateStartTick   = 0;
-        long alarmStartTick   = 0;
+        GuardState state = GuardState.CALM;
+        long stateStartTick = 0;
+        long alarmStartTick = 0;
         float prevDetectionLevel = 0f;
-        UUID suspectPlayer    = null;
+        UUID suspectPlayer = null;
     }
 }
