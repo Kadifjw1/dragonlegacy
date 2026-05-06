@@ -23,8 +23,8 @@ public class NpcModelTab implements NpcEditorTab {
     private static final String[] CAT_LABELS = { "Все", "Гуманоиды", "Животные", "Големы" };
 
     private String categoryFilter = "all";
-    private int profileScroll = 0;
-    private EditBox scaleBox, offsetYBox;
+    private int    profileScroll  = 0;
+    private EditBox offsetYBox;
 
     @Override
     public void init(Consumer<AbstractWidget> add, Runnable rebuild,
@@ -32,9 +32,10 @@ public class NpcModelTab implements NpcEditorTab {
         NpcEntityData d = state.getDraft();
         NpcModelConfig mc = ensureModel(d);
         var font = Minecraft.getInstance().font;
-        int y = oy + 26;
+        
+        int y = oy + 20; // below section header
 
-        // ── Category filter ───────────────────────────────────────────────────
+        // ── Category filter row ───────────────────────────────────────────────
         int bw = rw / CAT_IDS.length;
         for (int i = 0; i < CAT_IDS.length; i++) {
             final String cat = CAT_IDS[i];
@@ -44,7 +45,7 @@ public class NpcModelTab implements NpcEditorTab {
                     b -> { categoryFilter = cat; profileScroll = 0; rebuild.run(); }
             ).bounds(rx + i * bw, y, bw - 2, 16).build());
         }
-        y += 20;
+        y += 22;
 
         // ── Profile list ──────────────────────────────────────────────────────
         List<NpcModelProfile> filtered = filteredProfiles();
@@ -57,101 +58,106 @@ public class NpcModelTab implements NpcEditorTab {
             NpcModelProfile profile = filtered.get(i);
             boolean selected = mc.profile == profile;
             add.accept(Button.builder(
-                    Component.literal(selected ? "§e§l▶ " + profile.label : profile.label),
+                    Component.literal(selected ? "§e§l▶ " + profile.label : "   " + profile.label),
                     b -> {
                         mc.profile = profile;
                         mc.scale   = profile.baseScale;
                         state.markDirty();
                         rebuild.run();
                     }
-            ).bounds(rx, y + (i - profileScroll) * 18, rw - 24, 16).build());
+            ).bounds(rx, y + (i - profileScroll) * 18, rw - 26, 16).build());
         }
 
+        // Scroll arrows (right of list)
         add.accept(Button.builder(Component.literal("▲"),
                 b -> { profileScroll = Math.max(0, profileScroll - 1); rebuild.run(); }
-        ).bounds(rx + rw - 22, listTop, 20, 16).build());
+        ).bounds(rx + rw - 24, listTop, 22, 16).build());
         add.accept(Button.builder(Component.literal("▼"),
                 b -> { profileScroll = Math.min(maxScroll, profileScroll + 1); rebuild.run(); }
-        ).bounds(rx + rw - 22, listTop + 18, 20, 16).build());
+        ).bounds(rx + rw - 24, listTop + 20, 22, 16).build());
+        
+        y += visibleRows * 18 + 10;
 
-        y += visibleRows * 18 + 8;
-
-        // ── Scale ─────────────────────────────────────────────────────────────
+        // ── Parameters section ────────────────────────────────────────────────
+        // Scale row:  ◀  [value]  ▶   label on right
         add.accept(Button.builder(Component.literal("◀"), b -> {
             mc.scale = Math.max(0.1f, Math.round((mc.scale - 0.1f) * 10) / 10f);
             state.markDirty(); rebuild.run();
-        }).bounds(rx, y, 18, 16).build());
+         }).bounds(rx + 60, y, 20, 16).build());
         add.accept(Button.builder(Component.literal("▶"), b -> {
             mc.scale = Math.min(4f, Math.round((mc.scale + 0.1f) * 10) / 10f);
             state.markDirty(); rebuild.run();
-        }).bounds(rx + 54, y, 18, 16).build());
+        }).bounds(rx + 116, y, 20, 16).build());
+        y += 20;
 
-        // ── Offset Y ─────────────────────────────────────────────────────────
-        offsetYBox = new EditBox(font, rx + 100, y, 50, 16, Component.literal("Y"));
+       // Offset Y row: label + editbox
+        offsetYBox = new EditBox(font, rx + 60, y, 54, 16, Component.literal("Y"));
         offsetYBox.setValue(String.format("%.2f", mc.offsetY));
         add.accept(offsetYBox);
+        y += 20;
 
-        // ── Eye height override ───────────────────────────────────────────────
+        // Eye height row: ◀  [value]  ▶  ↺
         add.accept(Button.builder(Component.literal("◀"), b -> {
             mc.eyeHeightOverride = Math.max(-1f,
                     Math.round((mc.eyeHeightOverride < 0 ? mc.profile.eyeHeight : mc.eyeHeightOverride) - 0.1f) / 10f * 10f);
             state.markDirty(); rebuild.run();
-        }).bounds(rx, y + 22, 18, 16).build());
+         }).bounds(rx + 60, y, 20, 16).build());
         add.accept(Button.builder(Component.literal("▶"), b -> {
             float base = mc.eyeHeightOverride < 0 ? mc.profile.eyeHeight : mc.eyeHeightOverride;
             mc.eyeHeightOverride = Math.round((base + 0.1f) * 10) / 10f;
             state.markDirty(); rebuild.run();
-        }).bounds(rx + 54, y + 22, 18, 16).build());
+         }).bounds(rx + 116, y, 20, 16).build());
         add.accept(Button.builder(Component.literal("↺"), b -> {
             mc.eyeHeightOverride = -1f;
             state.markDirty(); rebuild.run();
-        }).bounds(rx + 76, y + 22, 18, 16).build());
+        }).bounds(rx + 140, y, 20, 16).build());
+        y += 26;
 
-        y += 48;
-
-        // ── Options ───────────────────────────────────────────────────────────
+       // ── Toggle options ────────────────────────────────────────────────────
+        int hw = rw / 2 - 2;
         add.accept(Button.builder(
-                Component.literal("Звуки существа: " + (mc.useCreatureSounds ? "§aВКЛ" : "§cВЫКЛ")),
+                Component.literal("Звуки: " + (mc.useCreatureSounds ? "§aВКЛ" : "§cВЫКЛ")),
                 b -> { mc.useCreatureSounds = !mc.useCreatureSounds; state.markDirty(); rebuild.run(); }
-        ).bounds(rx, y, rw / 2 - 2, 16).build());
-
+        ).bounds(rx, y, hw, 16).build());
         add.accept(Button.builder(
                 Component.literal("Анимации: " + (mc.useCreatureAnimations ? "§aВКЛ" : "§cВЫКЛ")),
                 b -> { mc.useCreatureAnimations = !mc.useCreatureAnimations; state.markDirty(); rebuild.run(); }
-        ).bounds(rx + rw / 2, y, rw / 2 - 2, 16).build());
+        ).bounds(rx + hw + 2, y, hw, 16).build());
     }
 
     @Override
     public void render(GuiGraphics g, NpcEditorState state, int rx, int oy, int rw, int mx, int my) {
         var font = Minecraft.getInstance().font;
-        NpcEntityData d = state.getDraft();
+        NpcEntityData d  = state.getDraft();
         NpcModelConfig mc = ensureModel(d);
 
+        // Section header
         NpcEditorUtils.sectionCard(g, rx, oy, rw, 18, "МОДЕЛЬ / ПРОФИЛЬ", ACCENT);
+        g.drawString(font, "§7Выбрано: §f" + mc.profile.label
+                + " §8(" + mc.profile.category() + ")", rx + 4, oy + 4, 0xFFCCCCCC, false);
+        
+        // Parameters section (below the list)
+        int paramY = oy + 20 + 22 + 5 * 18 + 10;
+        NpcEditorUtils.sectionCard(g, rx, paramY - 6, rw, 84, "ПАРАМЕТРЫ", ACCENT);
+        
+        // Scale label + current value (left of buttons)
+        g.drawString(font, "§7Масштаб:", rx + 4, paramY + 2, 0xFF888877, false);
+        g.drawString(font, "§f" + String.format("%.1f", mc.scale), rx + 84, paramY + 2, 0xFFFFCC44, false);
 
-        // Current selection
-        g.drawString(font, "§7Выбрано: §f" + mc.profile.label + " §8(" + mc.profile.category() + ")",
-                rx + 4, oy + 4, 0xFFCCCCCC, false);
+         // Offset Y label
+        g.drawString(font, "§7Смещ. Y:", rx + 4, paramY + 22, 0xFF888877, false);
 
-        int y = oy + 26 + 20 + 5 * 18 + 8;
-
-// Scale display
-        NpcEditorUtils.sectionCard(g, rx, y - 4, rw, 64, "ПАРАМЕТРЫ", ACCENT);
-        g.drawString(font, "§7Масштаб:", rx + 4, y + 2, 0xFF888877, false);
-        g.drawString(font, "§f" + String.format("%.1f", mc.scale),
-                rx + 22, y + 2, 0xFFFFCC44, false);
-
-        g.drawString(font, "§7Смещ. Y:", rx + 4, y + 18, 0xFF888877, false);
-
+        // Eye height label + value (right of ↺)
         float eh = mc.effectiveEyeHeight();
-        g.drawString(font, "§7Высота глаз: §f" + String.format("%.2f", eh),
-                rx + 4, y + 30, 0xFF888877, false);
+        g.drawString(font, "§7Высота глаз:", rx + 4, paramY + 42, 0xFF888877, false);
+        g.drawString(font, "§f" + String.format("%.2f", eh), rx + 84, paramY + 42, 0xFFFFCC44, false);
 
-        // Visual profile info
-        float np = mc.effectiveNameplateOffset();
+        // Nameplate / dialogue offsets
+        float np  = mc.effectiveNameplateOffset();
         float dlg = mc.effectiveDialogueOffset();
-        g.drawString(font, "§7Имя: §8+" + String.format("%.1f", np) + "  §7Диалог: §8+" + String.format("%.1f", dlg),
-                rx + 4, y + 42, 0xFF888877, false);
+       g.drawString(font, "§8Имя: §7+" + String.format("%.1f", np)
+                + "  Диалог: §7+" + String.format("%.1f", dlg),
+                rx + 4, paramY + 58, 0xFF666677, false);
     }
 
     @Override
