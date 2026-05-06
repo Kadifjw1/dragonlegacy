@@ -241,6 +241,12 @@ final class NpcSceneEditorNodePanel {
                     id -> n.actionParam = id, null);
         }
 
+        if (NpcSceneNode.ACTION_START_BUILDING.equals(n.actionType)) {
+            NpcSceneSelectorComponents.addSelector(scr, x + 8, y + 48, COL3_W - 16, "Здание",
+                    n.actionParam, NpcSceneSelectorComponents.buildingOptions(),
+                    id -> n.actionParam = id, null);
+        }
+        
         if (NpcSceneNode.ACTION_LOOK_AT.equals(n.actionType) || NpcSceneNode.ACTION_MOVE_TO.equals(n.actionType)) {
             NpcSceneSelectorComponents.addSelector(scr, x + 8, y + 48, COL3_W - 16, "NPC",
                     n.actionParam, NpcSceneSelectorComponents.npcOptions(),
@@ -445,6 +451,16 @@ final class NpcSceneEditorNodePanel {
             case NpcSceneNode.ACTION_TELEPORT -> "x,y,z";
             case NpcSceneNode.ACTION_SET_VARIABLE -> "name=value";
             case NpcSceneNode.ACTION_OPEN_SCENE -> "ID сцены";
+            case NpcSceneNode.ACTION_START_BUILDING     -> "ID шаблона здания";
+            case NpcSceneNode.ACTION_PLAY_ANIM_STATE    -> "idle/walk/work/talk/guard/sleep/custom";
+            case NpcSceneNode.ACTION_STOP_ANIMATION     -> "ID анимации (или пусто=все)";
+            case NpcSceneNode.ACTION_WAIT_ANIM_END      -> "ID анимации";
+            case NpcSceneNode.ACTION_SET_IDLE_ANIMATION -> "ID анимации";
+            case NpcSceneNode.ACTION_RAISE_ALARM        -> "local|global (пусто=local)";
+            case NpcSceneNode.ACTION_LOWER_ALARM        -> "local|global (пусто=local)";
+            case NpcSceneNode.ACTION_START_STEALTH      -> "ID миссии";
+            case NpcSceneNode.ACTION_MISSION_FAIL_ALERT -> "";
+            case NpcSceneNode.ACTION_MISSION_SUCCESS    -> ""; 
             default -> "";
         };
         return Component.literal(h).withStyle(s -> s.withColor(0xFF555566));
@@ -459,8 +475,12 @@ final class NpcSceneEditorNodePanel {
                  NpcSceneNode.COND_NOT_HAS_ITEM -> "minecraft:diamond";
             case NpcSceneNode.COND_RELATION -> "FRIENDLY/NEUTRAL/HOSTILE";
             case NpcSceneNode.COND_FACTION  -> "ID фракции";
-            case NpcSceneNode.COND_PATH_STAGE -> "номер стадии";
-            case NpcSceneNode.COND_HAS_ABILITY -> "ID способности";
+            case NpcSceneNode.COND_PATH_STAGE        -> "номер стадии";
+            case NpcSceneNode.COND_HAS_ABILITY       -> "ID способности";
+            case NpcSceneNode.COND_DETECTION_LEVEL   -> "0.0–1.0 (порог)";
+            case NpcSceneNode.COND_ALERT_STATE       -> "NONE/LOW/MEDIUM/HIGH/LOCKDOWN";
+            case NpcSceneNode.COND_IN_ZONE           -> "ID зоны";
+            case NpcSceneNode.COND_CHAT_MESSAGE      -> "ключевое слово";
             default -> "(нет параметра)";
         };
         return Component.literal(h).withStyle(s -> s.withColor(0xFF555566));
