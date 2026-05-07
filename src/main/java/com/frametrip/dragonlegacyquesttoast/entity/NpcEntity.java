@@ -3,8 +3,10 @@ package com.frametrip.dragonlegacyquesttoast.entity;
 import com.frametrip.dragonlegacyquesttoast.network.ModNetwork;
 import com.frametrip.dragonlegacyquesttoast.network.NpcDialoguePacket;
 import com.frametrip.dragonlegacyquesttoast.network.NpcStartScenePacket;
+import com.frametrip.dragonlegacyquesttoast.network.OpenCompanionScreenPacket;
 import com.frametrip.dragonlegacyquesttoast.network.OpenTraderShopPacket;
 import com.frametrip.dragonlegacyquesttoast.profession.NpcProfessionType;
+import com.frametrip.dragonlegacyquesttoast.server.companion.CompanionGoal;
 import com.frametrip.dragonlegacyquesttoast.server.DialogueDefinition;
 import com.frametrip.dragonlegacyquesttoast.server.DialogueManager;
 import com.frametrip.dragonlegacyquesttoast.server.dialogue.NpcScene;
@@ -57,9 +59,10 @@ public class NpcEntity extends PathfinderMob {
     @Override
     protected void registerGoals() {
         goalSelector.addGoal(1, new FloatGoal(this));
-        goalSelector.addGoal(2, new NpcLookAtPlayerGoal());
-        goalSelector.addGoal(3, new RandomLookAroundGoal(this));
-        goalSelector.addGoal(4, new WaterAvoidingRandomStrollGoal(this, 0.4));
+        goalSelector.addGoal(2, new CompanionGoal(this));
+        goalSelector.addGoal(3, new NpcLookAtPlayerGoal());
+        goalSelector.addGoal(4, new RandomLookAroundGoal(this));
+        goalSelector.addGoal(5, new WaterAvoidingRandomStrollGoal(this, 0.4));
     }
 
     public static AttributeSupplier.Builder createAttributes() {
@@ -125,6 +128,16 @@ public class NpcEntity extends PathfinderMob {
                     return InteractionResult.CONSUME;
                 }
 
+            // Profession: Companion → open companion control screen
+                if (data.professionData != null
+                        && data.professionData.type == NpcProfessionType.COMPANION) {
+                    ModNetwork.CHANNEL.send(
+                            PacketDistributor.PLAYER.with(() -> sp),
+                            new OpenCompanionScreenPacket(this.getUUID(), data)
+                    );
+                    return InteractionResult.CONSUME;
+                }
+            
                 // Prefer scene-based dialogue, fall back to legacy dialogue
                 if (!data.sceneId.isEmpty()) {
                     NpcScene scene = NpcSceneManager.get(data.sceneId);
