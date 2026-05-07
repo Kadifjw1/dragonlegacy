@@ -2,7 +2,11 @@ package com.frametrip.dragonlegacyquesttoast.entity;
 
 import com.frametrip.dragonlegacyquesttoast.profession.NpcProfessionData;
 import com.frametrip.dragonlegacyquesttoast.server.NpcProfile;
+import com.frametrip.dragonlegacyquesttoast.server.animation.NpcAnimationData;
 import com.frametrip.dragonlegacyquesttoast.server.building.NpcBuildingData;
+import com.frametrip.dragonlegacyquesttoast.server.companion.CompanionData;
+import com.frametrip.dragonlegacyquesttoast.server.event.EventChain;
+import com.frametrip.dragonlegacyquesttoast.server.gui.GuiTemplate;
 import com.frametrip.dragonlegacyquesttoast.server.chat.NpcChatConfig;
 import com.frametrip.dragonlegacyquesttoast.server.model.NpcModelConfig;
 import com.frametrip.dragonlegacyquesttoast.server.stealth.StealthConfig;
@@ -22,7 +26,19 @@ public class NpcEntityData {
     // texture layers: category -> textureId (base, hair, eyes, top, bottom, shoes, accessory, overlay)
     public Map<String, String> textureLayers = new LinkedHashMap<>();
 
-    // — Animation —
+    // — Animations —
+    public List<NpcAnimationData> animations = new ArrayList<>();
+
+    // — Event chains —
+    public List<EventChain> eventChains = new ArrayList<>();
+
+    // — Companion —
+    public CompanionData companionData = new CompanionData();
+
+    // — GUI templates —
+    public List<GuiTemplate> guiTemplates = new ArrayList<>();
+
+    // — Animation pose & movement —
     public String  idlePose          = "STANDING"; // STANDING, CROUCHING
     public float   walkSpeed         = 0.5f;       // 0.0–1.0
     public boolean lookAtPlayer      = true;
@@ -88,6 +104,13 @@ public class NpcEntityData {
         c.questIds          = new ArrayList<>(this.questIds);
         c.factionId         = this.factionId;
         c.textureLayers     = new LinkedHashMap<>(this.textureLayers);
+        c.animations        = new ArrayList<>();
+        for (NpcAnimationData a : this.animations) c.animations.add(a.copy());
+        c.eventChains       = new ArrayList<>();
+        for (EventChain ch  : this.eventChains) c.eventChains.add(ch.copy());
+        c.companionData     = this.companionData != null ? this.companionData.copy() : new CompanionData();
+        c.guiTemplates      = new ArrayList<>();
+        for (GuiTemplate t  : this.guiTemplates) c.guiTemplates.add(t.copy());
         c.idlePose          = this.idlePose;
         c.walkSpeed         = this.walkSpeed;
         c.lookAtPlayer      = this.lookAtPlayer;
