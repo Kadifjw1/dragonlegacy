@@ -1,0 +1,38 @@
+{
+  "id": "preset02",
+  "name": "Доска заданий",
+  "templateType": "journal",
+  "elements": [
+    {
+      "id": "bg002",
+      "type": "BACKGROUND",
+      "x": 0, "y": 0, "w": 100, "h": 100,
+      "props": { "color": "#0A1020", "alpha": "220" }
+    },
+    {
+      "id": "pn003",
+      "type": "PANEL",
+      "x": 3, "y": 3, "w": 94, "h": 12,
+      "props": { "color": "#1A2040", "alpha": "200" }
+    },
+    {
+      "id": "tx002",
+      "type": "TEXT",
+      "x": 6, "y": 5, "w": 88, "h": 8,
+      "props": { "text": "Доска заданий", "color": "#88AAFF", "fontSize": "normal" }
+    },
+    {
+      "id": "sc001",
+      "type": "SCROLL_AREA",
+      "x": 3, "y": 18, "w": 94, "h": 70,
+      "props": { "scrollDir": "vertical" }
+    },
+    {
+      "id": "bt002",
+      "type": "BUTTON",
+      "x": 35, "y": 90, "w": 30, "h": 8,
+      "props": { "text": "Принять", "color": "#224488", "action": "accept_quest" }
+    }
+  ]
+}
+
