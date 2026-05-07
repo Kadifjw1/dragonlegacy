@@ -21,6 +21,8 @@ public class ModCreativeTabs {
                     output.accept(ModItems.NPC_SPAWNER.get());
                     output.accept(ModItems.LEGACY_COIN.get());
                     output.accept(ModItems.TRAVELER_JOURNAL.get());
+                    output.accept(ModItems.EVENT_BOOK.get());
+                    output.accept(ModItems.GUI_CONFIGURATOR.get());
                 })
                 .build()
         );
