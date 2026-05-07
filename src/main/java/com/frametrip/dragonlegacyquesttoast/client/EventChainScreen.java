@@ -5,7 +5,6 @@ import com.frametrip.dragonlegacyquesttoast.entity.NpcEntityData;
 import com.frametrip.dragonlegacyquesttoast.network.ModNetwork;
 import com.frametrip.dragonlegacyquesttoast.network.SaveNpcEntityDataPacket;
 import com.frametrip.dragonlegacyquesttoast.server.event.*;
-import com.frametrip.dragonlegacyquesttoast.server.npceditor.NpcEditorState;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
@@ -32,7 +31,6 @@ public class EventChainScreen extends Screen {
     private static final int COL_W  = 185;
     private static final int PAD    = 5;
 
-    // colours
     private static final int C_BG     = 0xFF0D0D1A;
     private static final int C_PANEL  = 0xFF14142B;
     private static final int C_BORDER = 0xFF2A2A44;
@@ -46,11 +44,9 @@ public class EventChainScreen extends Screen {
     private EventChain selectedChain = null;
     private int chainScroll = 0;
 
-    // Selected chain editing state
     private int selectedCondIdx = -1;
     private int selectedActionIdx = -1;
 
-    // Widgets (rebuilt on init)
     private EditBox chainNameBox;
     private EditBox triggerParamBox;
     private EditBox condParamBox;
@@ -60,13 +56,13 @@ public class EventChainScreen extends Screen {
 
     public EventChainScreen(NpcEntity npc) {
         super(Component.literal("Редактор событий — " + npc.getNpcData().displayName));
-        this.npc   = npc;
+        this.npc = npc;
         this.draft = npc.getNpcData().copy();
     }
 
     @Override
     protected void init() {
-        guiLeft = (width  - W) / 2;
+        guiLeft = (width - W) / 2;
         guiTop  = (height - H) / 2;
         rebuild();
     }
@@ -74,15 +70,13 @@ public class EventChainScreen extends Screen {
     private void rebuild() {
         clearWidgets();
         int lx = guiLeft + PAD;
-        int ly = guiTop  + PAD;
+        int ly = guiTop + PAD;
 
-        // ── Chain list ────────────────────────────────────────────────────────
-        // "Add" button
         addRenderableWidget(Button.builder(Component.literal("+ Добавить событие"), b -> {
             EventChain chain = new EventChain();
             draft.eventChains.add(chain);
             selectedChain = chain;
-            selectedCondIdx   = -1;
+            selectedCondIdx = -1;
             selectedActionIdx = -1;
             rebuild();
         }).bounds(lx, ly, LIST_W, 16).build());
@@ -100,14 +94,13 @@ public class EventChainScreen extends Screen {
             final int fi = i;
             addRenderableWidget(Button.builder(Component.literal(label), b -> {
                 selectedChain = draft.eventChains.get(fi);
-                selectedCondIdx   = -1;
+                selectedCondIdx = -1;
                 selectedActionIdx = -1;
                 rebuild();
             }).bounds(lx, ly, LIST_W, 14).build());
             ly += 15;
         }
 
-  // Chain action buttons
         int btnY = guiTop + H - 22;
         if (selectedChain != null) {
             addRenderableWidget(Button.builder(Component.literal("⧉ Копия"), b -> {
@@ -120,25 +113,22 @@ public class EventChainScreen extends Screen {
             addRenderableWidget(Button.builder(Component.literal("§c✕"), b -> {
                 draft.eventChains.remove(selectedChain);
                 selectedChain = draft.eventChains.isEmpty() ? null : draft.eventChains.get(0);
-                selectedCondIdx   = -1;
+                selectedCondIdx = -1;
                 selectedActionIdx = -1;
                 rebuild();
             }).bounds(lx + 62, btnY, 22, 14).build());
         }
 
-        // Save / Close
-        addRenderableWidget(Button.builder(Component.literal("§aSохранить"), b -> save())
+        addRenderableWidget(Button.builder(Component.literal("§aСохранить"), b -> save())
                 .bounds(guiLeft + W - 110, guiTop + H - 22, 56, 14).build());
         addRenderableWidget(Button.builder(Component.literal("§cЗакрыть"), b -> onClose())
                 .bounds(guiLeft + W - 52, guiTop + H - 22, 50, 14).build());
 
         if (selectedChain == null) return;
 
-        // ── Right area — chain editor ─────────────────────────────────────────
         int rx = guiLeft + LIST_W + PAD * 2;
         int ry = guiTop + PAD;
 
-        // Row 1: name + toggles
         chainNameBox = new EditBox(font, rx, ry, 180, 14, Component.literal("Название"));
         chainNameBox.setValue(selectedChain.name);
         addRenderableWidget(chainNameBox);
@@ -162,7 +152,6 @@ public class EventChainScreen extends Screen {
         ).bounds(rx + 270, ry, 70, 14).build());
         ry += 20;
 
-        // Three-column layout
         int colAx = rx;
         int colBx = rx + COL_W + PAD;
         int colCx = rx + (COL_W + PAD) * 2;
@@ -171,8 +160,6 @@ public class EventChainScreen extends Screen {
         buildConditionColumn(colBx, ry);
         buildActionColumn(colCx, ry);
     }
-
-    // ── Trigger column ────────────────────────────────────────────────────────
 
     private void buildTriggerColumn(int cx, int cy) {
         EventTriggerType[] types = EventTriggerType.values();
@@ -189,7 +176,6 @@ public class EventChainScreen extends Screen {
         }).bounds(cx + COL_W - 22, cy, 20, 14).build());
         cy += 18;
 
-        // Param field
         String hint = selectedChain.trigger.paramHint();
         if (!hint.isEmpty()) {
             String paramKey = triggerParamKey(selectedChain.trigger);
@@ -198,8 +184,6 @@ public class EventChainScreen extends Screen {
             addRenderableWidget(triggerParamBox);
         }
     }
-
-// ── Condition column ──────────────────────────────────────────────────────
 
     private void buildConditionColumn(int cx, int cy) {
         addRenderableWidget(Button.builder(Component.literal("+ Условие"), b -> {
@@ -252,8 +236,6 @@ public class EventChainScreen extends Screen {
         }
     }
 
-    // ── Action column ─────────────────────────────────────────────────────────
-
     private void buildActionColumn(int cx, int cy) {
         addRenderableWidget(Button.builder(Component.literal("+ Действие"), b -> {
             selectedChain.actions.add(new EventAction());
@@ -305,7 +287,6 @@ public class EventChainScreen extends Screen {
                 cy += 16;
             }
 
-      // Second param for actions that need two values (itemId + qty)
             String param2Key = actionParam2Key(act.type);
             if (!param2Key.isEmpty()) {
                 EditBox p2 = new EditBox(font, cx, cy, COL_W, 13,
@@ -318,19 +299,14 @@ public class EventChainScreen extends Screen {
         }
     }
 
-    // ── Render ────────────────────────────────────────────────────────────────
-
     @Override
     public void render(GuiGraphics g, int mx, int my, float pt) {
-        // Background
         g.fill(guiLeft, guiTop, guiLeft + W, guiTop + H, C_BG);
         border(g, guiLeft, guiTop, W, H);
 
-        // Left panel background
         g.fill(guiLeft + PAD, guiTop + PAD, guiLeft + LIST_W + PAD, guiTop + H - PAD, C_PANEL);
         border(g, guiLeft + PAD, guiTop + PAD, LIST_W, H - PAD * 2);
 
-        // Column headers
         if (selectedChain != null) {
             int rx = guiLeft + LIST_W + PAD * 2;
             int ry = guiTop + PAD + 22;
@@ -341,17 +317,14 @@ public class EventChainScreen extends Screen {
             columnHeader(g, colBx, ry - 4, COL_W, "УСЛОВИЕ",  0xFF4488FF);
             columnHeader(g, colCx, ry - 4, COL_W, "ДЕЙСТВИЕ", 0xFF44CC66);
 
-            // Trigger name in centre of column header area
             g.drawCenteredString(font, "§e" + selectedChain.trigger.label(),
                     rx + COL_W / 2, ry + 5, C_TEXT);
 
-            // Condition mode label
             g.drawCenteredString(font,
                     "§8Режим: §f" + ("AND".equals(selectedChain.conditionMode) ? "ВСЕ (AND)" : "ЛЮБОЕ (OR)"),
                     colBx + COL_W / 2, ry - 16, C_DIM);
         }
 
-        // Title
         g.drawString(font, "§l⚡ РЕДАКТОР СОБЫТИЙ  §7— " + npc.getNpcData().displayName,
                 guiLeft + PAD + 2, guiTop + H - 10, C_ACCENT, false);
 
@@ -365,13 +338,11 @@ public class EventChainScreen extends Screen {
     }
 
     private static void border(GuiGraphics g, int x, int y, int w, int h) {
-        g.fill(x,         y,         x + w,     y + 1,     C_BORDER);
-        g.fill(x,         y + h - 1, x + w,     y + h,     C_BORDER);
-        g.fill(x,         y,         x + 1,     y + h,     C_BORDER);
-        g.fill(x + w - 1, y,         x + w,     y + h,     C_BORDER);
+        g.fill(x,         y,         x + w, y + 1,     C_BORDER);
+        g.fill(x,         y + h - 1, x + w, y + h,     C_BORDER);
+        g.fill(x,         y,         x + 1, y + h,     C_BORDER);
+        g.fill(x + w - 1, y,         x + w, y + h,     C_BORDER);
     }
-
-    // ── Input handling ────────────────────────────────────────────────────────
 
     @Override
     public boolean mouseScrolled(double mx, double my, double delta) {
@@ -395,19 +366,20 @@ public class EventChainScreen extends Screen {
 
     private void pullFields() {
         if (selectedChain == null) return;
-        if (chainNameBox != null) selectedChain.name = chainNameBox.getValue();
+
+        if (chainNameBox != null) {
+            selectedChain.name = chainNameBox.getValue();
+        }
         if (triggerParamBox != null) {
             String key = triggerParamKey(selectedChain.trigger);
             if (!key.isEmpty()) selectedChain.triggerParam(key, triggerParamBox.getValue());
         }
-        if (selectedCondIdx >= 0 && selectedCondIdx < selectedChain.conditions.size()
-                && condParamBox != null) {
+        if (selectedCondIdx >= 0 && selectedCondIdx < selectedChain.conditions.size() && condParamBox != null) {
             EventCondition cond = selectedChain.conditions.get(selectedCondIdx);
             String key = condParamKey(cond.type);
             if (!key.isEmpty()) cond.param(key, condParamBox.getValue());
         }
-        if (selectedActionIdx >= 0 && selectedActionIdx < selectedChain.actions.size()
-                && actionParamBox != null) {
+        if (selectedActionIdx >= 0 && selectedActionIdx < selectedChain.actions.size() && actionParamBox != null) {
             EventAction act = selectedChain.actions.get(selectedActionIdx);
             String key = actionParamKey(act.type);
             if (!key.isEmpty()) act.param(key, actionParamBox.getValue());
@@ -422,8 +394,6 @@ public class EventChainScreen extends Screen {
 
     @Override
     public boolean isPauseScreen() { return false; }
-
-// ── Param key/label helpers ───────────────────────────────────────────────
 
     private static String triggerParamKey(EventTriggerType type) {
         return switch (type) {
@@ -463,29 +433,29 @@ public class EventChainScreen extends Screen {
 
     private static String actionParamKey(EventActionType type) {
         return switch (type) {
-            case SAY_PHRASE    -> "phrase";
-            case OPEN_DIALOGUE -> "dialogueId";
-            case START_SCENE   -> "sceneId";
-            case GIVE_ITEM     -> "itemId";
+            case SAY_PHRASE     -> "phrase";
+            case OPEN_DIALOGUE  -> "dialogueId";
+            case START_SCENE    -> "sceneId";
+            case GIVE_ITEM      -> "itemId";
             case GIVE_QUEST, COMPLETE_QUEST -> "questId";
-            case SET_NPC_STATE -> "state";
+            case SET_NPC_STATE  -> "state";
             case PLAY_ANIMATION -> "animName";
-            case TELEPORT      -> "x";
-            default            -> "";
+            case TELEPORT       -> "x";
+            default             -> "";
         };
     }
 
     private static String actionParamLabel(EventActionType type) {
         return switch (type) {
-            case SAY_PHRASE    -> "Текст фразы";
-            case OPEN_DIALOGUE -> "ID диалога";
-            case START_SCENE   -> "ID сцены";
-            case GIVE_ITEM     -> "ID предмета";
+            case SAY_PHRASE     -> "Текст фразы";
+            case OPEN_DIALOGUE  -> "ID диалога";
+            case START_SCENE    -> "ID сцены";
+            case GIVE_ITEM      -> "ID предмета";
             case GIVE_QUEST, COMPLETE_QUEST -> "ID квеста";
-            case SET_NPC_STATE -> "Состояние";
+            case SET_NPC_STATE  -> "Состояние";
             case PLAY_ANIMATION -> "Имя анимации";
-            case TELEPORT      -> "X";
-            default            -> "";
+            case TELEPORT       -> "X";
+            default             -> "";
         };
     }
 
