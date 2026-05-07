@@ -1,0 +1,44 @@
+{
+  "id": "preset01",
+  "name": "Меню таверны",
+  "templateType": "custom",
+  "elements": [
+    {
+      "id": "bg001",
+      "type": "BACKGROUND",
+      "x": 0, "y": 0, "w": 100, "h": 100,
+      "props": { "color": "#1A0D00", "alpha": "230" }
+    },
+    {
+      "id": "pn001",
+      "type": "PANEL",
+      "x": 5, "y": 5, "w": 90, "h": 15,
+      "props": { "color": "#3D1F00", "alpha": "200" }
+    },
+    {
+      "id": "tx001",
+      "type": "TEXT",
+      "x": 8, "y": 8, "w": 84, "h": 9,
+      "props": { "text": "Добро пожаловать в таверну!", "color": "#FFD580", "fontSize": "normal" }
+    },
+    {
+      "id": "pn002",
+      "type": "PANEL",
+      "x": 5, "y": 23, "w": 90, "h": 65,
+      "props": { "color": "#2A1200", "alpha": "200" }
+    },
+    {
+      "id": "gr001",
+      "type": "ITEM_GRID",
+      "x": 8, "y": 26, "w": 84, "h": 50,
+      "props": { "columns": "4", "padding": "3" }
+    },
+    {
+      "id": "bt001",
+      "type": "BUTTON",
+      "x": 30, "y": 88, "w": 40, "h": 8,
+      "props": { "text": "Купить", "color": "#8B4513", "action": "buy" }
+    }
+  ]
+}
+
