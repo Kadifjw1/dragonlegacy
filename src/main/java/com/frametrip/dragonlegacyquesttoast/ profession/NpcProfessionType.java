@@ -1,15 +1,21 @@
 package com.frametrip.dragonlegacyquesttoast.profession;
 
+import com.frametrip.dragonlegacyquesttoast.DragonLegacyQuestToastMod;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
+
 public enum NpcProfessionType {
     NONE,
     TRADER,
-    BUILDER;
+    BUILDER,
+    COMPANION;
 
+    public String translationKey() {
+        return "npc.profession." + DragonLegacyQuestToastMod.MODID + "." + name().toLowerCase();
+    }
+
+    @OnlyIn(Dist.CLIENT)
     public String label() {
-        return switch (this) {
-            case NONE    -> "Нет профессии";
-            case TRADER  -> "Купля-продажа";
-            case BUILDER -> "Строитель";
-        };
+        return net.minecraft.client.resources.language.I18n.get(translationKey());
     }
 }
