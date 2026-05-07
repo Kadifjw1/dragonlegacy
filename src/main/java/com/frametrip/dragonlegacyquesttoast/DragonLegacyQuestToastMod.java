@@ -15,6 +15,7 @@ import com.frametrip.dragonlegacyquesttoast.network.ModNetwork;
 import com.frametrip.dragonlegacyquesttoast.network.SyncAbilitiesPacket;
 import com.frametrip.dragonlegacyquesttoast.network.SyncDialoguesPacket;
 import com.frametrip.dragonlegacyquesttoast.network.SyncFactionsPacket;
+import com.frametrip.dragonlegacyquesttoast.network.SyncDataPresetsPacket;
 import com.frametrip.dragonlegacyquesttoast.network.SyncNpcProfilesPacket;
 import com.frametrip.dragonlegacyquesttoast.network.SyncNpcScenesPacket;
 import com.frametrip.dragonlegacyquesttoast.network.SyncPlayerCurrencyPacket;
@@ -38,12 +39,14 @@ import com.frametrip.dragonlegacyquesttoast.server.VoidAbilityHandler;
 import com.frametrip.dragonlegacyquesttoast.server.building.BuildingTemplateManager;
 import com.frametrip.dragonlegacyquesttoast.server.building.NpcBuildingManager;
 import com.frametrip.dragonlegacyquesttoast.server.chat.NpcChatHandler;
+import com.frametrip.dragonlegacyquesttoast.server.data.DataPackManager;
 import com.frametrip.dragonlegacyquesttoast.server.dialogue.NpcSceneManager;
 import com.frametrip.dragonlegacyquesttoast.server.stealth.NpcDetectionHandler;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RegisterGuiOverlaysEvent;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -78,6 +81,7 @@ public class DragonLegacyQuestToastMod {
 
         MinecraftForge.EVENT_BUS.addListener(this::registerCommands);
         MinecraftForge.EVENT_BUS.addListener(this::onPlayerLogin);
+        MinecraftForge.EVENT_BUS.addListener(this::onAddReloadListeners);
 
         MinecraftForge.EVENT_BUS.register(new FireAbilityHandler());
         MinecraftForge.EVENT_BUS.register(new IceAbilityHandler());
@@ -160,5 +164,11 @@ public class DragonLegacyQuestToastMod {
                 new SyncNpcScenesPacket(NpcSceneManager.getAll()));
          ModNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player),
                 new SyncPlayerCurrencyPacket(CurrencyManager.getBalance(player.getUUID())));
+        ModNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player),
+                new SyncDataPresetsPacket(DataPackManager.animationPresets, DataPackManager.guiPresets));
+    }
+
+    private void onAddReloadListeners(AddReloadListenerEvent event) {
+        event.addListener(DataPackManager.INSTANCE);
     }
 }
