@@ -61,5 +61,8 @@ public class ModNetwork {
         CHANNEL.registerMessage(packetId++, NpcBuildingActionPacket.class, NpcBuildingActionPacket::encode, NpcBuildingActionPacket::decode, NpcBuildingActionPacket::handle);
         CHANNEL.registerMessage(packetId++, SyncNpcBuildingStatePacket.class, SyncNpcBuildingStatePacket::encode, SyncNpcBuildingStatePacket::decode, SyncNpcBuildingStatePacket::handle);
         CHANNEL.registerMessage(packetId++, DeleteNpcPacket.class, DeleteNpcPacket::encode, DeleteNpcPacket::decode, DeleteNpcPacket::handle);
+        CHANNEL.registerMessage(packetId++, SetCompanionModePacket.class, SetCompanionModePacket::encode, SetCompanionModePacket::decode, SetCompanionModePacket::handle);
+        CHANNEL.registerMessage(packetId++, OpenCompanionScreenPacket.class, OpenCompanionScreenPacket::encode, OpenCompanionScreenPacket::decode, OpenCompanionScreenPacket::handle);
+        CHANNEL.registerMessage(packetId++, SyncDataPresetsPacket.class, SyncDataPresetsPacket::encode, SyncDataPresetsPacket::decode, SyncDataPresetsPacket::handle);
     }
 }
