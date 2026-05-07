@@ -1,10 +1,10 @@
 package com.frametrip.dragonlegacyquesttoast.client.npceditor;
 
+import com.frametrip.dragonlegacyquesttoast.entity.NpcEntityData;
 import com.frametrip.dragonlegacyquesttoast.server.animation.AnimationBone;
 import com.frametrip.dragonlegacyquesttoast.server.animation.AnimationKeyframe;
 import com.frametrip.dragonlegacyquesttoast.server.animation.AnimationState;
 import com.frametrip.dragonlegacyquesttoast.server.animation.NpcAnimationData;
-import com.frametrip.dragonlegacyquesttoast.server.animation.NpcAnimationLibrary;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -16,12 +16,11 @@ import java.util.List;
 import java.util.function.Consumer;
 
 /**
- * Animation editor tab.
+ * Animation editor tab — works directly with NpcEntityData.animations so animations
+ * are persisted per NPC and saved to the server when the editor is saved.
  *
  * Layout (left→right):
  *   [90px list] | [timeline + controls] | [110px keyframe props]
- *
- * All controls are assigned non-overlapping Y coordinates.
  */
 public class NpcAnimationEditorTab implements NpcEditorTab {
 
@@ -49,6 +48,9 @@ public class NpcAnimationEditorTab implements NpcEditorTab {
     @Override
     public void init(Consumer<AbstractWidget> add, Runnable rebuild,
                      NpcEditorState state, int rx, int oy, int rw) {
+        NpcEntityData draft = state.getDraft();
+        List<NpcAnimationData> anims = draft.animations;
+        
         int listX = rx;
         int centerX = rx + LIST_W + 4;
         int centerW = rw - LIST_W - 4 - RIGHT_W - 4;
@@ -58,22 +60,22 @@ public class NpcAnimationEditorTab implements NpcEditorTab {
         int ly = oy + 4;
         add.accept(Button.builder(Component.literal("+ Новая"), b -> {
             NpcAnimationData anim = new NpcAnimationData();
-            anim.name = "Анимация " + (NpcAnimationLibrary.size() + 1);
+            anim.name = "Анимация " + (anims.size() + 1);
             anim.ensureBones();
-            NpcAnimationLibrary.register(anim);
+            anims.add(anim);
             selectedAnim = anim;
             selectedKeyframeIdx = -1;
+            state.markDirty();
             rebuild.run();
         }).bounds(listX, ly, LIST_W, 16).build());
         ly += 20;
 
-        List<NpcAnimationData> allAnims = NpcAnimationLibrary.getAll();
         int visAnims = 9;
-        int maxScroll = Math.max(0, allAnims.size() - visAnims);
+        int maxScroll = Math.max(0, anims.size() - visAnims);
         animScroll = Math.max(0, Math.min(animScroll, maxScroll));
 
-        for (int i = animScroll; i < Math.min(allAnims.size(), animScroll + visAnims); i++) {
-            NpcAnimationData anim = allAnims.get(i);
+        for (int i = animScroll; i < Math.min(anims.size(), animScroll + visAnims); i++) {
+            NpcAnimationData anim = anims.get(i);
             boolean sel = anim == selectedAnim;
             add.accept(Button.builder(
                     Component.literal(sel ? "§e▶ " + truncate(anim.name, 8) : "  " + truncate(anim.name, 9)),
@@ -89,10 +91,10 @@ public class NpcAnimationEditorTab implements NpcEditorTab {
         int delY = ly + visAnims * 18 + 4;
         if (selectedAnim != null) {
             add.accept(Button.builder(Component.literal("§c✕ Удалить"), b -> {
-                NpcAnimationLibrary.remove(selectedAnim.id);
-                selectedAnim = NpcAnimationLibrary.getAll().isEmpty() ? null
-                        : NpcAnimationLibrary.getAll().get(0);
+                anims.remove(selectedAnim);
+                selectedAnim = anims.isEmpty() ? null : anims.get(0);
                 selectedKeyframeIdx = -1;
+                state.markDirty();
                 rebuild.run();
             }).bounds(listX, delY, LIST_W, 16).build());
         }
@@ -115,6 +117,7 @@ public class NpcAnimationEditorTab implements NpcEditorTab {
                 Component.literal(selectedAnim.loop ? "§aЦикл" : "§8Цикл"),
                 b -> {
                     selectedAnim.loop = !selectedAnim.loop;
+                    state.markDirty();
                     rebuild.run();
                 }
         ).bounds(afterName + 44, cy, 40, 16).build());
@@ -125,6 +128,7 @@ public class NpcAnimationEditorTab implements NpcEditorTab {
                 b -> {
                     int si = selectedAnim.stateBinding.ordinal();
                     selectedAnim.stateBinding = states[(si + 1) % states.length];
+                    state.markDirty();
                     rebuild.run();
                 }
         ).bounds(afterName + 88, cy, 70, 16).build());
@@ -184,6 +188,7 @@ public class NpcAnimationEditorTab implements NpcEditorTab {
             frames.add(kf);
             frames.sort((a, bk) -> Float.compare(a.tick, bk.tick));
             selectedKeyframeIdx = frames.indexOf(kf);
+            state.markDirty();
             rebuild.run();
         }).bounds(centerX, cy, 55, 14).build());
 
@@ -193,6 +198,7 @@ public class NpcAnimationEditorTab implements NpcEditorTab {
                 if (selectedKeyframeIdx < frames.size()) {
                     frames.remove(selectedKeyframeIdx);
                     selectedKeyframeIdx = Math.max(-1, selectedKeyframeIdx - 1);
+                    state.markDirty();
                     rebuild.run();
                 }
             }
@@ -235,6 +241,7 @@ public class NpcAnimationEditorTab implements NpcEditorTab {
                                 if (easings[ii].equals(kf.easing)) ei = ii;
                             }
                             kf.easing = easings[(ei + 1) % easings.length];
+                            state.markDirty();
                             rebuild.run();
                         }
                 ).bounds(rightX, ry, RIGHT_W - 2, 14).build());
@@ -255,9 +262,10 @@ public class NpcAnimationEditorTab implements NpcEditorTab {
                 try {
                     NpcAnimationData imported = NpcAnimationData.fromGeckoLibJson(clip);
                     if (imported != null) {
-                        NpcAnimationLibrary.register(imported);
+                        anims.add(imported);
                         selectedAnim = imported;
                         selectedKeyframeIdx = -1;
+                        state.markDirty();
                         rebuild.run();
                     }
                 } catch (Exception ignored) {
@@ -355,10 +363,14 @@ public class NpcAnimationEditorTab implements NpcEditorTab {
     @Override
     public void pullFields(NpcEditorState state) {
         if (selectedAnim == null) return;
-        if (nameBox != null) selectedAnim.name = nameBox.getValue();
+        if (nameBox != null) {
+            selectedAnim.name = nameBox.getValue();
+            state.markDirty();
+        }
         if (durationBox != null) {
             try {
                 selectedAnim.durationTicks = Float.parseFloat(durationBox.getValue());
+                state.markDirty();
             } catch (Exception ignored) {
             }
         }
@@ -366,21 +378,19 @@ public class NpcAnimationEditorTab implements NpcEditorTab {
             List<AnimationKeyframe> frames = getFrames(selectedAnim.getBone(selectedBone));
             if (selectedKeyframeIdx < frames.size()) {
                 AnimationKeyframe kf = frames.get(selectedKeyframeIdx);
-                if (kfTickBox != null) try {
-                    kf.tick = Float.parseFloat(kfTickBox.getValue());
-                } catch (Exception ignored) {
-                }
+                boolean changed = false;
+                kf.tick = Float.parseFloat(kfTickBox.getValue()); changed = true;
+                } catch (Exception ignored) {}
                 if (kfXBox != null) try {
-                    kf.x = Float.parseFloat(kfXBox.getValue());
-                } catch (Exception ignored) {
-                }
+                    kf.x = Float.parseFloat(kfXBox.getValue()); changed = true;
+                } catch (Exception ignored) {}
                 if (kfYBox != null) try {
-                    kf.y = Float.parseFloat(kfYBox.getValue());
-                } catch (Exception ignored) {
-                }
+                    kf.y = Float.parseFloat(kfYBox.getValue()); changed = true;
+                } catch (Exception ignored) {}
                 if (kfZBox != null) try {
-                    kf.z = Float.parseFloat(kfZBox.getValue());
-                } catch (Exception ignored) {
+                    kf.z = Float.parseFloat(kfZBox.getValue()); changed = true;
+                } catch (Exception ignored) {}
+                if (changed) state.markDirty();
                 }
             }
         }
@@ -389,7 +399,7 @@ public class NpcAnimationEditorTab implements NpcEditorTab {
     @Override
     public boolean onMouseScrolled(double mx, double my, double delta,
                                    NpcEditorState state, int rx, int oy, int rw) {
-        int maxScroll = Math.max(0, NpcAnimationLibrary.size() - 9);
+        int maxScroll = Math.max(0, state.getDraft().animations.size() - 9);
         animScroll = Math.max(0, Math.min(maxScroll, animScroll - (int) Math.signum(delta)));
         return true;
     }
