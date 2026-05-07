@@ -3,15 +3,14 @@ package com.frametrip.dragonlegacyquesttoast.server.companion;
 import com.frametrip.dragonlegacyquesttoast.entity.NpcEntity;
 import com.frametrip.dragonlegacyquesttoast.entity.NpcEntityData;
 import com.frametrip.dragonlegacyquesttoast.profession.NpcProfessionType;
-import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.phys.Vec3;
 
 import java.util.EnumSet;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -23,9 +22,9 @@ public class CompanionGoal extends Goal {
 
     private final NpcEntity npc;
 
-    private Player owner         = null;
-    private int    cooldown      = 0;
-    private int    guardIdleTick = 0;
+    private Player owner = null;
+    private int cooldown = 0;
+    private int guardIdleTick = 0;
 
     public CompanionGoal(NpcEntity npc) {
         this.npc = npc;
@@ -50,7 +49,7 @@ public class CompanionGoal extends Goal {
         cooldown = 10;
 
         NpcEntityData data = npc.getNpcData();
-        CompanionData cd   = data.companionData;
+        CompanionData cd = data.companionData;
         if (cd == null) return;
 
         resolveOwner(cd);
@@ -66,8 +65,6 @@ public class CompanionGoal extends Goal {
         }
     }
 
-    // ── Mode behaviours ───────────────────────────────────────────────────────
-
     private void tickFollow(CompanionData cd) {
         if (owner == null) return;
         double dist = npc.distanceTo(owner);
@@ -78,8 +75,8 @@ public class CompanionGoal extends Goal {
             npc.getNavigation().stop();
             lookAt(owner);
         }
-        // Teleport to owner if very far (e.g. player teleported)
-        if (dist > 24 && npc.level() instanceof ServerLevel sl) {
+
+        if (dist > 24 && npc.level() instanceof ServerLevel) {
             npc.teleportTo(owner.getX(), owner.getY(), owner.getZ());
         }
     }
@@ -93,25 +90,25 @@ public class CompanionGoal extends Goal {
             tickWait();
             return;
         }
-        double dist = npc.distanceTo(cd.guardX, cd.guardY, cd.guardZ);
-        if (dist > 1.5) {
+
+        double distSqr = npc.distanceToSqr(cd.guardX, cd.guardY, cd.guardZ);
+        if (distSqr > 1.5 * 1.5) {
             npc.getNavigation().moveTo(cd.guardX, cd.guardY, cd.guardZ, speed(cd) * 0.8);
         } else {
             npc.getNavigation().stop();
-            // Idle patrol: small rotation
             guardIdleTick++;
             if (guardIdleTick % 40 == 0) {
                 npc.setYRot(npc.getYRot() + 90);
             }
         }
-        // Attack threats within guard radius
+
         if (cd.aggressiveness > 0.3f) {
             LivingEntity threat = findThreat(cd.guardX, cd.guardY, cd.guardZ, cd.guardRadius, cd);
             if (threat != null) attackTarget(threat);
         }
     }
 
-private void tickProtect(CompanionData cd) {
+    private void tickProtect(CompanionData cd) {
         if (owner == null) return;
         tickFollow(cd);
         LivingEntity attacker = findAttackerOf(owner);
@@ -119,7 +116,11 @@ private void tickProtect(CompanionData cd) {
     }
 
     private void tickCombat(CompanionData cd) {
-        if (owner == null) { tickWait(); return; }
+        if (owner == null) {
+            tickWait();
+            return;
+        }
+
         LivingEntity target = findNearestHostile(cd);
         if (target != null) {
             attackTarget(target);
@@ -130,7 +131,6 @@ private void tickProtect(CompanionData cd) {
     }
 
     private void tickStealth(CompanionData cd) {
-        // Follow silently, don't attack
         if (owner == null) return;
         double dist = npc.distanceTo(owner);
         if (dist > cd.followDistance * 1.5) {
@@ -146,12 +146,15 @@ private void tickProtect(CompanionData cd) {
         npc.setTarget(null);
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
-
     private void resolveOwner(CompanionData cd) {
-        if (cd.ownerUUID.isEmpty()) { owner = null; return; }
+        if (cd.ownerUUID.isEmpty()) {
+            owner = null;
+            return;
+        }
         if (owner != null && owner.isAlive()
-                && owner.getUUID().toString().equals(cd.ownerUUID)) return;
+                && owner.getUUID().toString().equals(cd.ownerUUID)) {
+            return;
+        }
         try {
             UUID ownerUuid = UUID.fromString(cd.ownerUUID);
             owner = npc.level().getPlayerByUUID(ownerUuid);
@@ -173,33 +176,71 @@ private void tickProtect(CompanionData cd) {
     }
 
     private LivingEntity findNearestHostile(CompanionData cd) {
-        return npc.level().getNearestEntity(
-                npc.level().getEntitiesOfClass(LivingEntity.class,
-                        npc.getBoundingBox().inflate(16)),
-                e -> e != npc && e.isAlive()
-                        && !(e instanceof Player)
-                        && npc.getSensing().hasLineOfSight(e),
-                npc, npc.getX(), npc.getY(), npc.getZ()
+        List<LivingEntity> nearby = npc.level().getEntitiesOfClass(
+                LivingEntity.class,
+                npc.getBoundingBox().inflate(16)
         );
+
+        LivingEntity best = null;
+        double bestDist = Double.MAX_VALUE;
+
+        for (LivingEntity e : nearby) {
+            if (e == npc || !e.isAlive() || e instanceof Player) continue;
+            if (!npc.getSensing().hasLineOfSight(e)) continue;
+
+            double d = npc.distanceToSqr(e);
+            if (d < bestDist) {
+                bestDist = d;
+                best = e;
+            }
+        }
+        return best;
     }
 
     private LivingEntity findAttackerOf(Player player) {
-        return npc.level().getNearestEntity(
-                npc.level().getEntitiesOfClass(LivingEntity.class,
-                        player.getBoundingBox().inflate(16)),
-                e -> e != npc && e.isAlive() && !(e instanceof Player)
-                        && e instanceof Mob mob && mob.getTarget() == player,
-                npc, npc.getX(), npc.getY(), npc.getZ()
+        List<LivingEntity> nearby = npc.level().getEntitiesOfClass(
+                LivingEntity.class,
+                player.getBoundingBox().inflate(16)
         );
+
+        LivingEntity best = null;
+        double bestDist = Double.MAX_VALUE;
+
+        for (LivingEntity e : nearby) {
+            if (e == npc || !e.isAlive() || e instanceof Player) continue;
+            if (e instanceof Mob mob && mob.getTarget() == player) {
+                double d = npc.distanceToSqr(e);
+                if (d < bestDist) {
+                    bestDist = d;
+                    best = e;
+                }
+            }
+        }
+        return best;
     }
 
     private LivingEntity findThreat(double gx, double gy, double gz, float radius, CompanionData cd) {
-        return npc.level().getNearestEntity(
-                npc.level().getEntitiesOfClass(LivingEntity.class,
-                        npc.getBoundingBox().inflate(radius)),
-                e -> e != npc && e.isAlive() && !(e instanceof Player)
-                        && e.distanceTo(npc) <= radius,
-                npc, gx, gy, gz
+        List<LivingEntity> nearby = npc.level().getEntitiesOfClass(
+                LivingEntity.class,
+                npc.getBoundingBox().inflate(radius)
         );
+
+        LivingEntity best = null;
+        double bestDist = Double.MAX_VALUE;
+        double maxDistSqr = radius * radius;
+
+        for (LivingEntity e : nearby) {
+            if (e == npc || !e.isAlive() || e instanceof Player) continue;
+
+            double dToGuard = e.distanceToSqr(gx, gy, gz);
+            if (dToGuard > maxDistSqr) continue;
+
+            double dToNpc = npc.distanceToSqr(e);
+            if (dToNpc < bestDist) {
+                bestDist = dToNpc;
+                best = e;
+            }
+        }
+        return best;
     }
 }
