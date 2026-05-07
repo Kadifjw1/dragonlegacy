@@ -6,12 +6,12 @@ import com.frametrip.dragonlegacyquesttoast.network.ModNetwork;
 import com.frametrip.dragonlegacyquesttoast.network.SetCompanionModePacket;
 import com.frametrip.dragonlegacyquesttoast.server.companion.CompanionData;
 import com.frametrip.dragonlegacyquesttoast.server.companion.CompanionMode;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.network.chat.Component;
+import org.joml.Quaternionf;
 
 import java.util.UUID;
 
@@ -20,9 +20,9 @@ import java.util.UUID;
  *
  * Layout (420 × 320):
  *   Left 100px  — 3-D NPC preview
- *   Right 300px — mode buttons (large) + sliders for followDist/aggression/guardRadius
+ *   Right 300px — mode buttons + sliders
  *
- * Sends SetCompanionModePacket immediately on each button press (no explicit Save).
+ * Sends SetCompanionModePacket immediately on each button press.
  */
 public class CompanionControlScreen extends Screen {
 
@@ -33,7 +33,6 @@ public class CompanionControlScreen extends Screen {
     private static final int C_PANEL  = 0xFF14142B;
     private static final int C_BORDER = 0xFF2A2A44;
     private static final int C_ACCENT = 0xFFFF8844;
-    private static final int C_SEL    = 0xFF334466;
     private static final int C_TEXT   = 0xFFCCCCDD;
     private static final int C_DIM    = 0xFF555566;
 
@@ -47,7 +46,7 @@ public class CompanionControlScreen extends Screen {
 
     public CompanionControlScreen(NpcEntity npc, UUID npcUuid) {
         super(Component.literal("Управление спутником"));
-        this.npc     = npc;
+        this.npc = npc;
         this.npcUuid = npcUuid;
         NpcEntityData data = npc.getNpcData();
         this.cd = data.companionData != null ? data.companionData.copy() : new CompanionData();
@@ -55,8 +54,8 @@ public class CompanionControlScreen extends Screen {
 
     @Override
     protected void init() {
-        guiLeft = (width  - W) / 2;
-        guiTop  = (height - H) / 2;
+        guiLeft = (width - W) / 2;
+        guiTop = (height - H) / 2;
         rebuild();
     }
 
@@ -66,15 +65,15 @@ public class CompanionControlScreen extends Screen {
         int rx = guiLeft + PREVIEW_W + 10;
         int ry = guiTop + 32;
 
-        // ── Mode buttons ─────────────────────────────────────────────────────
         CompanionMode[] modes = CompanionMode.values();
-        int btnW = 135, btnH = 26, gap = 4;
-        int cols = 2;
+        int btnW = 135, btnH = 26, gap = 4, cols = 2;
+
         for (int i = 0; i < modes.length; i++) {
             CompanionMode m = modes[i];
             int col = i % cols;
             int row = i / cols;
             boolean active = m == cd.mode;
+
             addRenderableWidget(Button.builder(
                     Component.literal((active ? "§e■ " : "§8□ ") + m.label()),
                     b -> {
@@ -84,34 +83,36 @@ public class CompanionControlScreen extends Screen {
                     }
             ).bounds(rx + col * (btnW + gap), ry + row * (btnH + gap), btnW, btnH).build());
         }
+
         ry += ((modes.length + 1) / cols) * (btnH + gap) + 10;
 
-        // ── Sliders (◀ value ▶) ───────────────────────────────────────────────
         buildSlider(rx, ry, "Дистанция следования", cd.followDistance, 1f, 12f, v -> {
-            cd.followDistance = v; sendPacket();
+            cd.followDistance = v;
+            sendPacket();
         });
         ry += 24;
 
         buildSlider(rx, ry, "Агрессивность", cd.aggressiveness, 0f, 1f, v -> {
-            cd.aggressiveness = v; sendPacket();
+            cd.aggressiveness = v;
+            sendPacket();
         });
         ry += 24;
 
         if (cd.mode == CompanionMode.GUARD) {
             buildSlider(rx, ry, "Радиус охраны", cd.guardRadius, 2f, 20f, v -> {
-                cd.guardRadius = v; sendPacket();
+                cd.guardRadius = v;
+                sendPacket();
             });
-            ry += 24;
         }
 
-        // Close
         addRenderableWidget(Button.builder(Component.literal("Закрыть"), b -> onClose())
                 .bounds(guiLeft + W - 74, guiTop + H - 22, 70, 16).build());
     }
 
     private void buildSlider(int x, int y, String label, float current, float min, float max,
-                              java.util.function.Consumer<Float> onChanged) {
+                             java.util.function.Consumer<Float> onChanged) {
         float step = (max - min) / SLIDER_STEPS;
+
         addRenderableWidget(Button.builder(Component.literal("◀"), b -> {
             onChanged.accept(Math.max(min, round1(current - step)));
             rebuild();
@@ -127,38 +128,38 @@ public class CompanionControlScreen extends Screen {
         return Math.round(v * 10f) / 10f;
     }
 
-    // ── Render ────────────────────────────────────────────────────────────────
-
     @Override
     public void render(GuiGraphics g, int mx, int my, float pt) {
-        // Background
         g.fill(guiLeft, guiTop, guiLeft + W, guiTop + H, C_BG);
         border(g, guiLeft, guiTop, W, H);
 
-        // Preview panel
         g.fill(guiLeft, guiTop, guiLeft + PREVIEW_W, guiTop + H, C_PANEL);
         border(g, guiLeft, guiTop, PREVIEW_W, H);
 
-        // 3-D NPC preview
         int previewCX = guiLeft + PREVIEW_W / 2;
         int previewCY = guiTop + H / 2 + 20;
-        InventoryScreen.renderEntityInInventory(g, previewCX, previewCY, 28, previewCX - mx, previewCY - 80 - my, npc);
 
-        // Header
+        float yaw = (float) Math.atan((previewCX - mx) / 40.0F);
+        float pitch = (float) Math.atan((previewCY - 80 - my) / 40.0F);
+
+        Quaternionf bodyRot = new Quaternionf().rotateZ((float) Math.PI);
+        Quaternionf headRot = new Quaternionf().rotateX(pitch * 0.35F);
+        bodyRot.mul(headRot);
+
+        InventoryScreen.renderEntityInInventory(g, previewCX, previewCY, 28, headRot, bodyRot, npc);
+
         g.drawString(font, "§l" + npc.getNpcData().displayName, guiLeft + PREVIEW_W + 10, guiTop + 6, C_ACCENT, false);
         g.drawString(font, "§7Режим: §e" + cd.mode.label(), guiLeft + PREVIEW_W + 10, guiTop + 18, C_TEXT, false);
 
-        // Slider labels + values
         int rx = guiLeft + PREVIEW_W + 10;
         int sliderY0 = modeButtonsBottom();
 
-        renderSliderRow(g, rx, sliderY0,      "Дистанция следования", cd.followDistance, 1f, 12f);
-        renderSliderRow(g, rx, sliderY0 + 24, "Агрессивность",        cd.aggressiveness, 0f, 1f);
+        renderSliderRow(g, rx, sliderY0, "Дистанция следования", cd.followDistance, 1f, 12f);
+        renderSliderRow(g, rx, sliderY0 + 24, "Агрессивность", cd.aggressiveness, 0f, 1f);
         if (cd.mode == CompanionMode.GUARD) {
             renderSliderRow(g, rx, sliderY0 + 48, "Радиус охраны", cd.guardRadius, 2f, 20f);
         }
 
-        // Mode description
         g.drawString(font, "§8" + cd.mode.description(),
                 guiLeft + PREVIEW_W + 10, guiTop + H - 32, C_DIM, false);
 
@@ -168,11 +169,11 @@ public class CompanionControlScreen extends Screen {
     private void renderSliderRow(GuiGraphics g, int x, int y, String label, float val, float min, float max) {
         g.drawString(font, "§7" + label + ":", x, y + 2, C_TEXT, false);
         g.drawString(font, "§f" + round1(val), x + 148, y + 2, C_ACCENT, false);
-        // Bar
+
         int barX = x, barY = y + 13, barW = 120, barH = 3;
         g.fill(barX, barY, barX + barW, barY + barH, C_PANEL);
         float pct = (val - min) / (max - min);
-        g.fill(barX, barY, barX + (int)(barW * pct), barY + barH, C_ACCENT);
+        g.fill(barX, barY, barX + (int) (barW * pct), barY + barH, C_ACCENT);
     }
 
     private int modeButtonsBottom() {
@@ -186,8 +187,6 @@ public class CompanionControlScreen extends Screen {
         g.fill(x,         y,         x + 1, y + h,     C_BORDER);
         g.fill(x + w - 1, y,         x + w, y + h,     C_BORDER);
     }
-
-    // ── Networking ────────────────────────────────────────────────────────────
 
     private void sendPacket() {
         ModNetwork.CHANNEL.sendToServer(new SetCompanionModePacket(
