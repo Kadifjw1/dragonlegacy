@@ -1,33 +1,20 @@
 package com.frametrip.dragonlegacyquesttoast.server.event;
 
 public enum EventActionType {
-    SAY_PHRASE,
-    OPEN_DIALOGUE,
-    START_SCENE,
-    OPEN_GUI,
-    GIVE_ITEM,
-    GIVE_QUEST,
-    COMPLETE_QUEST,
-    SET_NPC_STATE,
-    PLAY_ANIMATION,
-    TELEPORT,
-    START_PATROL,
-    START_BUILD_SCENE;
+    SAY_PHRASE      ("Сказать фразу"),
+    OPEN_DIALOGUE   ("Открыть диалог"),
+    START_SCENE     ("Начать сцену"),
+    GIVE_ITEM       ("Дать предмет"),
+    GIVE_QUEST      ("Дать квест"),
+    COMPLETE_QUEST  ("Завершить квест"),
+    SET_NPC_STATE   ("Установить состояние"),
+    PLAY_ANIMATION  ("Воспроизвести анимацию"),
+    OPEN_GUI        ("Открыть GUI"),
+    TELEPORT        ("Телепортировать");
 
-    public String label() {
-        return switch (this) {
-            case SAY_PHRASE       -> "Сказать фразу";
-            case OPEN_DIALOGUE    -> "Открыть диалог";
-            case START_SCENE      -> "Запустить сцену";
-            case OPEN_GUI         -> "Открыть интерфейс";
-            case GIVE_ITEM        -> "Выдать предмет";
-            case GIVE_QUEST       -> "Выдать квест";
-            case COMPLETE_QUEST   -> "Завершить квест";
-            case SET_NPC_STATE    -> "Сменить состояние NPC";
-            case PLAY_ANIMATION   -> "Проиграть анимацию";
-            case TELEPORT         -> "Телепорт";
-            case START_PATROL     -> "Начать патруль";
-            case START_BUILD_SCENE -> "Строительная сцена";
-        };
-    }
+    private final String label;
+
+    EventActionType(String label) { this.label = label; }
+
+    public String label() { return label; }
 }
