@@ -4,6 +4,7 @@ import com.frametrip.dragonlegacyquesttoast.client.ClientNpcDialogueManager;
 import com.frametrip.dragonlegacyquesttoast.client.ClientPlayerAbilityState;
 import com.frametrip.dragonlegacyquesttoast.client.ClientQuestProgressState;
 import com.frametrip.dragonlegacyquesttoast.network.ModNetwork;
+import com.frametrip.dragonlegacyquesttoast.network.NpcAnimStatePacket;
 import com.frametrip.dragonlegacyquesttoast.network.NpcBuildingActionPacket;
 import com.frametrip.dragonlegacyquesttoast.network.RequestOpenNpcShopPacket;
 import com.frametrip.dragonlegacyquesttoast.network.QuestStateActionPacket;
@@ -259,6 +260,9 @@ public class NpcSceneController {
                 case NpcSceneNode.ACTION_OPEN_SCENE           -> "⏵ Переход в сцену";
                 case NpcSceneNode.ACTION_CLOSE_SCENE          -> "⏵ Завершение сцены";
                 case NpcSceneNode.ACTION_START_BUILDING       -> "⏵ Начало строительства";
+                case NpcSceneNode.ACTION_PLAY_ANIM_STATE      -> "⏵ Анимация: " + actionParam;
+                case NpcSceneNode.ACTION_STOP_ANIMATION       -> "⏵ Стоп анимация";
+                case NpcSceneNode.ACTION_SET_IDLE_ANIMATION   -> "⏵ Анимация стойки: " + actionParam;
                 default                                       -> "⏵ " + actionType;
             };
             String extra = (actionParam == null || actionParam.isBlank()) ? "" : ": " + actionParam;
@@ -300,6 +304,22 @@ public class NpcSceneController {
                     ModNetwork.CHANNEL.sendToServer(
                             new NpcBuildingActionPacket(currentNpcUuid, "start", actionParam, 0, 0, 0));
                     ClientNpcDialogueManager.show("", "Строительство начато: " + actionParam);
+                }
+            }
+            case NpcSceneNode.ACTION_PLAY_ANIM_STATE -> {
+                if (currentNpcUuid != null && actionParam != null && !actionParam.isBlank()) {
+                    ModNetwork.CHANNEL.sendToServer(new NpcAnimStatePacket(currentNpcUuid, actionParam));
+                }
+            }
+            case NpcSceneNode.ACTION_STOP_ANIMATION -> {
+                if (currentNpcUuid != null) {
+                    ModNetwork.CHANNEL.sendToServer(new NpcAnimStatePacket(currentNpcUuid, ""));
+                }
+            }
+            case NpcSceneNode.ACTION_SET_IDLE_ANIMATION -> {
+                // same as play_anim_state but treated as a persistent override
+                if (currentNpcUuid != null && actionParam != null && !actionParam.isBlank()) {
+                    ModNetwork.CHANNEL.sendToServer(new NpcAnimStatePacket(currentNpcUuid, actionParam));
                 }
             }
             // OPEN_SCENE / CLOSE_SCENE are handled in processAction() flow.

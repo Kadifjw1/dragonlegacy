@@ -64,5 +64,6 @@ public class ModNetwork {
         CHANNEL.registerMessage(packetId++, SetCompanionModePacket.class, SetCompanionModePacket::encode, SetCompanionModePacket::decode, SetCompanionModePacket::handle);
         CHANNEL.registerMessage(packetId++, OpenCompanionScreenPacket.class, OpenCompanionScreenPacket::encode, OpenCompanionScreenPacket::decode, OpenCompanionScreenPacket::handle);
         CHANNEL.registerMessage(packetId++, SyncDataPresetsPacket.class, SyncDataPresetsPacket::encode, SyncDataPresetsPacket::decode, SyncDataPresetsPacket::handle);
+        CHANNEL.registerMessage(packetId++, NpcAnimStatePacket.class,    NpcAnimStatePacket::encode,    NpcAnimStatePacket::decode,    NpcAnimStatePacket::handle);
     }
 }
