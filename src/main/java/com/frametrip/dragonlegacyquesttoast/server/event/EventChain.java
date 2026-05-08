@@ -1,15 +1,29 @@
 package com.frametrip.dragonlegacyquesttoast.server.event;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 public class EventChain {
-    public String id = UUID.randomUUID().toString().substring(0, 8);
-    public String name = "Событие";
-    public boolean enabled = true;
+    public String             name          = "";
+    public boolean            enabled       = true;
+    public EventTriggerType   trigger       = EventTriggerType.PLAYER_INTERACT;
+    public String             conditionMode = "AND";
+    public boolean            executeAll    = false;
+    public List<EventCondition> conditions  = new ArrayList<>();
+    public List<EventAction>    actions     = new ArrayList<>();
+    public Map<String, String>  triggerParams = new HashMap<>();
+
+    public String triggerParam(String key) {
+        return triggerParams.getOrDefault(key, "");
+    }
+
+    public void triggerParam(String key, String value) {
+        triggerParams.put(key, value);
+    }
 
     public EventTriggerType trigger = EventTriggerType.NPC_CLICK;
     /** Type-specific trigger params (e.g. "phrase", "radius", "interval"). */
@@ -33,15 +47,14 @@ public class EventChain {
 
     public EventChain copy() {
         EventChain c = new EventChain();
-        c.id            = UUID.randomUUID().toString().substring(0, 8);
-        c.name          = this.name + " (копия)";
+        c.name          = this.name;
         c.enabled       = this.enabled;
         c.trigger       = this.trigger;
-        c.triggerParams = new LinkedHashMap<>(this.triggerParams);
         c.conditionMode = this.conditionMode;
         c.executeAll    = this.executeAll;
-        for (EventCondition cond : conditions) c.conditions.add(cond.copy());
-        for (EventAction act  : actions)     c.actions.add(act.copy());
+        c.triggerParams = new HashMap<>(this.triggerParams);
+        for (EventCondition cond : this.conditions) c.conditions.add(cond.copy());
+        for (EventAction    act  : this.actions)    c.actions.add(act.copy());
         return c;
     }
 }
