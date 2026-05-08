@@ -239,23 +239,53 @@ public class NpcEntity extends PathfinderMob implements GeoEntity {
 
         NpcEntityData data = getNpcData();
         if (state.isMoving()) {
-            NpcAnimationData walkAnim = findAnimationForState(data,
+            // 1. custom WALK binding  2. profession walk binding  3. default name
+            NpcAnimationData anim = findAnimationForState(data,
                     com.frametrip.dragonlegacyquesttoast.server.animation.AnimationState.WALK);
-            String name = walkAnim != null
-                    ? "animation.npc." + walkAnim.name.toLowerCase().replace(' ', '_')
+            if (anim == null) anim = findAnimationForState(data, professionWalkState(data));
+            String name = anim != null
+                    ? "animation.npc." + anim.name.toLowerCase().replace(' ', '_')
                     : "animation.npc.walk";
             state.getController().setAnimation(
-                    RawAnimation.begin().then(name, findAnimLooping(walkAnim)));
+                    RawAnimation.begin().then(name, findAnimLooping(anim)));
         } else {
-            NpcAnimationData idleAnim = findAnimationForState(data,
+            // 1. custom IDLE binding  2. profession idle binding  3. default name
+            NpcAnimationData anim = findAnimationForState(data,
                     com.frametrip.dragonlegacyquesttoast.server.animation.AnimationState.IDLE);
-            String name = idleAnim != null
-                    ? "animation.npc." + idleAnim.name.toLowerCase().replace(' ', '_')
+            if (anim == null) anim = findAnimationForState(data, professionIdleState(data));
+            String name = anim != null
+                    ? "animation.npc." + anim.name.toLowerCase().replace(' ', '_')
                     : "animation.npc.idle";
             state.getController().setAnimation(
-                    RawAnimation.begin().then(name, findAnimLooping(idleAnim)));
+                    RawAnimation.begin().then(name, findAnimLooping(anim)));
         }
         return PlayState.CONTINUE;
+    }
+
+    /** Maps profession to a preferred idle AnimationState for the fallback chain. */
+    private com.frametrip.dragonlegacyquesttoast.server.animation.AnimationState professionIdleState(
+            NpcEntityData data) {
+        if (data.professionData == null) return com.frametrip.dragonlegacyquesttoast.server.animation.AnimationState.IDLE;
+        return switch (data.professionData.type) {
+            case GUARD    -> com.frametrip.dragonlegacyquesttoast.server.animation.AnimationState.GUARD;
+            case TRADER   -> com.frametrip.dragonlegacyquesttoast.server.animation.AnimationState.WORK;
+            case FARMER   -> com.frametrip.dragonlegacyquesttoast.server.animation.AnimationState.WORK;
+            case MINER    -> com.frametrip.dragonlegacyquesttoast.server.animation.AnimationState.WORK;
+            case BUILDER  -> com.frametrip.dragonlegacyquesttoast.server.animation.AnimationState.WORK;
+            default       -> com.frametrip.dragonlegacyquesttoast.server.animation.AnimationState.IDLE;
+        };
+    }
+
+    /** Maps profession to a preferred walk AnimationState for the fallback chain. */
+    private com.frametrip.dragonlegacyquesttoast.server.animation.AnimationState professionWalkState(
+            NpcEntityData data) {
+        if (data.professionData == null) return com.frametrip.dragonlegacyquesttoast.server.animation.AnimationState.WALK;
+        return switch (data.professionData.type) {
+            case COMPANION, FOLLOWER ->
+                    com.frametrip.dragonlegacyquesttoast.server.animation.AnimationState.FOLLOW;
+            default ->
+                    com.frametrip.dragonlegacyquesttoast.server.animation.AnimationState.WALK;
+        };
     }
 
     private NpcAnimationData findAnimationForState(
