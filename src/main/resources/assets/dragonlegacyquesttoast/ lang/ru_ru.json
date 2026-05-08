@@ -5,6 +5,8 @@
   "item.dragonlegacyquesttoast.event_book": "Книга событий",
   "item.dragonlegacyquesttoast.gui_configurator": "Конфигуратор интерфейса",
 
+  "entity.dragonlegacyquesttoast.npc": "NPC",
+
   "npc.profession.dragonlegacyquesttoast.none":      "Нет профессии",
   "npc.profession.dragonlegacyquesttoast.trader":    "Купля-продажа",
   "npc.profession.dragonlegacyquesttoast.builder":   "Строитель",
