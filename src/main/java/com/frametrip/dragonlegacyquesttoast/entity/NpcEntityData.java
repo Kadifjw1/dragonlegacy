@@ -62,6 +62,11 @@ public class NpcEntityData {
     // — Model Profile —
     public NpcModelConfig modelConfig = new NpcModelConfig();
 
+    // — GeckoLib resource overrides (empty = use NpcGeoModel defaults) —
+    public String geckoModel     = ""; // e.g. "dragonlegacyquesttoast:geo/my_npc.geo.json"
+    public String geckoAnimation = ""; // e.g. "dragonlegacyquesttoast:animations/my_npc.animation.json"
+    public String geckoTexture   = ""; // e.g. "dragonlegacyquesttoast:textures/entity/my_npc.png"
+ 
     // — Stealth / Guard —
     public StealthConfig stealthConfig = new StealthConfig();
  
@@ -124,6 +129,9 @@ public class NpcEntityData {
         c.chatConfig        = this.chatConfig     != null ? this.chatConfig.copy()     : new NpcChatConfig();
         c.modelConfig       = this.modelConfig    != null ? this.modelConfig.copy()    : new NpcModelConfig();
         c.stealthConfig     = this.stealthConfig  != null ? this.stealthConfig.copy()  : new StealthConfig();
+        c.geckoModel        = this.geckoModel;
+        c.geckoAnimation    = this.geckoAnimation;
+        c.geckoTexture      = this.geckoTexture;
 
         return c;
     }
