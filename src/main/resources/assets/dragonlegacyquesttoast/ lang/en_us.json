@@ -5,6 +5,8 @@
   "item.dragonlegacyquesttoast.event_book": "Event Book",
   "item.dragonlegacyquesttoast.gui_configurator": "GUI Configurator",
 
+  "entity.dragonlegacyquesttoast.npc": "NPC",
+
   "npc.profession.dragonlegacyquesttoast.none":      "No Profession",
   "npc.profession.dragonlegacyquesttoast.trader":    "Trader",
   "npc.profession.dragonlegacyquesttoast.builder":   "Builder",
