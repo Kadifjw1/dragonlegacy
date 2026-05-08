@@ -123,6 +123,14 @@ public class NpcCreatorScreen extends Screen {
             ).bounds(ox + 4, oy + TOP_H + 8 + i * 40, SIDEBAR_W - 8, 34).build());
         }
 
+        // Preview: reset-view button (bottom-right of preview panel)
+        int px = ox + SIDEBAR_W + CONTENT_W;
+        addRenderableWidget(Button.builder(Component.literal("↺ Вид"), b -> {
+            previewYaw   = -30f;
+            previewPitch =   5f;
+            previewZoom  =   1.0f;
+        }).bounds(px + PREVIEW_W - 60, oy + H - BOT_H - 2, 56, 16).build());
+
         // Active tab widgets
         Consumer<AbstractWidget> addWidget = this::addRenderableWidget;
         TAB_INSTANCES[activeTab].init(addWidget, this::rebuildWidgets, editorState, rx, oy + TOP_H + 18, rw);
@@ -225,10 +233,10 @@ public class NpcCreatorScreen extends Screen {
             int cx = panelX + PREVIEW_W / 2;
             int cy = oy + TOP_H + (int)((H - TOP_H) * 0.55);
             int scale = (int)(80 * previewZoom);
-            Quaternionf camera = new Quaternionf().rotateZ((float) Math.PI);
+            Quaternionf camera  = new Quaternionf().rotateZ((float) Math.PI);
             Quaternionf entity2 = new Quaternionf()
-                    .rotateX(previewPitch * ((float) Math.PI / 180f))
-                    .rotateY(previewYaw  * ((float) Math.PI / 180f));
+                    .rotateY(previewYaw   * ((float) Math.PI / 180f))
+                    .rotateX(previewPitch * ((float) Math.PI / 180f));
             InventoryScreen.renderEntityInInventory(g, cx, cy, scale, camera, entity2, entity);
         } finally {
             entity.setNpcData(backup);
@@ -279,8 +287,8 @@ public class NpcCreatorScreen extends Screen {
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dx, double dy) {
         if (button == 0 && isMouseOverPreview(mouseX, mouseY)) {
-            previewYaw   = Mth.clamp(previewYaw   + (float)(dx * 0.5f), -89f, 89f);
-            previewPitch = Mth.clamp(previewPitch + (float)(dy * 0.3f), -89f, 89f);
+            previewYaw   += (float)(dx * 0.5f);
+            previewPitch  = Mth.clamp(previewPitch + (float)(dy * 0.3f), -89f, 89f);
             return true;
         }
         return super.mouseDragged(mouseX, mouseY, button, dx, dy);
