@@ -8,9 +8,13 @@
   "entity.dragonlegacyquesttoast.npc": "NPC",
 
   "npc.profession.dragonlegacyquesttoast.none":      "Нет профессии",
-  "npc.profession.dragonlegacyquesttoast.trader":    "Купля-продажа",
+  "npc.profession.dragonlegacyquesttoast.trader":    "Торговец",
   "npc.profession.dragonlegacyquesttoast.builder":   "Строитель",
   "npc.profession.dragonlegacyquesttoast.companion": "Спутник",
+  "npc.profession.dragonlegacyquesttoast.miner":     "Шахтёр",
+  "npc.profession.dragonlegacyquesttoast.guard":     "Страж",
+  "npc.profession.dragonlegacyquesttoast.farmer":    "Фермер",
+  "npc.profession.dragonlegacyquesttoast.follower":  "Спутник (Follower)",
 
   "gui.dragonlegacyquesttoast.save":      "Сохранить",
   "gui.dragonlegacyquesttoast.delete":    "Удалить",

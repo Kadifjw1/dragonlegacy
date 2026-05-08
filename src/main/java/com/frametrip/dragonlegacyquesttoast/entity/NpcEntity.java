@@ -35,6 +35,8 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.network.PacketDistributor;
 
+import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.level.ServerLevelAccessor;
 import java.util.Objects;
 
 public class NpcEntity extends PathfinderMob {
@@ -160,6 +162,30 @@ public class NpcEntity extends PathfinderMob {
             return InteractionResult.CONSUME;
         }
         return InteractionResult.PASS;
+    }
+
+    @Override
+    public net.minecraft.world.entity.SpawnGroupData finalizeSpawn(
+            ServerLevelAccessor level,
+            net.minecraft.world.DifficultyInstance difficulty,
+            MobSpawnType reason,
+            net.minecraft.world.entity.SpawnGroupData spawnData,
+            net.minecraft.nbt.CompoundTag dataTag) {
+        net.minecraft.world.entity.SpawnGroupData result = super.finalizeSpawn(level, difficulty, reason, spawnData, dataTag);
+        this.setXRot(0f);
+        this.setYRot(0f);
+        this.yHeadRot = 0f;
+        this.yBodyRot = 0f;
+        return result;
+    }
+
+    @Override
+    public Component getDisplayName() {
+        String name = getNpcData().displayName;
+        if (name != null && !name.isEmpty()) {
+            return Component.literal(name);
+        }
+        return super.getDisplayName();
     }
 
     @Override

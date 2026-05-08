@@ -11,6 +11,10 @@
   "npc.profession.dragonlegacyquesttoast.trader":    "Trader",
   "npc.profession.dragonlegacyquesttoast.builder":   "Builder",
   "npc.profession.dragonlegacyquesttoast.companion": "Companion",
+  "npc.profession.dragonlegacyquesttoast.miner":     "Miner",
+  "npc.profession.dragonlegacyquesttoast.guard":     "Guard",
+  "npc.profession.dragonlegacyquesttoast.farmer":    "Farmer",
+  "npc.profession.dragonlegacyquesttoast.follower":  "Follower",
 
   "gui.dragonlegacyquesttoast.save":      "Save",
   "gui.dragonlegacyquesttoast.delete":    "Delete",
