@@ -2,6 +2,7 @@ package com.frametrip.dragonlegacyquesttoast.client.npceditor;
 
 import com.frametrip.dragonlegacyquesttoast.client.ClientDialogueState;
 import com.frametrip.dragonlegacyquesttoast.client.ClientQuestState;
+import com.frametrip.dragonlegacyquesttoast.client.EventChainScreen;
 import com.frametrip.dragonlegacyquesttoast.client.NpcCreatorScreen;
 import com.frametrip.dragonlegacyquesttoast.client.dialogue.ClientNpcSceneState;
 import com.frametrip.dragonlegacyquesttoast.client.dialogue.NpcSceneController;
@@ -145,6 +146,11 @@ public class NpcInteractionTab implements NpcEditorTab {
             state.markDirty();
             rebuild.run();
         }).bounds(rx + 40, dlgY, 18, 14).build());
+
+        // ── Event Chain editor entry ─────────────────────────────────────────
+        add.accept(Button.builder(Component.literal("⚡ Редактор событий"), b -> {
+            Minecraft.getInstance().setScreen(new EventChainScreen(state.getEntity()));
+        }).bounds(rx, oy + 96, rw, 16).build());
 
         // ── Quest search + list ──────────────────────────────────────────────
         searchField = new EditBox(mc.font, rx, oy + 132, rw, 14, Component.literal("Поиск квестов"));
