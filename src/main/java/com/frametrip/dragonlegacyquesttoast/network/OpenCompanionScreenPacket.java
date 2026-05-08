@@ -5,52 +5,51 @@ import com.frametrip.dragonlegacyquesttoast.entity.NpcEntityData;
 import com.google.gson.Gson;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.world.entity.Entity;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.fml.DistExecutor;
+import net.minecraft.world.phys.AABB;
 import net.minecraftforge.network.NetworkEvent;
 
+import java.util.List;
 import java.util.UUID;
 import java.util.function.Supplier;
 
-/** Server → client: open the companion control screen. */
+/** Server → Client: open companion control screen for the given NPC. */
 public class OpenCompanionScreenPacket {
 
     private static final Gson GSON = new Gson();
 
-    private final UUID npcUuid;
+    private final UUID   npcUuid;
+    private final String npcDataJson;
 
-    public OpenCompanionScreenPacket(UUID npcUuid, NpcEntityData ignored) {
-        this.npcUuid = npcUuid;
+    public OpenCompanionScreenPacket(UUID npcUuid, NpcEntityData data) {
+        this.npcUuid     = npcUuid;
+        this.npcDataJson = GSON.toJson(data);
+    }
+
+    private OpenCompanionScreenPacket(UUID uuid, String json) {
+        this.npcUuid     = uuid;
+        this.npcDataJson = json;
     }
 
     public static void encode(OpenCompanionScreenPacket msg, FriendlyByteBuf buf) {
         buf.writeUUID(msg.npcUuid);
+        buf.writeUtf(msg.npcDataJson, 131072);
     }
 
     public static OpenCompanionScreenPacket decode(FriendlyByteBuf buf) {
-        return new OpenCompanionScreenPacket(buf.readUUID(), null);
+        return new OpenCompanionScreenPacket(buf.readUUID(), buf.readUtf(131072));
     }
 
     public static void handle(OpenCompanionScreenPacket msg, Supplier<NetworkEvent.Context> ctx) {
-        ctx.get().enqueueWork(() ->
-            DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> openScreen(msg.npcUuid))
-        );
+        ctx.get().enqueueWork(() -> {
+            Minecraft mc = Minecraft.getInstance();
+            if (mc.player == null || mc.level == null) return;
+            AABB searchBox = mc.player.getBoundingBox().inflate(128);
+            List<NpcEntity> found = mc.level.getEntitiesOfClass(
+                    NpcEntity.class, searchBox, e -> e.getUUID().equals(msg.npcUuid));
+            if (found.isEmpty()) return;
+            mc.setScreen(new com.frametrip.dragonlegacyquesttoast.client.CompanionControlScreen(
+                    found.get(0), msg.npcUuid));
+        });
         ctx.get().setPacketHandled(true);
     }
-
-    @OnlyIn(Dist.CLIENT)
-    private static void openScreen(UUID npcUuid) {
-        Minecraft mc = Minecraft.getInstance();
-        if (mc.level == null || mc.player == null) return;
-        for (Entity e : mc.level.entitiesForRendering()) {
-            if (e instanceof NpcEntity npc && npc.getUUID().equals(npcUuid)) {
-                mc.setScreen(new com.frametrip.dragonlegacyquesttoast.client.CompanionControlScreen(
-                        npc, npcUuid));
-                return;
-            }
-        }
-    }
 }
-
