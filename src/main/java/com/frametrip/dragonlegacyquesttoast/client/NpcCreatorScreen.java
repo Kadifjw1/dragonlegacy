@@ -13,7 +13,9 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Pose;
+import org.joml.Quaternionf;
 
 import java.util.function.Consumer;
 
@@ -71,6 +73,11 @@ public class NpcCreatorScreen extends Screen {
     private final NpcEditorState editorState;
     private int activeTab   = 0;
     private int dirtyTicks  = 0;
+
+    // Preview rotation / zoom
+    private float previewYaw   = -30f;
+    private float previewPitch =   5f;
+    private float previewZoom  =   1.0f;
 
     public NpcCreatorScreen(NpcEntity entity) {
         super(Component.literal("Настройка NPC"));
@@ -217,8 +224,12 @@ public class NpcCreatorScreen extends Screen {
             // Center in the top 60% of the preview panel, large scale
             int cx = panelX + PREVIEW_W / 2;
             int cy = oy + TOP_H + (int)((H - TOP_H) * 0.55);
-            int scale = 80;
-            InventoryScreen.renderEntityInInventoryFollowsMouse(g, cx, cy, scale, mx, my, entity);
+            int scale = (int)(80 * previewZoom);
+            Quaternionf camera = new Quaternionf().rotateZ((float) Math.PI);
+            Quaternionf entity2 = new Quaternionf()
+                    .rotateX(previewPitch * ((float) Math.PI / 180f))
+                    .rotateY(previewYaw  * ((float) Math.PI / 180f));
+            InventoryScreen.renderEntityInInventory(g, cx, cy, scale, camera, entity2, entity);
         } finally {
             entity.setNpcData(backup);
             entity.setCustomName(Component.literal(backup.displayName));
@@ -266,7 +277,21 @@ public class NpcCreatorScreen extends Screen {
     // ── Input handlers ────────────────────────────────────────────────────────
 
     @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dx, double dy) {
+        if (button == 0 && isMouseOverPreview(mouseX, mouseY)) {
+            previewYaw   = Mth.clamp(previewYaw   + (float)(dx * 0.5f), -89f, 89f);
+            previewPitch = Mth.clamp(previewPitch + (float)(dy * 0.3f), -89f, 89f);
+            return true;
+        }
+        return super.mouseDragged(mouseX, mouseY, button, dx, dy);
+    }
+    
+    @Override
     public boolean mouseScrolled(double mx, double my, double delta) {
+        if (isMouseOverPreview(mx, my)) {
+            previewZoom = Mth.clamp(previewZoom + (float)(delta * 0.1f), 0.5f, 3.0f);
+            return true;
+        }
         int rx = ox() + SIDEBAR_W + 8;
         int rw = CONTENT_W - 16;
         int tabOy = oy() + TOP_H + 18;
@@ -277,6 +302,13 @@ public class NpcCreatorScreen extends Screen {
         return super.mouseScrolled(mx, my, delta);
     }
 
+    private boolean isMouseOverPreview(double mouseX, double mouseY) {
+        int px = ox() + SIDEBAR_W + CONTENT_W;
+        int oy = oy();
+        return mouseX >= px && mouseX <= ox() + W
+                && mouseY >= oy + TOP_H && mouseY <= oy + H;
+    }
+    
     @Override
     public boolean mouseClicked(double mx, double my, int btn) {
         int rx = ox() + SIDEBAR_W + 8;
