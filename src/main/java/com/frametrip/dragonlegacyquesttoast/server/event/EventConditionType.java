@@ -1,23 +1,17 @@
 package com.frametrip.dragonlegacyquesttoast.server.event;
 
 public enum EventConditionType {
-    ITEM_IN_INVENTORY,
-    QUEST_STATUS,
-    TIME_OF_DAY,
-    IN_ZONE,
-    NPC_PROFESSION,
-    NPC_STATE,
-    REPUTATION;
+    ITEM_IN_INVENTORY ("Предмет в инвентаре"),
+    QUEST_STATUS      ("Статус квеста"),
+    TIME_OF_DAY       ("Время суток"),
+    IN_ZONE           ("В зоне"),
+    NPC_PROFESSION    ("Профессия NPC"),
+    NPC_STATE         ("Состояние NPC"),
+    REPUTATION        ("Репутация");
 
-    public String label() {
-        return switch (this) {
-            case ITEM_IN_INVENTORY -> "Предмет в инвентаре";
-            case QUEST_STATUS      -> "Статус квеста";
-            case TIME_OF_DAY       -> "Время суток";
-            case IN_ZONE           -> "В зоне";
-            case NPC_PROFESSION    -> "Профессия NPC";
-            case NPC_STATE         -> "Состояние NPC";
-            case REPUTATION        -> "Репутация";
-        };
-    }
+    private final String label;
+
+    EventConditionType(String label) { this.label = label; }
+
+    public String label() { return label; }
 }
