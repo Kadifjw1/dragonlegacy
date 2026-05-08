@@ -1,7 +1,7 @@
 package com.frametrip.dragonlegacyquesttoast.client;
  
 import com.frametrip.dragonlegacyquesttoast.DragonLegacyQuestToastMod;
-import com.frametrip.dragonlegacyquesttoast.client.renderer.NpcEntityRenderer;
+import com.frametrip.dragonlegacyquesttoast.client.renderer.NpcGeoRenderer;
 import com.frametrip.dragonlegacyquesttoast.registry.ModEntities;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.EntityRenderersEvent;
@@ -20,6 +20,6 @@ public class ClientSetup {
  
     @SubscribeEvent
     public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
-        event.registerEntityRenderer(ModEntities.NPC.get(), NpcEntityRenderer::new);
+        event.registerEntityRenderer(ModEntities.NPC.get(), NpcGeoRenderer::new);
     }
 }

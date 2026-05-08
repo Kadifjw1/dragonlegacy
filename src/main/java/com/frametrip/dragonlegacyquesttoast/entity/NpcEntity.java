@@ -37,9 +37,22 @@ import net.minecraftforge.network.PacketDistributor;
 
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.level.ServerLevelAccessor;
+import software.bernie.geckolib.animatable.GeoAnimatable;
+import software.bernie.geckolib.animatable.GeoEntity;
+import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
+import software.bernie.geckolib.animation.AnimatableManager;
+import software.bernie.geckolib.animation.AnimationController;
+import software.bernie.geckolib.animation.AnimationState;
+import software.bernie.geckolib.animation.PlayState;
+import software.bernie.geckolib.animation.RawAnimation;
+import software.bernie.geckolib.animation.Animation;
+import software.bernie.geckolib.util.GeckoLibUtil;
 import java.util.Objects;
 
-public class NpcEntity extends PathfinderMob {
+public class NpcEntity extends PathfinderMob implements GeoEntity {
+
+    // instance-level cache — must NOT be static
+    private final AnimatableInstanceCache geoCache = GeckoLibUtil.createInstanceCache(this);
 
     private static final Gson GSON = new Gson();
 
@@ -186,6 +199,29 @@ public class NpcEntity extends PathfinderMob {
             return Component.literal(name);
         }
         return super.getDisplayName();
+    }
+
+    // ── GeckoLib ──────────────────────────────────────────────────────────────
+
+    @Override
+    public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
+        controllers.add(new AnimationController<>(this, "movement", 5, this::movementPredicate));
+    }
+
+    private PlayState movementPredicate(AnimationState<NpcEntity> state) {
+        if (state.isMoving()) {
+            state.getController().setAnimation(
+                    RawAnimation.begin().then("animation.npc.walk", Animation.LoopType.LOOP));
+        } else {
+            state.getController().setAnimation(
+                    RawAnimation.begin().then("animation.npc.idle", Animation.LoopType.LOOP));
+        }
+        return PlayState.CONTINUE;
+    }
+
+    @Override
+    public AnimatableInstanceCache getAnimatableInstanceCache() {
+        return geoCache;
     }
 
     @Override
