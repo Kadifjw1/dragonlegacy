@@ -75,7 +75,7 @@ public class NpcAnimationEditorTab implements NpcEditorTab {
             NpcAnimationData anim = anims.get(i);
             boolean sel = anim == selectedAnim;
             add.accept(Button.builder(
-                    Component.literal(sel ? "§e▶ " + truncate(anim.name, 8) : "  " + truncate(anim.name, 9)),
+                    Component.literal(sel ? "§e▶ " + NpcEditorUtils.fitText(anim.name, LIST_W - 14) : "  " + NpcEditorUtils.fitText(anim.name, LIST_W - 10)),
                     b -> {
                         selectedAnim = anim;
                         selectedKeyframeIdx = -1;
@@ -443,8 +443,4 @@ public class NpcAnimationEditorTab implements NpcEditorTab {
         return "rotation".equals(channelMode) ? bone.rotationFrames : bone.positionFrames;
     }
 
-    private static String truncate(String s, int max) {
-        if (s == null) return "";
-        return s.length() > max ? s.substring(0, max) + "…" : s;
-    }
 }

@@ -57,15 +57,18 @@ public class NpcModelTab implements NpcEditorTab {
         for (int i = profileScroll; i < Math.min(filtered.size(), profileScroll + visibleRows); i++) {
             NpcModelProfile profile = filtered.get(i);
             boolean selected = mc.profile == profile;
+            int btnW = rw - 26;
+            String prefix = selected ? "§e§l▶ " : "   ";
+            String label  = NpcEditorUtils.fitText(profile.label, btnW - 14);
             add.accept(Button.builder(
-                    Component.literal(selected ? "§e§l▶ " + profile.label : "   " + profile.label),
+                    Component.literal(prefix + label),
                     b -> {
                         mc.profile = profile;
                         mc.scale   = profile.baseScale;
                         state.markDirty();
                         rebuild.run();
                     }
-            ).bounds(rx, y + (i - profileScroll) * 18, rw - 26, 16).build());
+            ).bounds(rx, y + (i - profileScroll) * 18, btnW, 16).build());
         }
 
         // Scroll arrows (right of list)

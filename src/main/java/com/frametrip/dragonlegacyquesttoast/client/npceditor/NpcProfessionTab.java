@@ -32,8 +32,9 @@ public class NpcProfessionTab implements NpcEditorTab {
             int row = i / 2;
             int bx = rx + col * (colW + 4);
             int by = oy + 38 + row * 22;
+            String profLabel = NpcEditorUtils.fitText(t.label(), colW - 16);
             add.accept(Button.builder(
-                    Component.literal((sel ? "§e◉ §r" : "○ ") + t.label()),
+                    Component.literal((sel ? "§e◉ §r" : "○ ") + profLabel),
                     b -> {
                         pd.type = t;
                         if (t == NpcProfessionType.TRADER) pd.ensureTraderData();
