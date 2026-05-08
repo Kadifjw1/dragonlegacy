@@ -1,0 +1,200 @@
+{
+  "format_version": "1.8.0",
+  "animations": {
+    "animation.npc.idle": {
+      "loop": true,
+      "animation_length": 2.0,
+      "bones": {
+        "head": {
+          "rotation": {
+            "0.0": [0, 0, 0],
+            "1.0": [5, 0, 0],
+            "2.0": [0, 0, 0]
+          }
+        }
+      }
+    },
+    "animation.npc.walk": {
+      "loop": true,
+      "animation_length": 1.0,
+      "bones": {
+        "leftLeg": {
+          "rotation": {
+            "0.0": [30, 0, 0],
+            "0.5": [-30, 0, 0],
+            "1.0": [30, 0, 0]
+          }
+        },
+        "rightLeg": {
+          "rotation": {
+            "0.0": [-30, 0, 0],
+            "0.5": [30, 0, 0],
+            "1.0": [-30, 0, 0]
+          }
+        },
+        "leftArm": {
+          "rotation": {
+            "0.0": [-30, 0, 0],
+            "0.5": [30, 0, 0],
+            "1.0": [-30, 0, 0]
+          }
+        },
+        "rightArm": {
+          "rotation": {
+            "0.0": [30, 0, 0],
+            "0.5": [-30, 0, 0],
+            "1.0": [30, 0, 0]
+          }
+        }
+      }
+    },
+    "animation.npc.talk": {
+      "loop": true,
+      "animation_length": 1.0,
+      "bones": {
+        "head": {
+          "rotation": {
+            "0.0": [0, -10, 0],
+            "0.5": [0, 10, 0],
+            "1.0": [0, -10, 0]
+          }
+        },
+        "rightArm": {
+          "rotation": {
+            "0.0": [-20, 0, -10],
+            "0.5": [-30, 0, -10],
+            "1.0": [-20, 0, -10]
+          }
+        }
+      }
+    },
+    "animation.npc.work": {
+      "loop": true,
+      "animation_length": 1.0,
+      "bones": {
+        "body": {
+          "rotation": {
+            "0.0": [10, 0, 0],
+            "0.5": [5, 0, 0],
+            "1.0": [10, 0, 0]
+          }
+        },
+        "rightArm": {
+          "rotation": {
+            "0.0": [-60, 0, 0],
+            "0.5": [-90, 0, 0],
+            "1.0": [-60, 0, 0]
+          }
+        }
+      }
+    },
+"animation.npc.interact": {
+      "loop": true,
+      "animation_length": 1.5,
+      "bones": {
+        "rightArm": {
+          "rotation": {
+            "0.0": [-45, 0, 0],
+            "0.75": [-60, 0, 20],
+            "1.5": [-45, 0, 0]
+          }
+        }
+      }
+    },
+    "animation.npc.guard_idle": {
+      "loop": true,
+      "animation_length": 2.0,
+      "bones": {
+        "head": {
+          "rotation": {
+            "0.0": [0, -20, 0],
+            "1.0": [0, 20, 0],
+            "2.0": [0, -20, 0]
+          }
+        },
+        "rightArm": {
+          "rotation": {
+            "0.0": [0, 0, -10],
+            "2.0": [0, 0, -10]
+          }
+        }
+      }
+    },
+    "animation.npc.alert": {
+      "loop": true,
+      "animation_length": 0.5,
+      "bones": {
+        "head": {
+          "rotation": {
+            "0.0": [-5, 0, 0],
+            "0.25": [5, 0, 0],
+            "0.5": [-5, 0, 0]
+          }
+        }
+      }
+    },
+    "animation.npc.attack": {
+      "loop": false,
+      "animation_length": 0.5,
+      "bones": {
+        "rightArm": {
+          "rotation": {
+            "0.0": [0, 0, 0],
+            "0.2": [-90, 0, 0],
+            "0.5": [0, 0, 0]
+          }
+        }
+      }
+    },
+    "animation.npc.sit": {
+      "loop": false,
+      "animation_length": 0.3,
+      "bones": {
+        "body": {
+          "rotation": {
+            "0.3": [0, 0, 0]
+          }
+        },
+        "leftLeg": {
+          "rotation": {
+            "0.3": [90, 0, 0]
+          }
+        },
+        "rightLeg": {
+          "rotation": {
+            "0.3": [90, 0, 0]
+          }
+        }
+      }
+    },
+    "animation.npc.sleep": {
+      "loop": false,
+      "animation_length": 0.5,
+      "bones": {
+        "body": {
+          "rotation": {
+            "0.5": [0, 0, 0]
+          },
+          "position": {
+            "0.5": [0, -10, 0]
+          }
+        },
+        "head": {
+          "rotation": {
+            "0.5": [90, 0, 0]
+          }
+        },
+        "leftLeg": {
+          "rotation": {
+            "0.5": [0, 0, 0]
+          }
+        },
+        "rightLeg": {
+          "rotation": {
+            "0.5": [0, 0, 0]
+          }
+        }
+      }
+    }
+  }
+}
