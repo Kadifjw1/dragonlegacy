@@ -131,10 +131,9 @@ public class NpcModelTab implements NpcEditorTab {
         NpcEntityData d  = state.getDraft();
         NpcModelConfig mc = ensureModel(d);
 
-        // Section header
-        NpcEditorUtils.sectionCard(g, rx, oy, rw, 18, "МОДЕЛЬ / ПРОФИЛЬ", ACCENT);
-        g.drawString(font, "§7Выбрано: §f" + mc.profile.label
-                + " §8(" + mc.profile.category() + ")", rx + 4, oy + 4, 0xFFCCCCCC, false);
+        // Section header — profile info embedded in title to avoid overlap
+        NpcEditorUtils.sectionCard(g, rx, oy, rw, 18,
+                "МОДЕЛЬ: " + mc.profile.label + " §8(" + mc.profile.category() + ")", ACCENT);
         
         // Parameters section (below the list)
         int paramY = oy + 20 + 22 + 5 * 18 + 10;
