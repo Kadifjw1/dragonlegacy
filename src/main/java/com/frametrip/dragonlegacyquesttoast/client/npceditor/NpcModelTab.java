@@ -33,7 +33,7 @@ public class NpcModelTab implements NpcEditorTab {
         NpcModelConfig mc = ensureModel(d);
         var font = Minecraft.getInstance().font;
         
-        int y = oy + 20; // below section header
+        int y = oy + 18; // below model subtitle (subtitle at oy+6, height ~8px)
 
         // ── Category filter row ───────────────────────────────────────────────
         int bw = rw / CAT_IDS.length;
@@ -131,12 +131,14 @@ public class NpcModelTab implements NpcEditorTab {
         NpcEntityData d  = state.getDraft();
         NpcModelConfig mc = ensureModel(d);
 
-        // Section header — profile info embedded in title to avoid overlap
-        NpcEditorUtils.sectionCard(g, rx, oy, rw, 18,
-                "МОДЕЛЬ: " + mc.profile.label + " §8(" + mc.profile.category() + ")", ACCENT);
-        
+        // Selected model subtitle (y=6 relative to tab content, no card — avoids
+        // overlapping with the tab label drawn by NpcCreatorScreen at oy-10)
+        g.drawString(font, "§b" + mc.profile.label
+                + " §8(" + mc.profile.category() + ")",
+                rx + 4, oy + 6, ACCENT, false);
+
         // Parameters section (below the list)
-        int paramY = oy + 20 + 22 + 5 * 18 + 10;
+        int paramY = oy + 18 + 22 + 5 * 18 + 10;
         NpcEditorUtils.sectionCard(g, rx, paramY - 6, rw, 84, "ПАРАМЕТРЫ", ACCENT);
         
         // Scale label + current value (left of buttons)
