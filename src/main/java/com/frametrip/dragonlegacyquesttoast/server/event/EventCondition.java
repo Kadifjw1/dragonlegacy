@@ -1,18 +1,12 @@
 package com.frametrip.dragonlegacyquesttoast.server.event;
 
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.Map;
 
 public class EventCondition {
+
     public EventConditionType type = EventConditionType.ITEM_IN_INVENTORY;
-    /** Flexible key→value storage for type-specific params. */
-    public Map<String, String> params = new LinkedHashMap<>();
-
-    public EventCondition() {}
-
-    public EventCondition(EventConditionType type) {
-        this.type = type;
-    }
+    public Map<String, String> params = new HashMap<>();
 
     public String param(String key) {
         return params.getOrDefault(key, "");
@@ -23,8 +17,9 @@ public class EventCondition {
     }
 
     public EventCondition copy() {
-        EventCondition c = new EventCondition(type);
-        c.params = new LinkedHashMap<>(params);
+        EventCondition c = new EventCondition();
+        c.type   = this.type;
+        c.params = new HashMap<>(this.params);
         return c;
     }
 }
