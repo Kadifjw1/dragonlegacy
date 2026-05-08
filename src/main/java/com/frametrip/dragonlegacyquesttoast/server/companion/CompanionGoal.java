@@ -23,4 +23,3 @@ public class CompanionGoal extends Goal {
         // Companion follow logic placeholder – full AI to be implemented.
     }
 }
-
