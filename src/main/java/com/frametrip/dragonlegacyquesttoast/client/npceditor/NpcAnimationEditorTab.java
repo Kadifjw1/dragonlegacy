@@ -5,13 +5,19 @@ import com.frametrip.dragonlegacyquesttoast.server.animation.AnimationBone;
 import com.frametrip.dragonlegacyquesttoast.server.animation.AnimationKeyframe;
 import com.frametrip.dragonlegacyquesttoast.server.animation.AnimationState;
 import com.frametrip.dragonlegacyquesttoast.server.animation.NpcAnimationData;
+import com.frametrip.dragonlegacyquesttoast.util.NpcFileUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.network.chat.Component;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -27,6 +33,7 @@ public class NpcAnimationEditorTab implements NpcEditorTab {
     public static final int ACCENT = 0xFFFF6644;
 
     // ── State ─────────────────────────────────────────────────────────────────
+    private static final Logger LOGGER = LogManager.getLogger("dragonlegacyquesttoast");
     private NpcAnimationData selectedAnim = null;
     private String selectedBone = AnimationBone.HEAD;
     private int selectedKeyframeIdx = -1;
@@ -241,24 +248,37 @@ public class NpcAnimationEditorTab implements NpcEditorTab {
 
         int exportY = oy + 150;
         add.accept(Button.builder(Component.literal("↓ GeckoLib JSON"), b -> {
+            if (selectedAnim == null) return;
             String json = selectedAnim.toGeckoLibJson();
+            // Copy to clipboard as quick fallback
             Minecraft.getInstance().keyboardHandler.setClipboard(json);
+            // Also write to export folder
+            Path dir = NpcFileUtils.exportAnimDir();
+            String safe = selectedAnim.name.toLowerCase().replaceAll("[^a-z0-9_]", "_");
+            Path out = dir.resolve(safe + ".animation.json");
+            try {
+                Files.createDirectories(dir);
+                Files.writeString(out, json);
+                NpcFileUtils.openInExplorer(dir);
+            } catch (IOException e) {
+                LOGGER.error("Failed to export animation: {}", out, e);
+            }
         }).bounds(rightX, exportY, RIGHT_W - 2, 14).build());
 
         add.accept(Button.builder(Component.literal("↑ Импорт JSON"), b -> {
             String clip = Minecraft.getInstance().keyboardHandler.getClipboard();
-            if (clip != null && !clip.isBlank()) {
-                try {
-                    NpcAnimationData imported = NpcAnimationData.fromGeckoLibJson(clip);
-                    if (imported != null) {
-                        anims.add(imported);
-                        selectedAnim = imported;
-                        selectedKeyframeIdx = -1;
-                        state.markDirty();
-                        rebuild.run();
-                    }
-                } catch (Exception ignored) {
+            if (clip == null || clip.isBlank()) return;
+            try {
+                NpcAnimationData imported = NpcAnimationData.fromGeckoLibJson(clip);
+                if (imported != null) {
+                    anims.add(imported);
+                    selectedAnim = imported;
+                    selectedKeyframeIdx = -1;
+                    state.markDirty();
+                    rebuild.run();
                 }
+            } catch (Exception e) {
+                LOGGER.error("Failed to import animation from clipboard", e);
             }
         }).bounds(rightX, exportY + 18, RIGHT_W - 2, 14).build());
     }

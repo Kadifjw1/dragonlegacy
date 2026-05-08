@@ -76,10 +76,6 @@ public class NpcSkinManager {
     }
  
     public static void openSkinsFolder() {
-        try {
-            java.awt.Desktop.getDesktop().open(SKINS_DIR.toFile());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        com.frametrip.dragonlegacyquesttoast.util.NpcFileUtils.openInExplorer(SKINS_DIR);
     }
 }
