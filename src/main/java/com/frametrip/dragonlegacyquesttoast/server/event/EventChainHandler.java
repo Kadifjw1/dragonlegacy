@@ -266,7 +266,16 @@ public class EventChainHandler {
             }
             case PLAY_ANIMATION -> {
                 String animName = action.param("animName");
-                // TODO: send ForcePlayAnimationPacket when client-side trigger packet exists
+                if (!animName.isEmpty()) {
+                    try {
+                        com.frametrip.dragonlegacyquesttoast.server.animation.AnimationState state =
+                                com.frametrip.dragonlegacyquesttoast.server.animation.AnimationState
+                                        .valueOf(animName.toUpperCase());
+                        npc.setAnimState(state);
+                    } catch (IllegalArgumentException ignored) {
+                        // animName is not an AnimationState enum — ignore
+                    }
+                }
             }
             case TELEPORT -> {
                 try {

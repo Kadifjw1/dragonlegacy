@@ -41,7 +41,8 @@ public class NpcAnimStatePacket {
     public static void handle(NpcAnimStatePacket msg, Supplier<NetworkEvent.Context> ctx) {
         ctx.get().enqueueWork(() -> {
             ServerPlayer player = ctx.get().getSender();
-            if (player == null) return;
+            // Only creative-mode (op) players may force NPC animation states.
+            if (player == null || !player.getAbilities().instabuild) return;
 
             net.minecraft.server.MinecraftServer server = player.getServer();
             if (server == null) return;
