@@ -238,7 +238,10 @@ public class NpcEntity extends PathfinderMob implements GeoEntity {
         }
 
         NpcEntityData data = getNpcData();
-        if (state.isMoving()) {
+        // Use navigation activity as well — slow NPCs (speed ≈0.06 blocks/tick) may
+        // fall below GeckoLib's isMoving() velocity threshold while the pathfinder is active.
+        boolean moving = state.isMoving() || this.getNavigation().isInProgress();
+        if (moving) {
             // 1. custom WALK binding  2. profession walk binding  3. default name
             NpcAnimationData anim = findAnimationForState(data,
                     com.frametrip.dragonlegacyquesttoast.server.animation.AnimationState.WALK);
