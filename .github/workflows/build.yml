@@ -37,36 +37,6 @@ jobs:
       - name: Make Gradle wrapper executable
         run: chmod +x gradlew
 
-      - name: Check GeckoLib availability and pre-download
-        run: |
-          URL="https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/software/bernie/geckolib/geckolib-forge-1.20.1/4.4.4/geckolib-forge-1.20.1-4.4.4.jar"
-
-          # Show Cloudsmith reachability
-          CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 "$URL")
-          echo "::notice::Cloudsmith HTTP status for GeckoLib 4.4.4 = $CODE"
-
-          # Wipe ALL Gradle module resolution metadata so Gradle re-downloads fresh
-          echo "Clearing stale Gradle resolution metadata..."
-          rm -rf "$HOME/.gradle/caches/modules-2/metadata-2.100" || true
-          rm -rf "$HOME/.gradle/caches/modules-2/files-2.1/software.bernie.geckolib" || true
-
-          # Try to download to local Maven cache as a fallback source
-          DIR="$HOME/.m2/repository/software/bernie/geckolib/geckolib-forge-1.20.1/4.4.4"
-          mkdir -p "$DIR"
-          if [ "$CODE" = "200" ]; then
-            for FILE in \
-              "geckolib-forge-1.20.1-4.4.4.jar" \
-              "geckolib-forge-1.20.1-4.4.4.pom" \
-              "geckolib-forge-1.20.1-4.4.4-sources.jar"; do
-              curl -fL --retry 3 --max-time 120 \
-                "https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/software/bernie/geckolib/geckolib-forge-1.20.1/4.4.4/$FILE" \
-                -o "$DIR/$FILE" && echo "Downloaded $FILE" || echo "WARNING: failed $FILE"
-            done
-            ls -lh "$DIR/"
-          else
-            echo "Cloudsmith NOT reachable (HTTP $CODE) — build will rely on direct resolution"
-          fi
-
       - name: Build mod
         run: ./gradlew build --stacktrace
 
