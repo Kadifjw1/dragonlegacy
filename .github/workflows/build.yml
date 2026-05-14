@@ -39,33 +39,33 @@ jobs:
 
       - name: Check GeckoLib availability and pre-download
         run: |
-          BASE="https://dl.cloudsmith.io/public/geckolib3/geckolib/maven"
-          COORD="software/bernie/geckolib/geckolib-forge-1.20.1/4.4.4"
-          JAR_URL="$BASE/$COORD/geckolib-forge-1.20.1-4.4.4.jar"
+          URL="https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/software/bernie/geckolib/geckolib-forge-1.20.1/4.4.4/geckolib-forge-1.20.1-4.4.4.jar"
 
-          # Diagnostic: what does Cloudsmith return?
-          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$JAR_URL")
-          echo "Cloudsmith HTTP status for GeckoLib 4.4.4: $HTTP_CODE"
+          # Show Cloudsmith reachability
+          CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 "$URL")
+          echo "::notice::Cloudsmith HTTP status for GeckoLib 4.4.4 = $CODE"
 
-          # Clear any stale Gradle "not found" cache for GeckoLib
+          # Wipe ALL Gradle module resolution metadata so Gradle re-downloads fresh
+          echo "Clearing stale Gradle resolution metadata..."
+          rm -rf "$HOME/.gradle/caches/modules-2/metadata-2.100" || true
           rm -rf "$HOME/.gradle/caches/modules-2/files-2.1/software.bernie.geckolib" || true
-          rm -rf "$HOME/.gradle/caches/modules-2/metadata-2.100/descriptors/software.bernie.geckolib" || true
 
-          # Download to local Maven cache so mavenLocal() serves it
-          DIR="$HOME/.m2/repository/$COORD"
+          # Try to download to local Maven cache as a fallback source
+          DIR="$HOME/.m2/repository/software/bernie/geckolib/geckolib-forge-1.20.1/4.4.4"
           mkdir -p "$DIR"
-          for FILE in \
-            "geckolib-forge-1.20.1-4.4.4.jar" \
-            "geckolib-forge-1.20.1-4.4.4.pom" \
-            "geckolib-forge-1.20.1-4.4.4-sources.jar"; do
-            curl -fL --retry 5 --retry-delay 5 --max-time 120 \
-              "$BASE/$COORD/$FILE" -o "$DIR/$FILE" \
-              && echo "Downloaded $FILE" \
-              || echo "WARNING: failed to download $FILE (HTTP $HTTP_CODE)"
-          done
-
-          # Confirm what landed in local Maven
-          ls -lh "$DIR/" 2>/dev/null || echo "Local Maven dir is empty"
+          if [ "$CODE" = "200" ]; then
+            for FILE in \
+              "geckolib-forge-1.20.1-4.4.4.jar" \
+              "geckolib-forge-1.20.1-4.4.4.pom" \
+              "geckolib-forge-1.20.1-4.4.4-sources.jar"; do
+              curl -fL --retry 3 --max-time 120 \
+                "https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/software/bernie/geckolib/geckolib-forge-1.20.1/4.4.4/$FILE" \
+                -o "$DIR/$FILE" && echo "Downloaded $FILE" || echo "WARNING: failed $FILE"
+            done
+            ls -lh "$DIR/"
+          else
+            echo "Cloudsmith NOT reachable (HTTP $CODE) — build will rely on direct resolution"
+          fi
 
       - name: Build mod
         run: ./gradlew build --stacktrace
