@@ -5,37 +5,16 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 public class EventChain {
-    public String             name          = "";
-    public boolean            enabled       = true;
-    public EventTriggerType   trigger       = EventTriggerType.PLAYER_INTERACT;
-    public String             conditionMode = "AND";
-    public boolean            executeAll    = false;
-    public List<EventCondition> conditions  = new ArrayList<>();
-    public List<EventAction>    actions     = new ArrayList<>();
-    public Map<String, String>  triggerParams = new HashMap<>();
-
-    public String triggerParam(String key) {
-        return triggerParams.getOrDefault(key, "");
-    }
-
-    public void triggerParam(String key, String value) {
-        triggerParams.put(key, value);
-    }
-
-    public EventTriggerType trigger = EventTriggerType.NPC_CLICK;
-    /** Type-specific trigger params (e.g. "phrase", "radius", "interval"). */
+    public String              name          = "";
+    public boolean             enabled       = true;
+    public EventTriggerType    trigger       = EventTriggerType.NPC_CLICK;
     public Map<String, String> triggerParams = new LinkedHashMap<>();
-
-    public List<EventCondition> conditions = new ArrayList<>();
-    /** "AND" — all conditions must pass; "OR" — any one is enough. */
-    public String conditionMode = "AND";
-
-    public List<EventAction> actions = new ArrayList<>();
-    /** If true, all matching chains execute; if false, only the first. */
-    public boolean executeAll = true;
+    public List<EventCondition> conditions   = new ArrayList<>();
+    public String              conditionMode = "AND";
+    public List<EventAction>   actions       = new ArrayList<>();
+    public boolean             executeAll    = true;
 
     public String triggerParam(String key) {
         return triggerParams.getOrDefault(key, "");
