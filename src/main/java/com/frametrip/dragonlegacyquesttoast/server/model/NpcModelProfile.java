@@ -1,5 +1,7 @@
 package com.frametrip.dragonlegacyquesttoast.server.model;
 
+import net.minecraft.resources.ResourceLocation;
+
 public enum NpcModelProfile {
     PLAYER        ("player",       "Игрок",       1.0f, 1.62f, 2.0f, 1.8f),
     WOLF          ("wolf",         "Волк",         1.0f, 0.85f, 1.2f, 1.0f),
@@ -55,6 +57,18 @@ public enum NpcModelProfile {
         if (this == PLAYER) return null;
         return "minecraft:" + id;
     }
+
+    /** Pre-computed ResourceLocations — avoids per-frame allocation in the renderer. */
+    public ResourceLocation geoResource(String modid) { return GEO.computeIfAbsent(this,
+            p -> new ResourceLocation(modid, "geo/npc_" + p.id + ".geo.json")); }
+    public ResourceLocation textureResource(String modid) { return TEX.computeIfAbsent(this,
+            p -> new ResourceLocation(modid, "textures/entity/npc_" + p.id + ".png")); }
+    public ResourceLocation animationResource(String modid) { return ANIM.computeIfAbsent(this,
+            p -> new ResourceLocation(modid, "animations/npc_" + p.id + ".animation.json")); }
+
+    private static final java.util.EnumMap<NpcModelProfile, ResourceLocation> GEO  = new java.util.EnumMap<>(NpcModelProfile.class);
+    private static final java.util.EnumMap<NpcModelProfile, ResourceLocation> TEX  = new java.util.EnumMap<>(NpcModelProfile.class);
+    private static final java.util.EnumMap<NpcModelProfile, ResourceLocation> ANIM = new java.util.EnumMap<>(NpcModelProfile.class);
 
     public String category() {
         return switch (this) {

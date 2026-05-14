@@ -54,6 +54,10 @@ public class NpcEntity extends PathfinderMob implements GeoEntity {
     // instance-level cache — must NOT be static
     private final AnimatableInstanceCache geoCache = GeckoLibUtil.createInstanceCache(this);
 
+    // Parsed NpcEntityData cache — invalidated whenever DATA_NPC_JSON changes.
+    // Avoids repeated GSON.fromJson() in tick(), movementPredicate(), and render methods.
+    private NpcEntityData cachedNpcData;
+
     private static final Gson GSON = new Gson();
 
     public static final EntityDataAccessor<String> DATA_NPC_JSON =
@@ -94,11 +98,15 @@ public class NpcEntity extends PathfinderMob implements GeoEntity {
     }
 
     public NpcEntityData getNpcData() {
-        NpcEntityData d = GSON.fromJson(entityData.get(DATA_NPC_JSON), NpcEntityData.class);
-        return d != null ? d : new NpcEntityData();
+        if (cachedNpcData == null) {
+            NpcEntityData d = GSON.fromJson(entityData.get(DATA_NPC_JSON), NpcEntityData.class);
+            cachedNpcData = d != null ? d : new NpcEntityData();
+        }
+        return cachedNpcData;
     }
 
     public void setNpcData(NpcEntityData data) {
+        cachedNpcData = data;
         entityData.set(DATA_NPC_JSON, GSON.toJson(data));
         applyDataEffects(data);
     }
@@ -143,8 +151,12 @@ public class NpcEntity extends PathfinderMob implements GeoEntity {
         if (tag.contains("NpcData")) {
             String json = tag.getString("NpcData");
             entityData.set(DATA_NPC_JSON, json);
+            cachedNpcData = null;
             NpcEntityData data = GSON.fromJson(json, NpcEntityData.class);
-            if (data != null) applyDataEffects(data);
+            if (data != null) {
+                cachedNpcData = data;
+                applyDataEffects(data);
+            }
         }
     }
 
