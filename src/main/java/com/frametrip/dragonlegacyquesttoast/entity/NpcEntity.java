@@ -81,6 +81,7 @@ public class NpcEntity extends PathfinderMob implements GeoEntity {
     protected void registerGoals() {
         goalSelector.addGoal(1, new FloatGoal(this));
         goalSelector.addGoal(2, new CompanionGoal(this));
+        goalSelector.addGoal(2, new com.frametrip.dragonlegacyquesttoast.server.companion.CompanionGuardGoal(this));
         goalSelector.addGoal(3, new NpcLookAtPlayerGoal());
         goalSelector.addGoal(4, new RandomLookAroundGoal(this));
         goalSelector.addGoal(5, new WaterAvoidingRandomStrollGoal(this, 0.4));
