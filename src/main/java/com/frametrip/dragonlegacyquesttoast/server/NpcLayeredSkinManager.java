@@ -218,10 +218,6 @@ public class NpcLayeredSkinManager {
     }
 
     public static void openLayersRootFolder() {
-        try {
-            java.awt.Desktop.getDesktop().open(LAYERS_DIR.toFile());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        com.frametrip.dragonlegacyquesttoast.util.NpcFileUtils.openInExplorer(LAYERS_DIR);
     }
 }
