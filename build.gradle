@@ -59,8 +59,11 @@ dependencies {
     implementation files('libs/geckolib-forge-1.20.1-4.4.4.jar')
 }
 
-sourceSets.main.compileClasspath += files('libs/geckolib-forge-1.20.1-4.4.4.jar')
-sourceSets.main.runtimeClasspath += files('libs/geckolib-forge-1.20.1-4.4.4.jar')
+afterEvaluate {
+    tasks.named('compileJava', JavaCompile) {
+        classpath = classpath + rootProject.files('libs/geckolib-forge-1.20.1-4.4.4.jar')
+    }
+}
 
 tasks.named('processResources', ProcessResources).configure {
     var replaceProperties = [
