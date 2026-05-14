@@ -1,6 +1,8 @@
 package com.frametrip.dragonlegacyquesttoast.server.event;
 
 public enum EventTriggerType {
+    NPC_CLICK       ("Клик по NPC",     ""),
+    NPC_ATTACKED    ("NPC атакован",    ""),
     PLAYER_INTERACT ("Взаимодействие", ""),
     CHAT_MESSAGE    ("Сообщение в чат", "Фраза"),
     ZONE_ENTER      ("Вход в зону",     "Радиус"),
