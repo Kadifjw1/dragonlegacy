@@ -48,6 +48,9 @@ public class NpcAnimationEditorTab implements NpcEditorTab {
     // ── Library mode state ────────────────────────────────────────────────────
     private boolean showLibrary = false;
     private AnimationState libStateFilter = null; // null = ALL
+
+    // ── Import/export status ──────────────────────────────────────────────────
+    private String ioStatus = "";
     private int libScroll = 0;
     private String libSelectedId = null;
 
@@ -269,40 +272,91 @@ public class NpcAnimationEditorTab implements NpcEditorTab {
         }
 
         int exportY = oy + 150;
-        add.accept(Button.builder(Component.literal("↓ GeckoLib JSON"), b -> {
+
+        // ── Export ───────────────────────────────────────────────────────────
+        // Single export — selected animation only
+        add.accept(Button.builder(Component.literal("↓ Текущую"), b -> {
             if (selectedAnim == null) return;
-            String json = selectedAnim.toGeckoLibJson();
-            // Copy to clipboard as quick fallback
-            Minecraft.getInstance().keyboardHandler.setClipboard(json);
-            // Also write to export folder
-            Path dir = NpcFileUtils.exportAnimDir();
-            String safe = selectedAnim.name.toLowerCase().replaceAll("[^a-z0-9_]", "_");
-            Path out = dir.resolve(safe + ".animation.json");
-            try {
-                Files.createDirectories(dir);
-                Files.writeString(out, json);
-                NpcFileUtils.openInExplorer(dir);
-            } catch (IOException e) {
-                LOGGER.error("Failed to export animation: {}", out, e);
-            }
+            exportSingle(selectedAnim);
+            ioStatus = "§aЭкспорт: " + selectedAnim.name;
+            rebuild.run();
         }).bounds(rightX, exportY, RIGHT_W - 2, 14).build());
 
-        add.accept(Button.builder(Component.literal("↑ Импорт JSON"), b -> {
+        // Batch export — all NPC animations
+        add.accept(Button.builder(Component.literal("↓ Все (" + anims.size() + ")"), b -> {
+            if (anims.isEmpty()) return;
+            int count = 0;
+            for (NpcAnimationData a : anims) { exportSingle(a); count++; }
+            Path dir = NpcFileUtils.exportAnimDir();
+            try { Files.createDirectories(dir); NpcFileUtils.openInExplorer(dir); } catch (IOException ignored) {}
+            ioStatus = "§aЭкспортировано: " + count;
+            rebuild.run();
+        }).bounds(rightX, exportY + 16, RIGHT_W - 2, 14).build());
+
+        // ── Import ───────────────────────────────────────────────────────────
+        // From clipboard
+        add.accept(Button.builder(Component.literal("↑ Буфер"), b -> {
             String clip = Minecraft.getInstance().keyboardHandler.getClipboard();
-            if (clip == null || clip.isBlank()) return;
-            try {
-                NpcAnimationData imported = NpcAnimationData.fromGeckoLibJson(clip);
-                if (imported != null) {
-                    anims.add(imported);
-                    selectedAnim = imported;
-                    selectedKeyframeIdx = -1;
-                    state.markDirty();
-                    rebuild.run();
-                }
-            } catch (Exception e) {
-                LOGGER.error("Failed to import animation from clipboard", e);
+            if (clip == null || clip.isBlank()) { ioStatus = "§cБуфер пуст"; rebuild.run(); return; }
+            NpcAnimationData imported = NpcAnimationData.fromGeckoLibJson(clip);
+            if (imported != null) {
+                anims.add(imported);
+                selectedAnim = imported;
+                selectedKeyframeIdx = -1;
+                state.markDirty();
+                ioStatus = "§aИмпорт: " + imported.name;
+            } else {
+                ioStatus = "§cНеверный формат";
             }
-        }).bounds(rightX, exportY + 18, RIGHT_W - 2, 14).build());
+            rebuild.run();
+        }).bounds(rightX, exportY + 34, RIGHT_W - 2, 14).build());
+
+        // From import/animations directory — loads all .animation.json files found
+        add.accept(Button.builder(Component.literal("↑ Из папки"), b -> {
+            int[] loaded = {0};
+            try (java.nio.file.DirectoryStream<Path> ds = Files.newDirectoryStream(
+                    NpcFileUtils.importAnimDir(), "*.animation.json")) {
+                for (Path p : ds) {
+                    try {
+                        String json = Files.readString(p);
+                        NpcAnimationData imported = NpcAnimationData.fromGeckoLibJson(json);
+                        if (imported != null) {
+                            anims.add(imported);
+                            selectedAnim = imported;
+                            selectedKeyframeIdx = -1;
+                            loaded[0]++;
+                        }
+                    } catch (Exception e) {
+                        LOGGER.warn("Skip {}: {}", p.getFileName(), e.getMessage());
+                    }
+                }
+            } catch (IOException e) {
+                ioStatus = "§cПапка недоступна";
+                rebuild.run();
+                return;
+            }
+            if (loaded[0] > 0) state.markDirty();
+            ioStatus = loaded[0] > 0 ? "§aЗагружено: " + loaded[0] : "§8Файлов не найдено";
+            rebuild.run();
+        }).bounds(rightX, exportY + 52, RIGHT_W - 2, 14).build());
+
+        // Open import/animations folder
+        add.accept(Button.builder(Component.literal("📂 Папка"), b -> {
+            NpcFileUtils.openInExplorer(NpcFileUtils.importAnimDir());
+        }).bounds(rightX, exportY + 70, RIGHT_W - 2, 12).build());
+    }
+
+    private void exportSingle(NpcAnimationData anim) {
+        String json = anim.toGeckoLibJson();
+        Minecraft.getInstance().keyboardHandler.setClipboard(json);
+        Path dir = NpcFileUtils.exportAnimDir();
+        String safe = anim.name.toLowerCase().replaceAll("[^a-z0-9_]", "_");
+        try {
+            Files.createDirectories(dir);
+            Files.writeString(dir.resolve(safe + ".animation.json"), json);
+        } catch (IOException e) {
+            LOGGER.error("Failed to export animation: {}", safe, e);
+        }
     }
 
     // ── Library panel ─────────────────────────────────────────────────────────
@@ -473,7 +527,10 @@ public class NpcAnimationEditorTab implements NpcEditorTab {
         } else {
             g.drawString(font, "§8Выберите кадр", rightX, ry + 30, 0xFF444455, false);
         }
-        g.drawString(font, "§8── Экспорт ──", rightX, oy + 142, 0xFF444455, false);
+        g.drawString(font, "§8── И/О ──", rightX, oy + 142, 0xFF444455, false);
+        if (!ioStatus.isEmpty()) {
+            g.drawString(font, ioStatus, rightX, oy + 238, 0xFFCCCCCC, false);
+        }
     }
 
     private void renderLibraryPanel(GuiGraphics g, int rx, int oy, int rw) {
