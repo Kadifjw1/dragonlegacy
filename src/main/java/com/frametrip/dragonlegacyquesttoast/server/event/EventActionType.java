@@ -10,7 +10,9 @@ public enum EventActionType {
     SET_NPC_STATE   ("Установить состояние"),
     PLAY_ANIMATION  ("Воспроизвести анимацию"),
     OPEN_GUI        ("Открыть GUI"),
-    TELEPORT        ("Телепортировать");
+    TELEPORT        ("Телепортировать"),
+    START_PATROL    ("Начать патруль"),
+    START_BUILD_SCENE ("Начать сцену строительства");
 
     private final String label;
 
