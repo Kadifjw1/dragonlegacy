@@ -37,6 +37,17 @@ jobs:
       - name: Make Gradle wrapper executable
         run: chmod +x gradlew
 
+      - name: Install GeckoLib to Maven Local
+        run: |
+          mvn install:install-file \
+            -Dfile=libs/geckolib-forge-1.20.1-4.4.4.jar \
+            -DgroupId=software.bernie.geckolib \
+            -DartifactId=geckolib-forge-1.20.1 \
+            -Dversion=4.4.4 \
+            -Dpackaging=jar \
+            -DgeneratePom=true \
+            -q
+
       - name: Build mod
         run: ./gradlew build --stacktrace
 
