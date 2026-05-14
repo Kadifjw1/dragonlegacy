@@ -31,11 +31,11 @@ public class SaveNpcEntityDataPacket {
  
     public static void encode(SaveNpcEntityDataPacket msg, FriendlyByteBuf buf) {
         buf.writeUUID(msg.entityUuid);
-        buf.writeUtf(msg.dataJson, 65535);
+        buf.writeUtf(msg.dataJson, 262144);
     }
  
     public static SaveNpcEntityDataPacket decode(FriendlyByteBuf buf) {
-        return new SaveNpcEntityDataPacket(buf.readUUID(), buf.readUtf(65535));
+        return new SaveNpcEntityDataPacket(buf.readUUID(), buf.readUtf(262144));
     }
  
     public static void handle(SaveNpcEntityDataPacket msg, Supplier<NetworkEvent.Context> ctx) {
