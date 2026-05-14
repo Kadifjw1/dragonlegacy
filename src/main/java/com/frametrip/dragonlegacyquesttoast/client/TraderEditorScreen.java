@@ -1,6 +1,8 @@
 package com.frametrip.dragonlegacyquesttoast.client;
 
 import com.frametrip.dragonlegacyquesttoast.client.npceditor.NpcEditorState;
+import com.frametrip.dragonlegacyquesttoast.network.ModNetwork;
+import com.frametrip.dragonlegacyquesttoast.network.SaveTraderDataPacket;
 import com.frametrip.dragonlegacyquesttoast.profession.trader.BuyTradeOffer;
 import com.frametrip.dragonlegacyquesttoast.profession.trader.RestockMode;
 import com.frametrip.dragonlegacyquesttoast.profession.trader.SellTradeOffer;
@@ -452,6 +454,11 @@ private void renderSellRow(GuiGraphics g, int x, int y, int w, SellTradeOffer o)
     }
 
     private void save() {
+        TraderProfessionData td = trader();
+        if (td != null) {
+            ModNetwork.CHANNEL.sendToServer(
+                    new SaveTraderDataPacket(editorState.getEntity().getUUID(), td));
+        }
         editorState.save();
         back();
     }
