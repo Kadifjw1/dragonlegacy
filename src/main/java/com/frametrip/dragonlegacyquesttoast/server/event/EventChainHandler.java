@@ -5,7 +5,10 @@ import com.frametrip.dragonlegacyquesttoast.entity.NpcEntityData;
 import com.frametrip.dragonlegacyquesttoast.network.ModNetwork;
 import com.frametrip.dragonlegacyquesttoast.network.NpcDialoguePacket;
 import com.frametrip.dragonlegacyquesttoast.network.NpcStartScenePacket;
+import com.frametrip.dragonlegacyquesttoast.server.PlayerFactionReputationManager;
 import com.frametrip.dragonlegacyquesttoast.server.QuestManager;
+import com.frametrip.dragonlegacyquesttoast.server.QuestProgressManager;
+import com.frametrip.dragonlegacyquesttoast.server.companion.CompanionMode;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -176,8 +179,12 @@ public class EventChainHandler {
             case QUEST_STATUS -> {
                 String questId = cond.param("questId");
                 if (questId.isEmpty()) yield false;
-                var quest = QuestManager.get(questId);
-                yield quest != null; // TODO: link to QuestProgressManager
+                String status = cond.param("status"); // ACTIVE / COMPLETED / FAILED
+                yield switch (status) {
+                    case "COMPLETED" -> QuestProgressManager.isCompleted(player.getUUID(), questId);
+                    case "FAILED"    -> QuestProgressManager.isFailed(player.getUUID(), questId);
+                    default          -> QuestProgressManager.isActive(player.getUUID(), questId);
+                };
             }
             case TIME_OF_DAY -> {
                 long t = npc.level().getDayTime() % 24000;
@@ -199,8 +206,20 @@ public class EventChainHandler {
                         && data.professionData.type != null
                         && data.professionData.type.name().equalsIgnoreCase(prof);
             }
-            case NPC_STATE -> true; // TODO: wire to companion/AI state
-            case REPUTATION -> true; // TODO: wire to faction reputation
+            case NPC_STATE -> {
+                String expected = cond.param("state");
+                if (expected.isEmpty()) yield true;
+                var compData = data.companionData;
+                if (compData == null) yield false;
+                yield expected.equalsIgnoreCase(compData.mode.name());
+            }
+            case REPUTATION -> {
+                String factionId = cond.param("factionId");
+                String relation  = cond.param("relation"); // FRIENDLY / NEUTRAL / HOSTILE
+                if (factionId.isEmpty()) yield true;
+                String actual = PlayerFactionReputationManager.getRelation(player.getUUID(), factionId);
+                yield relation.isEmpty() || actual.equalsIgnoreCase(relation);
+            }
         };
     }
 
@@ -251,34 +270,49 @@ public class EventChainHandler {
             case GIVE_QUEST -> {
                 String questId = action.param("questId");
                 if (!questId.isEmpty()) {
-                    // TODO: QuestProgressManager.start(player, questId)
+                    QuestProgressManager.accept(player.getUUID(), questId);
                 }
             }
             case COMPLETE_QUEST -> {
                 String questId = action.param("questId");
                 if (!questId.isEmpty()) {
-                    // TODO: QuestProgressManager.complete(player, questId)
+                    QuestProgressManager.complete(player.getUUID(), questId);
                 }
             }
             case SET_NPC_STATE -> {
                 String stateName = action.param("state");
-                // TODO: wire to companion mode when System 3 is implemented
+                if (!stateName.isEmpty() && data.companionData != null) {
+                    try {
+                        CompanionMode mode = CompanionMode.valueOf(stateName.toUpperCase());
+                        data.companionData.setMode(mode);
+                    } catch (IllegalArgumentException ignored) {}
+                }
             }
             case PLAY_ANIMATION -> {
                 String animName = action.param("animName");
-                // TODO: send ForcePlayAnimationPacket when client-side trigger packet exists
+                if (!animName.isEmpty()) {
+                    try {
+                        com.frametrip.dragonlegacyquesttoast.server.animation.AnimationState state =
+                                com.frametrip.dragonlegacyquesttoast.server.animation.AnimationState
+                                        .valueOf(animName.toUpperCase());
+                        npc.setAnimState(state);
+                    } catch (IllegalArgumentException ignored) {
+                        // animName is not an AnimationState enum — ignore
+                    }
+                }
             }
             case TELEPORT -> {
                 try {
                     double x = Double.parseDouble(action.param("x"));
                     double y = Double.parseDouble(action.param("y"));
-                    double z = Double.parseDouble(action.param("z"));
+                    String zs = action.param("z");
+                    double z = zs.isEmpty() ? player.getZ() : Double.parseDouble(zs);
                     player.teleportTo(x, y, z);
                 } catch (NumberFormatException ignored) {
                 }
             }
             case START_PATROL, START_BUILD_SCENE, OPEN_GUI -> {
-                // TODO: implement when respective systems are ready
+                // Reserved for future patrol/scene/GUI systems
             }
         }
     }

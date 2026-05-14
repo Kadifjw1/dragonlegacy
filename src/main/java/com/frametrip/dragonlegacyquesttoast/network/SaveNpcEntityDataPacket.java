@@ -33,7 +33,7 @@ public class SaveNpcEntityDataPacket {
         buf.writeUUID(msg.entityUuid);
         buf.writeUtf(msg.dataJson, 262144);
     }
- 
+
     public static SaveNpcEntityDataPacket decode(FriendlyByteBuf buf) {
         return new SaveNpcEntityDataPacket(buf.readUUID(), buf.readUtf(262144));
     }

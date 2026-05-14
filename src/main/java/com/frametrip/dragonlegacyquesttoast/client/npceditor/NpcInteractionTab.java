@@ -151,7 +151,7 @@ public class NpcInteractionTab implements NpcEditorTab {
         add.accept(Button.builder(Component.literal("⚡ Редактор событий"), b -> {
             Minecraft.getInstance().setScreen(new EventChainScreen(state.getEntity()));
         }).bounds(rx, oy + 96, rw, 16).build());
-        
+
         // ── Quest search + list ──────────────────────────────────────────────
         searchField = new EditBox(mc.font, rx, oy + 132, rw, 14, Component.literal("Поиск квестов"));
         searchField.setMaxLength(48);

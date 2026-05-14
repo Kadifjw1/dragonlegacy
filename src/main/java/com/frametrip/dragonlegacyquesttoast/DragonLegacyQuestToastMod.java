@@ -31,6 +31,7 @@ import com.frametrip.dragonlegacyquesttoast.server.FireAbilityHandler;
 import com.frametrip.dragonlegacyquesttoast.server.IceAbilityHandler;
 import com.frametrip.dragonlegacyquesttoast.server.NpcProfileManager;
 import com.frametrip.dragonlegacyquesttoast.server.PlayerAbilityManager;
+import com.frametrip.dragonlegacyquesttoast.server.PlayerFactionReputationManager;
 import com.frametrip.dragonlegacyquesttoast.server.QuestManager;
 import com.frametrip.dragonlegacyquesttoast.server.QuestProgressManager;
 import com.frametrip.dragonlegacyquesttoast.server.StormAbilityHandler;
@@ -76,6 +77,7 @@ public class DragonLegacyQuestToastMod {
         DialogueManager.load();
         NpcProfileManager.load();
         FactionManager.load();
+        PlayerFactionReputationManager.init();
         NpcSceneManager.load();
         BuildingTemplateManager.load();
 

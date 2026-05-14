@@ -6,6 +6,7 @@ import com.frametrip.dragonlegacyquesttoast.network.NpcStartScenePacket;
 import com.frametrip.dragonlegacyquesttoast.network.OpenCompanionScreenPacket;
 import com.frametrip.dragonlegacyquesttoast.network.OpenTraderShopPacket;
 import com.frametrip.dragonlegacyquesttoast.profession.NpcProfessionType;
+import com.frametrip.dragonlegacyquesttoast.server.animation.NpcAnimationData;
 import com.frametrip.dragonlegacyquesttoast.server.companion.CompanionGoal;
 import com.frametrip.dragonlegacyquesttoast.server.DialogueDefinition;
 import com.frametrip.dragonlegacyquesttoast.server.DialogueManager;
@@ -35,13 +36,32 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.network.PacketDistributor;
 
+import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.level.ServerLevelAccessor;
+import software.bernie.geckolib.animatable.GeoAnimatable;
+import software.bernie.geckolib.animatable.GeoEntity;
+import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
+import software.bernie.geckolib.animation.AnimatableManager;
+import software.bernie.geckolib.animation.AnimationController;
+import software.bernie.geckolib.animation.AnimationState;
+import software.bernie.geckolib.animation.PlayState;
+import software.bernie.geckolib.animation.RawAnimation;
+import software.bernie.geckolib.animation.Animation;
+import software.bernie.geckolib.util.GeckoLibUtil;
 import java.util.Objects;
 
-public class NpcEntity extends PathfinderMob {
+public class NpcEntity extends PathfinderMob implements GeoEntity {
+
+    // instance-level cache — must NOT be static
+    private final AnimatableInstanceCache geoCache = GeckoLibUtil.createInstanceCache(this);
 
     private static final Gson GSON = new Gson();
 
     public static final EntityDataAccessor<String> DATA_NPC_JSON =
+            SynchedEntityData.defineId(NpcEntity.class, EntityDataSerializers.STRING);
+
+    /** "AUTO" = derive from movement; any other value = forced animation name. */
+    public static final EntityDataAccessor<String> DATA_ANIM_STATE =
             SynchedEntityData.defineId(NpcEntity.class, EntityDataSerializers.STRING);
 
     public NpcEntity(EntityType<? extends NpcEntity> type, Level level) {
@@ -54,12 +74,14 @@ public class NpcEntity extends PathfinderMob {
     protected void defineSynchedData() {
         super.defineSynchedData();
         entityData.define(DATA_NPC_JSON, GSON.toJson(new NpcEntityData()));
+        entityData.define(DATA_ANIM_STATE, "AUTO");
     }
 
     @Override
     protected void registerGoals() {
         goalSelector.addGoal(1, new FloatGoal(this));
         goalSelector.addGoal(2, new CompanionGoal(this));
+        goalSelector.addGoal(2, new com.frametrip.dragonlegacyquesttoast.server.companion.CompanionGuardGoal(this));
         goalSelector.addGoal(3, new NpcLookAtPlayerGoal());
         goalSelector.addGoal(4, new RandomLookAroundGoal(this));
         goalSelector.addGoal(5, new WaterAvoidingRandomStrollGoal(this, 0.4));
@@ -80,6 +102,21 @@ public class NpcEntity extends PathfinderMob {
     public void setNpcData(NpcEntityData data) {
         entityData.set(DATA_NPC_JSON, GSON.toJson(data));
         applyDataEffects(data);
+    }
+
+    /** Force a specific animation state, synced to all clients. */
+    public void setAnimState(com.frametrip.dragonlegacyquesttoast.server.animation.AnimationState state) {
+        NpcEntityData data = getNpcData();
+        NpcAnimationData anim = findAnimationForState(data, state);
+        String animName = anim != null
+                ? "animation.npc." + anim.name.toLowerCase().replace(' ', '_')
+                : "animation.npc." + state.name().toLowerCase();
+        entityData.set(DATA_ANIM_STATE, animName);
+    }
+
+    /** Return to automatic movement-based animation selection. */
+    public void clearAnimState() {
+        entityData.set(DATA_ANIM_STATE, "AUTO");
     }
 
     private void applyDataEffects(NpcEntityData data) {
@@ -160,6 +197,115 @@ public class NpcEntity extends PathfinderMob {
             return InteractionResult.CONSUME;
         }
         return InteractionResult.PASS;
+    }
+
+    @Override
+    public net.minecraft.world.entity.SpawnGroupData finalizeSpawn(
+            ServerLevelAccessor level,
+            net.minecraft.world.DifficultyInstance difficulty,
+            MobSpawnType reason,
+            net.minecraft.world.entity.SpawnGroupData spawnData,
+            net.minecraft.nbt.CompoundTag dataTag) {
+        net.minecraft.world.entity.SpawnGroupData result = super.finalizeSpawn(level, difficulty, reason, spawnData, dataTag);
+        this.setXRot(0f);
+        this.setYRot(0f);
+        this.yHeadRot = 0f;
+        this.yBodyRot = 0f;
+        return result;
+    }
+
+    @Override
+    public Component getDisplayName() {
+        String name = getNpcData().displayName;
+        if (name != null && !name.isEmpty()) {
+            return Component.literal(name);
+        }
+        return super.getDisplayName();
+    }
+
+    // ── GeckoLib ──────────────────────────────────────────────────────────────
+
+    @Override
+    public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
+        controllers.add(new AnimationController<>(this, "movement", 5, this::movementPredicate));
+    }
+
+    private PlayState movementPredicate(AnimationState<NpcEntity> state) {
+        String forced = entityData.get(DATA_ANIM_STATE);
+        if (!"AUTO".equals(forced)) {
+            state.getController().setAnimation(
+                    RawAnimation.begin().then(forced, Animation.LoopType.LOOP));
+            return PlayState.CONTINUE;
+        }
+
+        NpcEntityData data = getNpcData();
+        if (state.isMoving()) {
+            // 1. custom WALK binding  2. profession walk binding  3. default name
+            NpcAnimationData anim = findAnimationForState(data,
+                    com.frametrip.dragonlegacyquesttoast.server.animation.AnimationState.WALK);
+            if (anim == null) anim = findAnimationForState(data, professionWalkState(data));
+            String name = anim != null
+                    ? "animation.npc." + anim.name.toLowerCase().replace(' ', '_')
+                    : "animation.npc.walk";
+            state.getController().setAnimation(
+                    RawAnimation.begin().then(name, findAnimLooping(anim)));
+        } else {
+            // 1. custom IDLE binding  2. profession idle binding  3. default name
+            NpcAnimationData anim = findAnimationForState(data,
+                    com.frametrip.dragonlegacyquesttoast.server.animation.AnimationState.IDLE);
+            if (anim == null) anim = findAnimationForState(data, professionIdleState(data));
+            String name = anim != null
+                    ? "animation.npc." + anim.name.toLowerCase().replace(' ', '_')
+                    : "animation.npc.idle";
+            state.getController().setAnimation(
+                    RawAnimation.begin().then(name, findAnimLooping(anim)));
+        }
+        return PlayState.CONTINUE;
+    }
+
+    /** Maps profession to a preferred idle AnimationState for the fallback chain. */
+    private com.frametrip.dragonlegacyquesttoast.server.animation.AnimationState professionIdleState(
+            NpcEntityData data) {
+        if (data.professionData == null) return com.frametrip.dragonlegacyquesttoast.server.animation.AnimationState.IDLE;
+        return switch (data.professionData.type) {
+            case GUARD    -> com.frametrip.dragonlegacyquesttoast.server.animation.AnimationState.GUARD;
+            case TRADER   -> com.frametrip.dragonlegacyquesttoast.server.animation.AnimationState.WORK;
+            case FARMER   -> com.frametrip.dragonlegacyquesttoast.server.animation.AnimationState.WORK;
+            case MINER    -> com.frametrip.dragonlegacyquesttoast.server.animation.AnimationState.WORK;
+            case BUILDER  -> com.frametrip.dragonlegacyquesttoast.server.animation.AnimationState.WORK;
+            default       -> com.frametrip.dragonlegacyquesttoast.server.animation.AnimationState.IDLE;
+        };
+    }
+
+    /** Maps profession to a preferred walk AnimationState for the fallback chain. */
+    private com.frametrip.dragonlegacyquesttoast.server.animation.AnimationState professionWalkState(
+            NpcEntityData data) {
+        if (data.professionData == null) return com.frametrip.dragonlegacyquesttoast.server.animation.AnimationState.WALK;
+        return switch (data.professionData.type) {
+            case COMPANION, FOLLOWER ->
+                    com.frametrip.dragonlegacyquesttoast.server.animation.AnimationState.FOLLOW;
+            default ->
+                    com.frametrip.dragonlegacyquesttoast.server.animation.AnimationState.WALK;
+        };
+    }
+
+    private NpcAnimationData findAnimationForState(
+            NpcEntityData data,
+            com.frametrip.dragonlegacyquesttoast.server.animation.AnimationState target) {
+        if (data.animations == null) return null;
+        for (NpcAnimationData a : data.animations) {
+            if (a.stateBinding == target) return a;
+        }
+        return null;
+    }
+
+    private Animation.LoopType findAnimLooping(NpcAnimationData anim) {
+        return (anim == null || anim.loop) ? Animation.LoopType.LOOP : Animation.LoopType.HOLD_ON_LAST_FRAME;
+    }
+
+    @Override
+    public AnimatableInstanceCache getAnimatableInstanceCache() {
+        return geoCache;
     }
 
     @Override

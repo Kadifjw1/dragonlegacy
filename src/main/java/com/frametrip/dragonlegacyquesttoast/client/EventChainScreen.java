@@ -50,7 +50,10 @@ public class EventChainScreen extends Screen {
     private EditBox chainNameBox;
     private EditBox triggerParamBox;
     private EditBox condParamBox;
+    private EditBox condParam2Box;
     private EditBox actionParamBox;
+    private EditBox actionParam2Box2;
+    private EditBox actionParam3Box;
 
     private int guiLeft, guiTop;
 
@@ -179,9 +182,25 @@ public class EventChainScreen extends Screen {
         String hint = selectedChain.trigger.paramHint();
         if (!hint.isEmpty()) {
             String paramKey = triggerParamKey(selectedChain.trigger);
-            triggerParamBox = new EditBox(font, cx, cy, COL_W, 14, Component.literal(hint));
-            triggerParamBox.setValue(selectedChain.triggerParam(paramKey));
-            addRenderableWidget(triggerParamBox);
+            // TIME_CHANGE uses a fixed set — show cycle button instead of free text
+            if (selectedChain.trigger == EventTriggerType.TIME_CHANGE) {
+                String[] opts = {"День", "Ночь", "Рассвет", "Закат"};
+                String cur = selectedChain.triggerParam("time");
+                if (cur.isEmpty()) cur = opts[0];
+                final String curF = cur;
+                addRenderableWidget(Button.builder(
+                        Component.literal("◀ " + cur + " ▶"),
+                        b -> {
+                            int i = java.util.Arrays.asList(opts).indexOf(curF);
+                            selectedChain.triggerParam("time", opts[(i + 1) % opts.length]);
+                            rebuild();
+                        }
+                ).bounds(cx, cy, COL_W, 14).build());
+            } else {
+                triggerParamBox = new EditBox(font, cx, cy, COL_W, 14, Component.literal(hint));
+                triggerParamBox.setValue(selectedChain.triggerParam(paramKey));
+                addRenderableWidget(triggerParamBox);
+            }
         }
     }
 
@@ -198,17 +217,29 @@ public class EventChainScreen extends Screen {
             EventCondition cond = conds.get(i);
             boolean sel = i == selectedCondIdx;
             final int fi = i;
+            String summary = condSummary(cond);
+            String rowLabel = (sel ? "§e▶ " : "  ") + truncate(cond.type.label(), 13)
+                    + (summary.isEmpty() ? "" : " §8" + summary);
 
             addRenderableWidget(Button.builder(
-                    Component.literal((sel ? "§e▶ " : "  ") + truncate(cond.type.label(), 16)),
+                    Component.literal(rowLabel),
                     b -> { selectedCondIdx = fi; selectedActionIdx = -1; rebuild(); }
-            ).bounds(cx, cy, COL_W - 20, 12).build());
+            ).bounds(cx, cy, COL_W - 36, 12).build());
 
+            // ↑ reorder up
+            addRenderableWidget(Button.builder(Component.literal("↑"), b -> {
+                if (fi > 0) { EventCondition tmp = conds.get(fi-1); conds.set(fi-1, conds.get(fi)); conds.set(fi, tmp); selectedCondIdx = fi-1; rebuild(); }
+            }).bounds(cx + COL_W - 34, cy, 14, 12).build());
+            // ↓ reorder down
+            addRenderableWidget(Button.builder(Component.literal("↓"), b -> {
+                if (fi < conds.size()-1) { EventCondition tmp = conds.get(fi+1); conds.set(fi+1, conds.get(fi)); conds.set(fi, tmp); selectedCondIdx = fi+1; rebuild(); }
+            }).bounds(cx + COL_W - 18, cy, 14, 12).build());
+            // ✕ delete
             addRenderableWidget(Button.builder(Component.literal("§c✕"), b -> {
                 conds.remove(fi);
                 selectedCondIdx = -1;
                 rebuild();
-            }).bounds(cx + COL_W - 18, cy, 16, 12).build());
+            }).bounds(cx + COL_W - 2, cy, 14, 12).build());
             cy += 14;
         }
 
@@ -227,11 +258,35 @@ public class EventChainScreen extends Screen {
             }).bounds(cx + COL_W - 22, cy, 20, 13).build());
             cy += 16;
 
-            String paramKey = condParamKey(cond.type);
-            if (!paramKey.isEmpty()) {
-                condParamBox = new EditBox(font, cx, cy, COL_W, 13, Component.literal(condParamLabel(cond.type)));
-                condParamBox.setValue(cond.param(paramKey));
-                addRenderableWidget(condParamBox);
+            // TIME_OF_DAY — cycle button
+            if (cond.type == EventConditionType.TIME_OF_DAY) {
+                String[] opts = {"День", "Ночь", "Рассвет", "Закат"};
+                String cur = cond.param("time"); if (cur.isEmpty()) cur = opts[0];
+                final String curF = cur;
+                addRenderableWidget(Button.builder(
+                        Component.literal("◀ " + cur + " ▶"),
+                        b -> {
+                            int oi = java.util.Arrays.asList(opts).indexOf(curF);
+                            cond.param("time", opts[(oi + 1) % opts.length]);
+                            rebuild();
+                        }
+                ).bounds(cx, cy, COL_W, 13).build());
+                cy += 16;
+            } else {
+                String paramKey = condParamKey(cond.type);
+                if (!paramKey.isEmpty()) {
+                    condParamBox = new EditBox(font, cx, cy, COL_W, 13, Component.literal(condParamLabel(cond.type)));
+                    condParamBox.setValue(cond.param(paramKey));
+                    addRenderableWidget(condParamBox);
+                    cy += 16;
+                }
+                // Second param (qty for ITEM_IN_INVENTORY)
+                String p2key = condParam2Key(cond.type);
+                if (!p2key.isEmpty()) {
+                    condParam2Box = new EditBox(font, cx, cy, COL_W, 13, Component.literal(condParam2Label(cond.type)));
+                    condParam2Box.setValue(cond.param(p2key));
+                    addRenderableWidget(condParam2Box);
+                }
             }
         }
     }
@@ -249,17 +304,29 @@ public class EventChainScreen extends Screen {
             EventAction act = acts.get(i);
             boolean sel = i == selectedActionIdx;
             final int fi = i;
+            String summary = actionSummary(act);
+            String rowLabel = (sel ? "§e▶ " : "  ") + truncate(act.type.label(), 13)
+                    + (summary.isEmpty() ? "" : " §8" + summary);
 
             addRenderableWidget(Button.builder(
-                    Component.literal((sel ? "§e▶ " : "  ") + truncate(act.type.label(), 16)),
+                    Component.literal(rowLabel),
                     b -> { selectedActionIdx = fi; selectedCondIdx = -1; rebuild(); }
-            ).bounds(cx, cy, COL_W - 20, 12).build());
+            ).bounds(cx, cy, COL_W - 36, 12).build());
 
+            // ↑ reorder up
+            addRenderableWidget(Button.builder(Component.literal("↑"), b -> {
+                if (fi > 0) { EventAction tmp = acts.get(fi-1); acts.set(fi-1, acts.get(fi)); acts.set(fi, tmp); selectedActionIdx = fi-1; rebuild(); }
+            }).bounds(cx + COL_W - 34, cy, 14, 12).build());
+            // ↓ reorder down
+            addRenderableWidget(Button.builder(Component.literal("↓"), b -> {
+                if (fi < acts.size()-1) { EventAction tmp = acts.get(fi+1); acts.set(fi+1, acts.get(fi)); acts.set(fi, tmp); selectedActionIdx = fi+1; rebuild(); }
+            }).bounds(cx + COL_W - 18, cy, 14, 12).build());
+            // ✕ delete
             addRenderableWidget(Button.builder(Component.literal("§c✕"), b -> {
                 acts.remove(fi);
                 selectedActionIdx = -1;
                 rebuild();
-            }).bounds(cx + COL_W - 18, cy, 16, 12).build());
+            }).bounds(cx + COL_W - 2, cy, 14, 12).build());
             cy += 14;
         }
 
@@ -289,12 +356,18 @@ public class EventChainScreen extends Screen {
 
             String param2Key = actionParam2Key(act.type);
             if (!param2Key.isEmpty()) {
-                EditBox p2 = new EditBox(font, cx, cy, COL_W, 13,
+                actionParam2Box2 = new EditBox(font, cx, cy, COL_W, 13,
                         Component.literal(actionParam2Label(act.type)));
-                p2.setValue(act.param(param2Key));
-                final String pk2 = param2Key;
-                p2.setResponder(v -> act.param(pk2, v));
-                addRenderableWidget(p2);
+                actionParam2Box2.setValue(act.param(param2Key));
+                addRenderableWidget(actionParam2Box2);
+                cy += 16;
+            }
+
+            // Third param — z coordinate for TELEPORT
+            if (act.type == EventActionType.TELEPORT) {
+                actionParam3Box = new EditBox(font, cx, cy, COL_W, 13, Component.literal("Z"));
+                actionParam3Box.setValue(act.param("z"));
+                addRenderableWidget(actionParam3Box);
             }
         }
     }
@@ -374,15 +447,30 @@ public class EventChainScreen extends Screen {
             String key = triggerParamKey(selectedChain.trigger);
             if (!key.isEmpty()) selectedChain.triggerParam(key, triggerParamBox.getValue());
         }
-        if (selectedCondIdx >= 0 && selectedCondIdx < selectedChain.conditions.size() && condParamBox != null) {
+        if (selectedCondIdx >= 0 && selectedCondIdx < selectedChain.conditions.size()) {
             EventCondition cond = selectedChain.conditions.get(selectedCondIdx);
-            String key = condParamKey(cond.type);
-            if (!key.isEmpty()) cond.param(key, condParamBox.getValue());
+            if (condParamBox != null) {
+                String key = condParamKey(cond.type);
+                if (!key.isEmpty()) cond.param(key, condParamBox.getValue());
+            }
+            if (condParam2Box != null) {
+                String key2 = condParam2Key(cond.type);
+                if (!key2.isEmpty()) cond.param(key2, condParam2Box.getValue());
+            }
         }
-        if (selectedActionIdx >= 0 && selectedActionIdx < selectedChain.actions.size() && actionParamBox != null) {
+        if (selectedActionIdx >= 0 && selectedActionIdx < selectedChain.actions.size()) {
             EventAction act = selectedChain.actions.get(selectedActionIdx);
-            String key = actionParamKey(act.type);
-            if (!key.isEmpty()) act.param(key, actionParamBox.getValue());
+            if (actionParamBox != null) {
+                String key = actionParamKey(act.type);
+                if (!key.isEmpty()) act.param(key, actionParamBox.getValue());
+            }
+            if (actionParam2Box2 != null) {
+                String key2 = actionParam2Key(act.type);
+                if (!key2.isEmpty()) act.param(key2, actionParam2Box2.getValue());
+            }
+            if (actionParam3Box != null && act.type == EventActionType.TELEPORT) {
+                act.param("z", actionParam3Box.getValue());
+            }
         }
     }
 
@@ -473,6 +561,24 @@ public class EventChainScreen extends Screen {
             case TELEPORT  -> "Y";
             default        -> "";
         };
+    }
+
+    private static String condParam2Key(EventConditionType type) {
+        return type == EventConditionType.ITEM_IN_INVENTORY ? "qty" : "";
+    }
+
+    private static String condParam2Label(EventConditionType type) {
+        return type == EventConditionType.ITEM_IN_INVENTORY ? "Кол-во (мин.)" : "";
+    }
+
+    private static String condSummary(EventCondition cond) {
+        String p1 = cond.param(condParamKey(cond.type));
+        return truncate(p1, 8);
+    }
+
+    private static String actionSummary(EventAction act) {
+        String p1 = act.param(actionParamKey(act.type));
+        return truncate(p1, 8);
     }
 
     private static String truncate(String s, int max) {

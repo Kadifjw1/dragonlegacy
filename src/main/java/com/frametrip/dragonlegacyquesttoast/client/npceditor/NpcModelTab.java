@@ -34,7 +34,7 @@ public class NpcModelTab implements NpcEditorTab {
         NpcModelConfig mc = ensureModel(d);
         var font = Minecraft.getInstance().font;
         
-        int y = oy + 20; // below section header
+        int y = oy + 18; // below model subtitle (subtitle at oy+6, height ~8px)
 
         // ── Category filter row ───────────────────────────────────────────────
         int bw = rw / CAT_IDS.length;
@@ -58,15 +58,18 @@ public class NpcModelTab implements NpcEditorTab {
         for (int i = profileScroll; i < Math.min(filtered.size(), profileScroll + visibleRows); i++) {
             NpcModelProfile profile = filtered.get(i);
             boolean selected = mc.profile == profile;
+            int btnW = rw - 26;
+            String prefix = selected ? "§e§l▶ " : "   ";
+            String label  = NpcEditorUtils.fitText(profile.label, btnW - 14);
             add.accept(Button.builder(
-                    Component.literal(selected ? "§e§l▶ " + profile.label : "   " + profile.label),
+                    Component.literal(prefix + label),
                     b -> {
                         mc.profile = profile;
                         mc.scale   = profile.baseScale;
                         state.markDirty();
                         rebuild.run();
                     }
-            ).bounds(rx, y + (i - profileScroll) * 18, rw - 26, 16).build());
+            ).bounds(rx, y + (i - profileScroll) * 18, btnW, 16).build());
         }
 
         // Scroll arrows (right of list)
@@ -164,12 +167,14 @@ public class NpcModelTab implements NpcEditorTab {
         NpcEntityData d  = state.getDraft();
         NpcModelConfig mc = ensureModel(d);
 
-        // Section header — profile info embedded in title to avoid overlap
-        NpcEditorUtils.sectionCard(g, rx, oy, rw, 18,
-                "МОДЕЛЬ: " + mc.profile.label + " §8(" + mc.profile.category() + ")", ACCENT);
-        
+        // Selected model subtitle (y=6 relative to tab content, no card — avoids
+        // overlapping with the tab label drawn by NpcCreatorScreen at oy-10)
+        g.drawString(font, "§b" + mc.profile.label
+                + " §8(" + mc.profile.category() + ")",
+                rx + 4, oy + 6, ACCENT, false);
+
         // Parameters section (below the list)
-        int paramY = oy + 20 + 22 + 5 * 18 + 10;
+        int paramY = oy + 18 + 22 + 5 * 18 + 10;
         NpcEditorUtils.sectionCard(g, rx, paramY - 6, rw, 84, "ПАРАМЕТРЫ", ACCENT);
         
         // Scale label + current value (left of buttons)
@@ -191,7 +196,7 @@ public class NpcModelTab implements NpcEditorTab {
                 + "  Диалог: §7+" + String.format("%.1f", dlg),
                 rx + 4, paramY + 58, 0xFF666677, false);
 
-         // GeckoLib section header (below parameters card)
+        // GeckoLib section header (below parameters card)
         int geckoY = paramY - 6 + 84 + 26;
         NpcEditorUtils.sectionCard(g, rx, geckoY, rw, 14, "GECKOLIB РЕСУРСЫ", ACCENT);
         g.drawString(font, "§8Модель:", rx + 4, geckoY + 17, 0xFF555566, false);

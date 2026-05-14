@@ -22,7 +22,7 @@ public final class NpcEditorUtils {
         String sub = font.plainSubstrByWidth(text, maxPx - font.width("…"));
         return sub + "…";
     }
-    
+
     /** Draw a 1-pixel border rectangle. */
     public static void brd(GuiGraphics g, int x, int y, int w, int h, int c) {
         g.fill(x,     y,     x + w, y + 1, c);

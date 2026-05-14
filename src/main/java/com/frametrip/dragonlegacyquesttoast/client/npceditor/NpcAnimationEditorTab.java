@@ -5,13 +5,20 @@ import com.frametrip.dragonlegacyquesttoast.server.animation.AnimationBone;
 import com.frametrip.dragonlegacyquesttoast.server.animation.AnimationKeyframe;
 import com.frametrip.dragonlegacyquesttoast.server.animation.AnimationState;
 import com.frametrip.dragonlegacyquesttoast.server.animation.NpcAnimationData;
+import com.frametrip.dragonlegacyquesttoast.server.animation.NpcAnimationLibrary;
+import com.frametrip.dragonlegacyquesttoast.util.NpcFileUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.network.chat.Component;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -27,6 +34,7 @@ public class NpcAnimationEditorTab implements NpcEditorTab {
     public static final int ACCENT = 0xFFFF6644;
 
     // ── State ─────────────────────────────────────────────────────────────────
+    private static final Logger LOGGER = LogManager.getLogger("dragonlegacyquesttoast");
     private NpcAnimationData selectedAnim = null;
     private String selectedBone = AnimationBone.HEAD;
     private int selectedKeyframeIdx = -1;
@@ -36,6 +44,15 @@ public class NpcAnimationEditorTab implements NpcEditorTab {
     private long playStartMs = 0;
     private float timelineScale = 10f;
     private String channelMode = "rotation";
+
+    // ── Library mode state ────────────────────────────────────────────────────
+    private boolean showLibrary = false;
+    private AnimationState libStateFilter = null; // null = ALL
+
+    // ── Import/export status ──────────────────────────────────────────────────
+    private String ioStatus = "";
+    private int libScroll = 0;
+    private String libSelectedId = null;
 
     private EditBox nameBox, durationBox, kfTickBox, kfXBox, kfYBox, kfZBox;
 
@@ -48,6 +65,21 @@ public class NpcAnimationEditorTab implements NpcEditorTab {
                      NpcEditorState state, int rx, int oy, int rw) {
         NpcEntityData draft = state.getDraft();
         List<NpcAnimationData> anims = draft.animations;
+
+        // ── Mode toggle ───────────────────────────────────────────────────────
+        add.accept(Button.builder(
+                Component.literal(showLibrary ? "§7Редактор" : "§e§lРедактор"),
+                b -> { showLibrary = false; rebuild.run(); }
+        ).bounds(rx, oy, 80, 14).build());
+        add.accept(Button.builder(
+                Component.literal(showLibrary ? "§e§lБиблиотека" : "§7Библиотека"),
+                b -> { showLibrary = true; rebuild.run(); }
+        ).bounds(rx + 84, oy, 80, 14).build());
+
+        if (showLibrary) {
+            initLibraryPanel(add, rebuild, state, draft, rx, oy + 18, rw);
+            return;
+        }
 
         int listX = rx;
         int centerX = rx + LIST_W + 4;
@@ -75,7 +107,7 @@ public class NpcAnimationEditorTab implements NpcEditorTab {
             NpcAnimationData anim = anims.get(i);
             boolean sel = anim == selectedAnim;
             add.accept(Button.builder(
-                    Component.literal(sel ? "§e▶ " + truncate(anim.name, 8) : "  " + truncate(anim.name, 9)),
+                    Component.literal(sel ? "§e▶ " + NpcEditorUtils.fitText(anim.name, LIST_W - 14) : "  " + NpcEditorUtils.fitText(anim.name, LIST_W - 10)),
                     b -> {
                         selectedAnim = anim;
                         selectedKeyframeIdx = -1;
@@ -240,27 +272,178 @@ public class NpcAnimationEditorTab implements NpcEditorTab {
         }
 
         int exportY = oy + 150;
-        add.accept(Button.builder(Component.literal("↓ GeckoLib JSON"), b -> {
-            String json = selectedAnim.toGeckoLibJson();
-            Minecraft.getInstance().keyboardHandler.setClipboard(json);
+
+        // ── Export ───────────────────────────────────────────────────────────
+        // Single export — selected animation only
+        add.accept(Button.builder(Component.literal("↓ Текущую"), b -> {
+            if (selectedAnim == null) return;
+            exportSingle(selectedAnim);
+            ioStatus = "§aЭкспорт: " + selectedAnim.name;
+            rebuild.run();
         }).bounds(rightX, exportY, RIGHT_W - 2, 14).build());
 
-        add.accept(Button.builder(Component.literal("↑ Импорт JSON"), b -> {
+        // Batch export — all NPC animations
+        add.accept(Button.builder(Component.literal("↓ Все (" + anims.size() + ")"), b -> {
+            if (anims.isEmpty()) return;
+            int count = 0;
+            for (NpcAnimationData a : anims) { exportSingle(a); count++; }
+            Path dir = NpcFileUtils.exportAnimDir();
+            try { Files.createDirectories(dir); NpcFileUtils.openInExplorer(dir); } catch (IOException ignored) {}
+            ioStatus = "§aЭкспортировано: " + count;
+            rebuild.run();
+        }).bounds(rightX, exportY + 16, RIGHT_W - 2, 14).build());
+
+        // ── Import ───────────────────────────────────────────────────────────
+        // From clipboard
+        add.accept(Button.builder(Component.literal("↑ Буфер"), b -> {
             String clip = Minecraft.getInstance().keyboardHandler.getClipboard();
-            if (clip != null && !clip.isBlank()) {
-                try {
-                    NpcAnimationData imported = NpcAnimationData.fromGeckoLibJson(clip);
-                    if (imported != null) {
-                        anims.add(imported);
-                        selectedAnim = imported;
-                        selectedKeyframeIdx = -1;
-                        state.markDirty();
-                        rebuild.run();
-                    }
-                } catch (Exception ignored) {
-                }
+            if (clip == null || clip.isBlank()) { ioStatus = "§cБуфер пуст"; rebuild.run(); return; }
+            NpcAnimationData imported = NpcAnimationData.fromGeckoLibJson(clip);
+            if (imported != null) {
+                anims.add(imported);
+                selectedAnim = imported;
+                selectedKeyframeIdx = -1;
+                state.markDirty();
+                ioStatus = "§aИмпорт: " + imported.name;
+            } else {
+                ioStatus = "§cНеверный формат";
             }
-        }).bounds(rightX, exportY + 18, RIGHT_W - 2, 14).build());
+            rebuild.run();
+        }).bounds(rightX, exportY + 34, RIGHT_W - 2, 14).build());
+
+        // From import/animations directory — loads all .animation.json files found
+        add.accept(Button.builder(Component.literal("↑ Из папки"), b -> {
+            int[] loaded = {0};
+            try (java.nio.file.DirectoryStream<Path> ds = Files.newDirectoryStream(
+                    NpcFileUtils.importAnimDir(), "*.animation.json")) {
+                for (Path p : ds) {
+                    try {
+                        String json = Files.readString(p);
+                        NpcAnimationData imported = NpcAnimationData.fromGeckoLibJson(json);
+                        if (imported != null) {
+                            anims.add(imported);
+                            selectedAnim = imported;
+                            selectedKeyframeIdx = -1;
+                            loaded[0]++;
+                        }
+                    } catch (Exception e) {
+                        LOGGER.warn("Skip {}: {}", p.getFileName(), e.getMessage());
+                    }
+                }
+            } catch (IOException e) {
+                ioStatus = "§cПапка недоступна";
+                rebuild.run();
+                return;
+            }
+            if (loaded[0] > 0) state.markDirty();
+            ioStatus = loaded[0] > 0 ? "§aЗагружено: " + loaded[0] : "§8Файлов не найдено";
+            rebuild.run();
+        }).bounds(rightX, exportY + 52, RIGHT_W - 2, 14).build());
+
+        // Open import/animations folder
+        add.accept(Button.builder(Component.literal("📂 Папка"), b -> {
+            NpcFileUtils.openInExplorer(NpcFileUtils.importAnimDir());
+        }).bounds(rightX, exportY + 70, RIGHT_W - 2, 12).build());
+    }
+
+    private void exportSingle(NpcAnimationData anim) {
+        String json = anim.toGeckoLibJson();
+        Minecraft.getInstance().keyboardHandler.setClipboard(json);
+        Path dir = NpcFileUtils.exportAnimDir();
+        String safe = anim.name.toLowerCase().replaceAll("[^a-z0-9_]", "_");
+        try {
+            Files.createDirectories(dir);
+            Files.writeString(dir.resolve(safe + ".animation.json"), json);
+        } catch (IOException e) {
+            LOGGER.error("Failed to export animation: {}", safe, e);
+        }
+    }
+
+    // ── Library panel ─────────────────────────────────────────────────────────
+
+    private void initLibraryPanel(Consumer<AbstractWidget> add, Runnable rebuild,
+                                   NpcEditorState state, NpcEntityData draft, int rx, int oy, int rw) {
+        // State filter cycle button
+        String filterLabel = libStateFilter == null ? "§7Все состояния" : "§7" + libStateFilter.label();
+        add.accept(Button.builder(Component.literal("Фильтр: " + filterLabel), b -> {
+            AnimationState[] vals = AnimationState.values();
+            if (libStateFilter == null) {
+                libStateFilter = vals[0];
+            } else {
+                int next = libStateFilter.ordinal() + 1;
+                libStateFilter = next >= vals.length ? null : vals[next];
+            }
+            libScroll = 0;
+            rebuild.run();
+        }).bounds(rx, oy, rw - 100, 14).build());
+
+        // Save selected NPC animation → library
+        add.accept(Button.builder(Component.literal("↑ В библиотеку"), b -> {
+            if (selectedAnim != null) {
+                NpcAnimationData copy = selectedAnim.copy();
+                NpcAnimationLibrary.register(copy);
+                libSelectedId = copy.id;
+                rebuild.run();
+            }
+        }).bounds(rx + rw - 96, oy, 96, 14).build());
+
+        // Filtered library list
+        List<NpcAnimationData> lib = libStateFilter == null
+                ? NpcAnimationLibrary.getAll()
+                : NpcAnimationLibrary.getByState(libStateFilter);
+
+        int visRows = 10;
+        int maxScroll = Math.max(0, lib.size() - visRows);
+        libScroll = Math.max(0, Math.min(libScroll, maxScroll));
+
+        int ly = oy + 20;
+        for (int i = libScroll; i < Math.min(lib.size(), libScroll + visRows); i++) {
+            NpcAnimationData a = lib.get(i);
+            boolean sel = a.id.equals(libSelectedId);
+            int btnW = rw - 26;
+            String prefix = sel ? "§e▶ " : "   ";
+            String label = NpcEditorUtils.fitText(
+                    a.name + " §8[" + a.stateBinding.label() + "]", btnW - 10);
+            final String id = a.id;
+            add.accept(Button.builder(Component.literal(prefix + label), b -> {
+                libSelectedId = id;
+                rebuild.run();
+            }).bounds(rx, ly + (i - libScroll) * 18, btnW, 16).build());
+        }
+
+        // Scroll arrows
+        add.accept(Button.builder(Component.literal("▲"),
+                b -> { libScroll = Math.max(0, libScroll - 1); rebuild.run(); }
+        ).bounds(rx + rw - 24, ly, 22, 16).build());
+        add.accept(Button.builder(Component.literal("▼"),
+                b -> { libScroll = Math.min(maxScroll, libScroll + 1); rebuild.run(); }
+        ).bounds(rx + rw - 24, ly + 20, 22, 16).build());
+
+        // Action buttons for selected library entry
+        if (libSelectedId != null && NpcAnimationLibrary.get(libSelectedId) != null) {
+            int actY = ly + visRows * 18 + 6;
+
+            // Apply to NPC
+            add.accept(Button.builder(Component.literal("→ Применить к NPC"), b -> {
+                NpcAnimationData src = NpcAnimationLibrary.get(libSelectedId);
+                if (src == null) return;
+                NpcAnimationData copy = src.copy();
+                copy.ensureBones();
+                draft.animations.add(copy);
+                selectedAnim = copy;
+                state.markDirty();
+                showLibrary = false;
+                rebuild.run();
+            }).bounds(rx, actY, 130, 16).build());
+
+            // Delete from library
+            add.accept(Button.builder(Component.literal("§c✕ Удалить"), b -> {
+                NpcAnimationLibrary.remove(libSelectedId);
+                libSelectedId = null;
+                libScroll = Math.max(0, libScroll - 1);
+                rebuild.run();
+            }).bounds(rx + 134, actY, 80, 16).build());
+        }
     }
 
     @Override
@@ -269,6 +452,11 @@ public class NpcAnimationEditorTab implements NpcEditorTab {
 
         g.fill(rx, oy, rx + rw, oy + 18, 0x55000000);
         g.drawString(font, "§l⏵ РЕДАКТОР АНИМАЦИЙ", rx + 4, oy + 4, ACCENT, false);
+
+        if (showLibrary) {
+            renderLibraryPanel(g, rx, oy + 18, rw);
+            return;
+        }
 
         if (selectedAnim == null) {
             g.drawString(font, "§8Выберите или создайте анимацию.", rx + LIST_W + 8, oy + 30, 0xFF555566, false);
@@ -339,7 +527,40 @@ public class NpcAnimationEditorTab implements NpcEditorTab {
         } else {
             g.drawString(font, "§8Выберите кадр", rightX, ry + 30, 0xFF444455, false);
         }
-        g.drawString(font, "§8── Экспорт ──", rightX, oy + 142, 0xFF444455, false);
+        g.drawString(font, "§8── И/О ──", rightX, oy + 142, 0xFF444455, false);
+        if (!ioStatus.isEmpty()) {
+            g.drawString(font, ioStatus, rightX, oy + 238, 0xFFCCCCCC, false);
+        }
+    }
+
+    private void renderLibraryPanel(GuiGraphics g, int rx, int oy, int rw) {
+        var font = Minecraft.getInstance().font;
+        List<NpcAnimationData> lib = libStateFilter == null
+                ? NpcAnimationLibrary.getAll()
+                : NpcAnimationLibrary.getByState(libStateFilter);
+
+        NpcEditorUtils.sectionCard(g, rx, oy - 2, rw, 16,
+                "БИБЛИОТЕКА (" + lib.size() + ")", ACCENT);
+
+        int ly = oy + 20;
+        for (int i = libScroll; i < Math.min(lib.size(), libScroll + 10); i++) {
+            NpcAnimationData a = lib.get(i);
+            boolean sel = a.id.equals(libSelectedId);
+            int rowY = ly + (i - libScroll) * 18;
+            if (sel) g.fill(rx, rowY, rx + rw - 26, rowY + 16, 0x44FFCC44);
+            g.drawString(font,
+                    "§8" + (int) a.durationTicks + "т  "
+                    + (a.loop ? "§aЦ " : "§8. ")
+                    + "§7" + a.stateBinding.label(),
+                    rx + rw - 140, rowY + 4, 0xFF666677, false);
+        }
+
+        if (lib.isEmpty()) {
+            g.drawString(font, "§8Библиотека пуста. Создайте анимацию в редакторе",
+                    rx + 4, ly + 8, 0xFF444455, false);
+            g.drawString(font, "§8и нажмите «↑ В библиотеку».",
+                    rx + 4, ly + 20, 0xFF444455, false);
+        }
     }
 
     @Override
@@ -407,8 +628,16 @@ public class NpcAnimationEditorTab implements NpcEditorTab {
     @Override
     public boolean onMouseScrolled(double mx, double my, double delta,
                                    NpcEditorState state, int rx, int oy, int rw) {
-        int maxScroll = Math.max(0, state.getDraft().animations.size() - 9);
-        animScroll = Math.max(0, Math.min(maxScroll, animScroll - (int) Math.signum(delta)));
+        if (showLibrary) {
+            List<NpcAnimationData> lib = libStateFilter == null
+                    ? NpcAnimationLibrary.getAll()
+                    : NpcAnimationLibrary.getByState(libStateFilter);
+            int maxScroll = Math.max(0, lib.size() - 10);
+            libScroll = Math.max(0, Math.min(maxScroll, libScroll - (int) Math.signum(delta)));
+        } else {
+            int maxScroll = Math.max(0, state.getDraft().animations.size() - 9);
+            animScroll = Math.max(0, Math.min(maxScroll, animScroll - (int) Math.signum(delta)));
+        }
         return true;
     }
 
@@ -443,8 +672,4 @@ public class NpcAnimationEditorTab implements NpcEditorTab {
         return "rotation".equals(channelMode) ? bone.rotationFrames : bone.positionFrames;
     }
 
-    private static String truncate(String s, int max) {
-        if (s == null) return "";
-        return s.length() > max ? s.substring(0, max) + "…" : s;
-    }
 }
