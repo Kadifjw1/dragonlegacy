@@ -8,7 +8,11 @@ public enum NpcProfessionType {
     NONE,
     TRADER,
     BUILDER,
-    COMPANION;
+    COMPANION,
+    MINER,
+    GUARD,
+    FARMER,
+    FOLLOWER;
 
     public String translationKey() {
         return "npc.profession." + DragonLegacyQuestToastMod.MODID + "." + name().toLowerCase();
