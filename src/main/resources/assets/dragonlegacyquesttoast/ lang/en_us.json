@@ -3,6 +3,7 @@
   "item.dragonlegacyquesttoast.legacy_coin": "Legacy Coin",
   "item.dragonlegacyquesttoast.traveler_journal": "Traveler's Journal",
   "item.dragonlegacyquesttoast.event_book": "Event Book",
+  "item.dragonlegacyquesttoast.event_book.hint": "Look at an NPC and right-click to open Event Editor",
   "item.dragonlegacyquesttoast.gui_configurator": "GUI Configurator",
 
   "entity.dragonlegacyquesttoast.npc": "NPC",

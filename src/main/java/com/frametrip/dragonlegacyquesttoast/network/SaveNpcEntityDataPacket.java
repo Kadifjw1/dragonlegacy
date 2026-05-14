@@ -38,13 +38,27 @@ public class SaveNpcEntityDataPacket {
         return new SaveNpcEntityDataPacket(buf.readUUID(), buf.readUtf(262144));
     }
  
+    private static final int MAX_JSON_BYTES = 131072; // 128 KiB
+
     public static void handle(SaveNpcEntityDataPacket msg, Supplier<NetworkEvent.Context> ctx) {
         ctx.get().enqueueWork(() -> {
             ServerPlayer player = ctx.get().getSender();
             if (player == null || !player.getAbilities().instabuild) return;
- 
-            NpcEntityData data = GSON.fromJson(msg.dataJson, NpcEntityData.class);
+
+            // Reject oversized payloads before parsing
+            if (msg.dataJson == null || msg.dataJson.length() > MAX_JSON_BYTES) return;
+
+            NpcEntityData data;
+            try {
+                data = GSON.fromJson(msg.dataJson, NpcEntityData.class);
+            } catch (Exception e) {
+                return;
+            }
             if (data == null) return;
+
+            // Basic field sanitisation
+            if (data.displayName == null) data.displayName = "";
+            if (data.displayName.length() > 64) data.displayName = data.displayName.substring(0, 64);
  
             net.minecraft.server.MinecraftServer server = player.getServer();
             if (server == null) return;

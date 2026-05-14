@@ -3,6 +3,7 @@
   "item.dragonlegacyquesttoast.legacy_coin": "Монета наследия",
   "item.dragonlegacyquesttoast.traveler_journal": "Журнал путешественника",
   "item.dragonlegacyquesttoast.event_book": "Книга событий",
+  "item.dragonlegacyquesttoast.event_book.hint": "Наведите на NPC и нажмите ПКМ для открытия редактора событий",
   "item.dragonlegacyquesttoast.gui_configurator": "Конфигуратор интерфейса",
 
   "entity.dragonlegacyquesttoast.npc": "NPC",
