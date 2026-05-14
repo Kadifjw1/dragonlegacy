@@ -25,6 +25,7 @@ public class NpcModelTab implements NpcEditorTab {
     private String categoryFilter = "all";
     private int    profileScroll  = 0;
     private EditBox offsetYBox;
+    private EditBox geckoModelBox, geckoAnimBox, geckoTexBox;
 
     @Override
     public void init(Consumer<AbstractWidget> add, Runnable rebuild,
@@ -123,6 +124,38 @@ public class NpcModelTab implements NpcEditorTab {
                 Component.literal("Анимации: " + (mc.useCreatureAnimations ? "§aВКЛ" : "§cВЫКЛ")),
                 b -> { mc.useCreatureAnimations = !mc.useCreatureAnimations; state.markDirty(); rebuild.run(); }
         ).bounds(rx + hw + 2, y, hw, 16).build());
+        y += 24;
+
+        // ── GeckoLib binding fields ───────────────────────────────────────────
+        int fieldW = rw - 4;
+        geckoModelBox = new EditBox(font, rx + 2, y, fieldW, 14, Component.literal("Модель"));
+        geckoModelBox.setMaxLength(256);
+        geckoModelBox.setValue(d.geckoModel);
+        geckoModelBox.setHint(Component.literal("modid:geo/npc.geo.json").withStyle(s -> s.withColor(0xFF444455)));
+        add.accept(geckoModelBox);
+        y += 18;
+
+        geckoAnimBox = new EditBox(font, rx + 2, y, fieldW, 14, Component.literal("Анимация"));
+        geckoAnimBox.setMaxLength(256);
+        geckoAnimBox.setValue(d.geckoAnimation);
+        geckoAnimBox.setHint(Component.literal("modid:animations/npc.animation.json").withStyle(s -> s.withColor(0xFF444455)));
+        add.accept(geckoAnimBox);
+        y += 18;
+
+        geckoTexBox = new EditBox(font, rx + 2, y, fieldW, 14, Component.literal("Текстура"));
+        geckoTexBox.setMaxLength(256);
+        geckoTexBox.setValue(d.geckoTexture);
+        geckoTexBox.setHint(Component.literal("modid:textures/entity/npc.png").withStyle(s -> s.withColor(0xFF444455)));
+        add.accept(geckoTexBox);
+
+        // Clear-all button
+        add.accept(Button.builder(Component.literal("↺ Сброс GeckoLib"), b -> {
+            d.geckoModel     = "";
+            d.geckoAnimation = "";
+            d.geckoTexture   = "";
+            state.markDirty();
+            rebuild.run();
+        }).bounds(rx + fieldW - 100, y + 18, 102, 14).build());
     }
 
     @Override
@@ -157,14 +190,25 @@ public class NpcModelTab implements NpcEditorTab {
        g.drawString(font, "§8Имя: §7+" + String.format("%.1f", np)
                 + "  Диалог: §7+" + String.format("%.1f", dlg),
                 rx + 4, paramY + 58, 0xFF666677, false);
+
+         // GeckoLib section header (below parameters card)
+        int geckoY = paramY - 6 + 84 + 26;
+        NpcEditorUtils.sectionCard(g, rx, geckoY, rw, 14, "GECKOLIB РЕСУРСЫ", ACCENT);
+        g.drawString(font, "§8Модель:", rx + 4, geckoY + 17, 0xFF555566, false);
+        g.drawString(font, "§8Анимация:", rx + 4, geckoY + 35, 0xFF555566, false);
+        g.drawString(font, "§8Текстура:", rx + 4, geckoY + 53, 0xFF555566, false);
     }
 
     @Override
     public void pullFields(NpcEditorState state) {
-        NpcModelConfig mc = ensureModel(state.getDraft());
+        NpcEntityData d = state.getDraft();
+        NpcModelConfig mc = ensureModel(d);
         if (offsetYBox != null) {
             try { mc.offsetY = Float.parseFloat(offsetYBox.getValue()); } catch (Exception ignored) {}
         }
+        if (geckoModelBox != null) d.geckoModel     = geckoModelBox.getValue().trim();
+        if (geckoAnimBox  != null) d.geckoAnimation = geckoAnimBox.getValue().trim();
+        if (geckoTexBox   != null) d.geckoTexture   = geckoTexBox.getValue().trim();
     }
 
     @Override
