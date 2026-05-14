@@ -149,7 +149,19 @@ public class NpcSceneController {
             NpcScene target = ClientNpcSceneState.get(node.actionParam);
             if (target != null) { currentScene = target; processNode(target.startNodeId); return; }
         }
+        if (NpcSceneNode.ACTION_WAIT_ANIM_END.equals(node.actionType)) {
+            int delay = parseAnimDelay(node.actionParam);
+            NpcSceneTickHandler.scheduleDeferredNode(node.actionNextNodeId, delay);
+            return;
+        }
         processNode(node.actionNextNodeId);
+    }
+
+    private static int parseAnimDelay(String param) {
+        if (param != null && !param.isBlank()) {
+            try { return Math.max(1, Integer.parseInt(param.trim())); } catch (NumberFormatException ignored) {}
+        }
+        return 20;
     }
 
     private static void processCondition(NpcSceneNode node) {
@@ -263,6 +275,7 @@ public class NpcSceneController {
                 case NpcSceneNode.ACTION_PLAY_ANIM_STATE      -> "⏵ Анимация: " + actionParam;
                 case NpcSceneNode.ACTION_STOP_ANIMATION       -> "⏵ Стоп анимация";
                 case NpcSceneNode.ACTION_SET_IDLE_ANIMATION   -> "⏵ Анимация стойки: " + actionParam;
+                case NpcSceneNode.ACTION_WAIT_ANIM_END        -> "⏵ Ждём конец анимации (" + actionParam + " тик)";
                 default                                       -> "⏵ " + actionType;
             };
             String extra = (actionParam == null || actionParam.isBlank()) ? "" : ": " + actionParam;
@@ -321,6 +334,9 @@ public class NpcSceneController {
                 if (currentNpcUuid != null && actionParam != null && !actionParam.isBlank()) {
                     ModNetwork.CHANNEL.sendToServer(new NpcAnimStatePacket(currentNpcUuid, actionParam));
                 }
+            }
+            case NpcSceneNode.ACTION_WAIT_ANIM_END -> {
+                // delay scheduling is handled in processAction(); nothing to execute here
             }
             // OPEN_SCENE / CLOSE_SCENE are handled in processAction() flow.
             default -> {}
