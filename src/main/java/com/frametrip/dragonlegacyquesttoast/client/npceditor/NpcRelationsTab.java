@@ -31,6 +31,9 @@ public static final int ACCENT = 0xFFCC55EE;
     private FactionData draftFaction = null;
     private EditBox factionNameField;
     private EditBox factionDescField;
+    private int factionRelScroll = 0;
+
+    private static final int FAC_VIS_ROWS = 7;
 
     @Override
     public void init(Consumer<AbstractWidget> add, Runnable rebuild,
@@ -81,6 +84,7 @@ public static final int ACCENT = 0xFFCC55EE;
 
         add.accept(Button.builder(Component.literal("+ Создать фракцию"), b -> {
             editingFaction = true;
+            factionRelScroll = 0;
             draftFaction = new FactionData();
             rebuild.run();
         }).bounds(rx, oy + 114, 130, 18).build());
@@ -89,6 +93,7 @@ public static final int ACCENT = 0xFFCC55EE;
         if (sel != null) {
             add.accept(Button.builder(Component.literal("✎ Редактировать"), b -> {
                 editingFaction = true;
+                factionRelScroll = 0;
                 draftFaction = sel.copy();
                 rebuild.run();
             }).bounds(rx + 134, oy + 114, 120, 18).build());
@@ -113,26 +118,38 @@ public static final int ACCENT = 0xFFCC55EE;
         factionDescField.setValue(draftFaction.description);
         add.accept(factionDescField);
 
-        // Relation editors with other factions
+        // Relation editors with other factions — scrollable
         List<FactionData> others = ClientFactionState.getAll().stream()
                 .filter(f -> !f.id.equals(draftFaction.id)).toList();
+        int maxRelScroll = Math.max(0, others.size() - FAC_VIS_ROWS);
+        factionRelScroll = Math.max(0, Math.min(factionRelScroll, maxRelScroll));
 
         int relY = oy + 154;
-        for (FactionData other : others) {
+        for (int i = factionRelScroll; i < Math.min(others.size(), factionRelScroll + FAC_VIS_ROWS); i++) {
+            FactionData other = others.get(i);
             add.accept(Button.builder(
                     Component.literal("◀▶ " + NpcEntityData.relationLabel(draftFaction.getRelationTo(other.id))),
                     b -> {
                         String[] rels = NpcEntityData.RELATIONS;
-                        int i = indexOf(rels, draftFaction.getRelationTo(other.id));
-                        draftFaction.setRelationTo(other.id, rels[Math.floorMod(i + 1, rels.length)]);
+                        int ri = indexOf(rels, draftFaction.getRelationTo(other.id));
+                        draftFaction.setRelationTo(other.id, rels[Math.floorMod(ri + 1, rels.length)]);
                         rebuild.run();
                     }
             ).bounds(rx + 108, relY, 120, 14).build());
             relY += 18;
         }
+        // Scroll arrows
+        if (others.size() > FAC_VIS_ROWS) {
+            add.accept(Button.builder(Component.literal("▲"),
+                    b -> { factionRelScroll = Math.max(0, factionRelScroll - 1); rebuild.run(); }
+            ).bounds(rx + rw - 22, oy + 154, 20, 12).build());
+            add.accept(Button.builder(Component.literal("▼"),
+                    b -> { factionRelScroll = Math.min(maxRelScroll, factionRelScroll + 1); rebuild.run(); }
+            ).bounds(rx + rw - 22, oy + 168, 20, 12).build());
+        }
 
-        // Action buttons
-        int bY = oy + 300;
+        // Action buttons — positioned below the visible rows
+        int bY = relY + 8;
         add.accept(Button.builder(Component.literal("Сохранить"), b -> {
             pullFactionFields();
             if (!draftFaction.name.isBlank()) {
@@ -247,10 +264,15 @@ public static final int ACCENT = 0xFFCC55EE;
         if (!others.isEmpty()) {
             g.drawString(font, "§7Отношения с другими фракциями:", rx + 4, oy + 132, 0xFF888877, false);
             int ry = oy + 145;
-            for (FactionData other : others) {
+            for (int i = factionRelScroll; i < Math.min(others.size(), factionRelScroll + FAC_VIS_ROWS); i++) {
+                FactionData other = others.get(i);
                 g.fill(rx + 4, ry + 1, rx + 10, ry + 7, other.color | 0xFF000000);
                 g.drawString(font, "§f" + other.name + ":", rx + 16, ry + 1, 0xFFCCCCCC, false);
                 ry += 18;
+            }
+            if (others.size() > FAC_VIS_ROWS) {
+                g.drawString(font, "§8" + factionRelScroll + "/" + (others.size() - FAC_VIS_ROWS),
+                        rx + rw - 30, oy + 132, 0xFF444455, false);
             }
         }
     }
@@ -266,6 +288,19 @@ public static final int ACCENT = 0xFFCC55EE;
                 draftFaction.color = SWATCH_COLORS[i];
                 return true;
             }
+        }
+        return false;
+    }
+
+    @Override
+    public boolean onMouseScrolled(double mx, double my, double delta,
+                                   NpcEditorState state, int rx, int oy, int rw) {
+        if (editingFaction) {
+            List<FactionData> others = ClientFactionState.getAll().stream()
+                    .filter(f -> draftFaction == null || !f.id.equals(draftFaction.id)).toList();
+            int maxScroll = Math.max(0, others.size() - FAC_VIS_ROWS);
+            factionRelScroll = Math.max(0, Math.min(maxScroll, factionRelScroll - (int) Math.signum(delta)));
+            return true;
         }
         return false;
     }

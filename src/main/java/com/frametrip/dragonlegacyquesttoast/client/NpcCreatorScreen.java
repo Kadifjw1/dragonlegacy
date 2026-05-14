@@ -300,14 +300,24 @@ public class NpcCreatorScreen extends Screen {
             previewZoom = Mth.clamp(previewZoom + (float)(delta * 0.1f), 0.5f, 3.0f);
             return true;
         }
-        int rx = ox() + SIDEBAR_W + 8;
-        int rw = CONTENT_W - 16;
-        int tabOy = oy() + TOP_H + 18;
-        if (TAB_INSTANCES[activeTab].onMouseScrolled(mx, my, delta, editorState, rx, tabOy, rw)) {
-            rebuildWidgets();
-            return true;
+        if (isMouseOverContent(mx, my)) {
+            int rx = ox() + SIDEBAR_W + 8;
+            int rw = CONTENT_W - 16;
+            int tabOy = oy() + TOP_H + 18;
+            if (TAB_INSTANCES[activeTab].onMouseScrolled(mx, my, delta, editorState, rx, tabOy, rw)) {
+                rebuildWidgets();
+                return true;
+            }
         }
         return super.mouseScrolled(mx, my, delta);
+    }
+
+    private boolean isMouseOverContent(double mouseX, double mouseY) {
+        int ox = ox(), oy = oy();
+        int contentX = ox + SIDEBAR_W;
+        int contentX2 = ox + SIDEBAR_W + CONTENT_W;
+        return mouseX >= contentX && mouseX <= contentX2
+                && mouseY >= oy + TOP_H && mouseY <= oy + H - BOT_H;
     }
 
     private boolean isMouseOverPreview(double mouseX, double mouseY) {
