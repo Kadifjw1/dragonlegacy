@@ -37,10 +37,21 @@ jobs:
       - name: Make Gradle wrapper executable
         run: chmod +x gradlew
 
-      - name: Pre-download GeckoLib to local Maven cache
+      - name: Check GeckoLib availability and pre-download
         run: |
           BASE="https://dl.cloudsmith.io/public/geckolib3/geckolib/maven"
           COORD="software/bernie/geckolib/geckolib-forge-1.20.1/4.4.4"
+          JAR_URL="$BASE/$COORD/geckolib-forge-1.20.1-4.4.4.jar"
+
+          # Diagnostic: what does Cloudsmith return?
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$JAR_URL")
+          echo "Cloudsmith HTTP status for GeckoLib 4.4.4: $HTTP_CODE"
+
+          # Clear any stale Gradle "not found" cache for GeckoLib
+          rm -rf "$HOME/.gradle/caches/modules-2/files-2.1/software.bernie.geckolib" || true
+          rm -rf "$HOME/.gradle/caches/modules-2/metadata-2.100/descriptors/software.bernie.geckolib" || true
+
+          # Download to local Maven cache so mavenLocal() serves it
           DIR="$HOME/.m2/repository/$COORD"
           mkdir -p "$DIR"
           for FILE in \
@@ -50,8 +61,11 @@ jobs:
             curl -fL --retry 5 --retry-delay 5 --max-time 120 \
               "$BASE/$COORD/$FILE" -o "$DIR/$FILE" \
               && echo "Downloaded $FILE" \
-              || echo "WARNING: failed to download $FILE"
+              || echo "WARNING: failed to download $FILE (HTTP $HTTP_CODE)"
           done
+
+          # Confirm what landed in local Maven
+          ls -lh "$DIR/" 2>/dev/null || echo "Local Maven dir is empty"
 
       - name: Build mod
         run: ./gradlew build --stacktrace
