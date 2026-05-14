@@ -1,6 +1,7 @@
 package com.frametrip.dragonlegacyquesttoast.client.npceditor;
 
 import com.frametrip.dragonlegacyquesttoast.client.NpcAppearancePresetManager;
+import com.frametrip.dragonlegacyquesttoast.client.NpcFileUtils;
 import com.frametrip.dragonlegacyquesttoast.client.NpcLayeredSkinManager;
 import com.frametrip.dragonlegacyquesttoast.client.NpcSkinManager;
 import com.frametrip.dragonlegacyquesttoast.entity.NpcEntityData;
@@ -13,6 +14,10 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.network.chat.Component;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -100,6 +105,10 @@ public class NpcInfoTab implements NpcEditorTab {
             NpcSkinManager.refresh();
             rb.run();
         }).bounds(rx + 104, oy + 84, 72, 14).build());
+        
+        add.accept(Button.builder(Component.literal("↑ Импорт PNG"), b -> {
+            importTextureFile(state, d, rb);
+        }).bounds(rx, oy + 102, 100, 14).build());
     }
 
     private void initLayers(Consumer<AbstractWidget> add, Runnable rb,
@@ -414,6 +423,46 @@ public class NpcInfoTab implements NpcEditorTab {
         }
     }
 
+    private void importTextureFile(NpcEditorState state, NpcEntityData d, Runnable rb) {
+        Thread t = new Thread(() -> {
+            try {
+                java.awt.FileDialog dialog = new java.awt.FileDialog(
+                        (java.awt.Frame) null, "Выберите PNG текстуру", java.awt.FileDialog.LOAD);
+                dialog.setFilenameFilter((dir, name) -> name.toLowerCase().endsWith(".png"));
+                dialog.setVisible(true);
+                String dirStr  = dialog.getDirectory();
+                String fileStr = dialog.getFile();
+                if (dirStr != null && fileStr != null) {
+                    Path source = Path.of(dirStr, fileStr);
+                    copyTextureToSkins(source, d, state, rb);
+                }
+            } catch (Exception e) {
+                // AWT not available — open import folder so user can drop files there
+                NpcFileUtils.openInExplorer(NpcFileUtils.getImportTexDir());
+            }
+        }, "npc-tex-import");
+        t.setDaemon(true);
+        t.start();
+    }
+
+    private void copyTextureToSkins(Path source, NpcEntityData d, NpcEditorState state, Runnable rb) {
+        try {
+            Path target = NpcFileUtils.getSkinsDir().resolve(source.getFileName());
+            Files.createDirectories(target.getParent());
+            Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
+            Minecraft.getInstance().execute(() -> {
+                NpcSkinManager.refresh();
+                String skinId = source.getFileName().toString()
+                        .replaceAll("\\.png$", "");
+                d.skinId = skinId;
+                state.markDirty();
+                rb.run();
+            });
+        } catch (IOException e) {
+            // silently ignored — folder is still opened above
+        }
+    }
+    
     static void sectionCard(GuiGraphics g, int x, int y, int w, int h, String title) {
         NpcEditorUtils.sectionCard(g, x, y, w, h, title, ACCENT);
     }
