@@ -281,7 +281,8 @@ public class EventChainHandler {
                 try {
                     double x = Double.parseDouble(action.param("x"));
                     double y = Double.parseDouble(action.param("y"));
-                    double z = Double.parseDouble(action.param("z"));
+                    String zs = action.param("z");
+                    double z = zs.isEmpty() ? player.getZ() : Double.parseDouble(zs);
                     player.teleportTo(x, y, z);
                 } catch (NumberFormatException ignored) {
                 }
