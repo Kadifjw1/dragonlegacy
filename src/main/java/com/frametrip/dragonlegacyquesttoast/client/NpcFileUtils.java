@@ -19,13 +19,14 @@ public class NpcFileUtils {
     }
 
     public static Path getSkinsDir()      { return getConfigDir().resolve("skins"); }
+    public static Path getLayersDir()     { return getConfigDir().resolve("layers"); }
     public static Path getImportTexDir()  { return getConfigDir().resolve("import/textures"); }
     public static Path getImportAnimDir() { return getConfigDir().resolve("import/animations"); }
     public static Path getImportGeoDir()  { return getConfigDir().resolve("import/models"); }
     public static Path getExportAnimDir() { return getConfigDir().resolve("export/animations"); }
 
     public static void ensureAllDirsExist() {
-        Stream.of(getSkinsDir(), getImportTexDir(), getImportAnimDir(),
+        Stream.of(getSkinsDir(), getLayersDir(), getImportTexDir(), getImportAnimDir(),
                   getImportGeoDir(), getExportAnimDir())
               .forEach(p -> {
                   try { Files.createDirectories(p); }

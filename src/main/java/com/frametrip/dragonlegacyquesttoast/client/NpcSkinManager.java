@@ -76,6 +76,6 @@ public class NpcSkinManager {
     }
  
     public static void openSkinsFolder() {
-        com.frametrip.dragonlegacyquesttoast.util.NpcFileUtils.openInExplorer(SKINS_DIR);
+        NpcFileUtils.openInExplorer(SKINS_DIR);
     }
 }

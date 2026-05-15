@@ -38,7 +38,7 @@ public class SaveNpcEntityDataPacket {
         return new SaveNpcEntityDataPacket(buf.readUUID(), buf.readUtf(262144));
     }
  
-    private static final int MAX_JSON_BYTES = 131072; // 128 KiB
+    private static final int MAX_JSON_BYTES = 131_072;
 
     public static void handle(SaveNpcEntityDataPacket msg, Supplier<NetworkEvent.Context> ctx) {
         ctx.get().enqueueWork(() -> {
@@ -56,9 +56,8 @@ public class SaveNpcEntityDataPacket {
             }
             if (data == null) return;
 
-            // Basic field sanitisation
             if (data.displayName == null) data.displayName = "";
-            if (data.displayName.length() > 64) data.displayName = data.displayName.substring(0, 64);
+            else if (data.displayName.length() > 64) data.displayName = data.displayName.substring(0, 64);
  
             net.minecraft.server.MinecraftServer server = player.getServer();
             if (server == null) return;
