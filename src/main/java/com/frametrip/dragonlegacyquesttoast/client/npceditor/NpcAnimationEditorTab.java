@@ -228,33 +228,42 @@ public class NpcAnimationEditorTab implements NpcEditorTab {
             }
         }).bounds(centerX + 58, cy, 90, 14).build());
 
+        // ── Right panel: keyframe fields ─────────────────────────────────────
+        // Layout: header (14px) + 4 fields × (label 12px + box 14px + gap 2px)
+        //         + easing button. Total ≈ 130px.
         int ry = oy + 4;
+        ry += 14; // reserve space for "Кадр #N" header drawn in render()
         if (selectedKeyframeIdx >= 0) {
             AnimationBone bone = selectedAnim.getBone(selectedBone);
             List<AnimationKeyframe> frames = getFrames(bone);
             if (selectedKeyframeIdx < frames.size()) {
                 AnimationKeyframe kf = frames.get(selectedKeyframeIdx);
 
-                kfTickBox = new EditBox(Minecraft.getInstance().font, rightX + 20, ry, 56, 14, Component.literal("Тик"));
+                ry += 12; // label "Тик:" drawn in render()
+                kfTickBox = new EditBox(Minecraft.getInstance().font, rightX, ry, RIGHT_W - 2, 14, Component.literal("Тик"));
                 kfTickBox.setValue(String.format("%.1f", kf.tick));
                 add.accept(kfTickBox);
-                ry += 18;
+                ry += 16;
 
-                kfXBox = new EditBox(Minecraft.getInstance().font, rightX + 20, ry, 56, 14, Component.literal("X"));
+                ry += 12; // label "X:"
+                kfXBox = new EditBox(Minecraft.getInstance().font, rightX, ry, RIGHT_W - 2, 14, Component.literal("X"));
                 kfXBox.setValue(String.format("%.2f", kf.x));
                 add.accept(kfXBox);
-                ry += 18;
+                ry += 16;
 
-                kfYBox = new EditBox(Minecraft.getInstance().font, rightX + 20, ry, 56, 14, Component.literal("Y"));
+                ry += 12; // label "Y:"
+                kfYBox = new EditBox(Minecraft.getInstance().font, rightX, ry, RIGHT_W - 2, 14, Component.literal("Y"));
                 kfYBox.setValue(String.format("%.2f", kf.y));
                 add.accept(kfYBox);
-                ry += 18;
+                ry += 16;
 
-                kfZBox = new EditBox(Minecraft.getInstance().font, rightX + 20, ry, 56, 14, Component.literal("Z"));
+                ry += 12; // label "Z:"
+                kfZBox = new EditBox(Minecraft.getInstance().font, rightX, ry, RIGHT_W - 2, 14, Component.literal("Z"));
                 kfZBox.setValue(String.format("%.2f", kf.z));
                 add.accept(kfZBox);
-                ry += 18;
+                ry += 16;
 
+                // easing cycle button
                 String[] easings = AnimationKeyframe.EASING_IDS;
                 add.accept(Button.builder(
                         Component.literal("§7" + kf.easing),
@@ -271,7 +280,7 @@ public class NpcAnimationEditorTab implements NpcEditorTab {
             }
         }
 
-        int exportY = oy + 150;
+        int exportY = oy + 160;
 
         // ── Export ───────────────────────────────────────────────────────────
         // Single export — selected animation only
@@ -343,7 +352,7 @@ public class NpcAnimationEditorTab implements NpcEditorTab {
         // Open import/animations folder
         add.accept(Button.builder(Component.literal("📂 Папка"), b -> {
             NpcFileUtils.openInExplorer(NpcFileUtils.getImportAnimDir());
-        }).bounds(rightX, exportY + 70, RIGHT_W - 2, 12).build());
+        }).bounds(rightX, exportY + 72, RIGHT_W - 2, 12).build());
     }
 
     private void exportSingle(NpcAnimationData anim) {
@@ -516,20 +525,22 @@ public class NpcAnimationEditorTab implements NpcEditorTab {
 
         int ry = oy + 4;
         if (selectedKeyframeIdx >= 0 && selectedKeyframeIdx < frames.size()) {
-            g.drawString(font, "§7Кадр §e#" + (selectedKeyframeIdx + 1), rightX, ry - 2, 0xFF888899, false);
-            ry += 2;
+            g.drawString(font, "§7Кадр §e#" + (selectedKeyframeIdx + 1), rightX, ry, 0xFF888899, false);
+            ry += 14; // header
+            // Each field: label (12px) then box (14px) then gap (2px)
             String[] lbls = {"§8Тик:", "§8X:", "§8Y:", "§8Z:"};
             for (String lbl : lbls) {
-                g.drawString(font, lbl, rightX, ry + 2, 0xFF777788, false);
-                ry += 18;
+                g.drawString(font, lbl, rightX, ry, 0xFF777788, false);
+                ry += 12; // label
+                ry += 16; // box + gap
             }
-            g.drawString(font, "§8Интерп.:", rightX, ry + 2, 0xFF777788, false);
+            g.drawString(font, "§8Интерп.:", rightX, ry, 0xFF777788, false);
         } else {
             g.drawString(font, "§8Выберите кадр", rightX, ry + 30, 0xFF444455, false);
         }
-        g.drawString(font, "§8── И/О ──", rightX, oy + 142, 0xFF444455, false);
+        g.drawString(font, "§8── И/О ──", rightX, oy + 152, 0xFF444455, false);
         if (!ioStatus.isEmpty()) {
-            g.drawString(font, ioStatus, rightX, oy + 238, 0xFFCCCCCC, false);
+            g.drawString(font, ioStatus, rightX, oy + 248, 0xFFCCCCCC, false);
         }
     }
 
@@ -628,6 +639,34 @@ public class NpcAnimationEditorTab implements NpcEditorTab {
     @Override
     public boolean onMouseScrolled(double mx, double my, double delta,
                                    NpcEditorState state, int rx, int oy, int rw) {
+        // Scroll numeric keyframe fields when cursor hovers over them
+        if (!showLibrary && selectedKeyframeIdx >= 0 && selectedAnim != null) {
+            List<AnimationKeyframe> frames = getFrames(selectedAnim.getBone(selectedBone));
+            if (selectedKeyframeIdx < frames.size()) {
+                AnimationKeyframe kf = frames.get(selectedKeyframeIdx);
+                if (scrollAdjustBox(kfTickBox, mx, my, delta, 1.0f)) {
+                    try { kf.tick = Math.max(0, Float.parseFloat(kfTickBox.getValue())); } catch (Exception ignored) {}
+                    state.markDirty();
+                    return true;
+                }
+                if (scrollAdjustBox(kfXBox, mx, my, delta, 1.0f)) {
+                    try { kf.x = Float.parseFloat(kfXBox.getValue()); } catch (Exception ignored) {}
+                    state.markDirty();
+                    return true;
+                }
+                if (scrollAdjustBox(kfYBox, mx, my, delta, 1.0f)) {
+                    try { kf.y = Float.parseFloat(kfYBox.getValue()); } catch (Exception ignored) {}
+                    state.markDirty();
+                    return true;
+                }
+                if (scrollAdjustBox(kfZBox, mx, my, delta, 1.0f)) {
+                    try { kf.z = Float.parseFloat(kfZBox.getValue()); } catch (Exception ignored) {}
+                    state.markDirty();
+                    return true;
+                }
+            }
+        }
+
         if (showLibrary) {
             List<NpcAnimationData> lib = libStateFilter == null
                     ? NpcAnimationLibrary.getAll()
@@ -639,6 +678,21 @@ public class NpcAnimationEditorTab implements NpcEditorTab {
             animScroll = Math.max(0, Math.min(maxScroll, animScroll - (int) Math.signum(delta)));
         }
         return true;
+    }
+
+    /** Adjusts an EditBox value by step*delta if the cursor is inside the box. Returns true if adjusted. */
+    private static boolean scrollAdjustBox(EditBox box, double mx, double my, double delta, float step) {
+        if (box == null) return false;
+        if (mx < box.getX() || mx > box.getX() + box.getWidth()) return false;
+        if (my < box.getY() || my > box.getY() + box.getHeight()) return false;
+        try {
+            float val = Float.parseFloat(box.getValue());
+            val += (float)(Math.signum(delta) * step);
+            box.setValue(String.format("%.2f", val));
+            return true;
+        } catch (Exception ignored) {
+            return false;
+        }
     }
 
     @Override
