@@ -218,6 +218,6 @@ public class NpcLayeredSkinManager {
     }
 
     public static void openLayersRootFolder() {
-        com.frametrip.dragonlegacyquesttoast.util.NpcFileUtils.openInExplorer(LAYERS_DIR);
+        com.frametrip.dragonlegacyquesttoast.client.NpcFileUtils.openInExplorer(LAYERS_DIR);
     }
 }

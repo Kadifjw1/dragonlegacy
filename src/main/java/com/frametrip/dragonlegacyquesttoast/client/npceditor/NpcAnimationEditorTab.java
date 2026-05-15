@@ -6,7 +6,7 @@ import com.frametrip.dragonlegacyquesttoast.server.animation.AnimationKeyframe;
 import com.frametrip.dragonlegacyquesttoast.server.animation.AnimationState;
 import com.frametrip.dragonlegacyquesttoast.server.animation.NpcAnimationData;
 import com.frametrip.dragonlegacyquesttoast.server.animation.NpcAnimationLibrary;
-import com.frametrip.dragonlegacyquesttoast.util.NpcFileUtils;
+import com.frametrip.dragonlegacyquesttoast.client.NpcFileUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -287,7 +287,7 @@ public class NpcAnimationEditorTab implements NpcEditorTab {
             if (anims.isEmpty()) return;
             int count = 0;
             for (NpcAnimationData a : anims) { exportSingle(a); count++; }
-            Path dir = NpcFileUtils.exportAnimDir();
+            Path dir = NpcFileUtils.getExportAnimDir();
             try { Files.createDirectories(dir); NpcFileUtils.openInExplorer(dir); } catch (IOException ignored) {}
             ioStatus = "§aЭкспортировано: " + count;
             rebuild.run();
@@ -315,7 +315,7 @@ public class NpcAnimationEditorTab implements NpcEditorTab {
         add.accept(Button.builder(Component.literal("↑ Из папки"), b -> {
             int[] loaded = {0};
             try (java.nio.file.DirectoryStream<Path> ds = Files.newDirectoryStream(
-                    NpcFileUtils.importAnimDir(), "*.animation.json")) {
+                    NpcFileUtils.getImportAnimDir(), "*.animation.json")) {
                 for (Path p : ds) {
                     try {
                         String json = Files.readString(p);
@@ -342,14 +342,14 @@ public class NpcAnimationEditorTab implements NpcEditorTab {
 
         // Open import/animations folder
         add.accept(Button.builder(Component.literal("📂 Папка"), b -> {
-            NpcFileUtils.openInExplorer(NpcFileUtils.importAnimDir());
+            NpcFileUtils.openInExplorer(NpcFileUtils.getImportAnimDir());
         }).bounds(rightX, exportY + 70, RIGHT_W - 2, 12).build());
     }
 
     private void exportSingle(NpcAnimationData anim) {
         String json = anim.toGeckoLibJson();
         Minecraft.getInstance().keyboardHandler.setClipboard(json);
-        Path dir = NpcFileUtils.exportAnimDir();
+        Path dir = NpcFileUtils.getExportAnimDir();
         String safe = anim.name.toLowerCase().replaceAll("[^a-z0-9_]", "_");
         try {
             Files.createDirectories(dir);
