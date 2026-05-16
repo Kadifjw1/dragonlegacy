@@ -66,9 +66,43 @@ public class NpcEntityData {
     public String geckoModel     = ""; // e.g. "dragonlegacyquesttoast:geo/my_npc.geo.json"
     public String geckoAnimation = ""; // e.g. "dragonlegacyquesttoast:animations/my_npc.animation.json"
     public String geckoTexture   = ""; // e.g. "dragonlegacyquesttoast:textures/entity/my_npc.png"
- 
+
     // — Stealth / Guard —
     public StealthConfig stealthConfig = new StealthConfig();
+
+    // [INFO-NEW-1]: Max health
+    public int maxHealth = 20;
+
+    // [INFO-NEW-2]: Gender (0=Male, 1=Female)
+    public byte gender = 0;
+
+    // [INFO-NEW-3]: Voice type (0=None, 1=Male, 2=Female, 3=Child, 4=Monster)
+    public byte voiceType = 0;
+
+    // [INFO-NEW-4]: Show nameplate above head
+    public boolean showName = true;
+
+    // [INFO-NEW-5]: Tag / Category (for search and grouping, max 32 chars)
+    public String npcTag = "";
+
+    // [INFO-NEW-6]: Editor-only note (NOT synced to players, max 256 chars)
+    public String editorNote = "";
+
+    // [INFO-NEW-7]: Death behavior (0=Respawn, 1=Vanish, 2=StayDown)
+    public byte deathBehavior = 0;
+    public int  respawnTime   = 60; // seconds
+
+    // [INFO-NEW-8]: Invulnerability flag
+    public boolean invulnerable = false;
+
+    // [INFO-NEW-9]: Rain reaction (0=Ignore, 1=Shelter)
+    public byte rainBehavior = 0;
+
+    // [INFO-NEW-10]: Nameplate icon (0=None … 7=Craftsman)
+    public byte nameplateIcon = 0;
+
+    // [INFO-NEW-11]: Group / Squad identifier (max 32 chars)
+    public String npcGroup = "";
  
     // ── Pose labels (for UI) ──────────────────────────────────────────────────
     public static final String[] IDLE_POSES       = {"STANDING", "CROUCHING"};
@@ -86,6 +120,18 @@ public class NpcEntityData {
     public static final String[] RELATIONS       = {"FRIENDLY", "NEUTRAL", "HOSTILE"};
     public static final String[] RELATION_LABELS = {"Дружелюбный", "Нейтральный", "Враждебный"};
     
+    // [INFO-NEW-3]: Voice type labels
+    public static final String[] VOICE_LABELS = {"Нет", "Мужской", "Женский", "Детский", "Монстр"};
+
+    // [INFO-NEW-7]: Death behavior labels
+    public static final String[] DEATH_LABELS = {"Возрождается", "Исчезает", "Остаётся лежать"};
+
+    // [INFO-NEW-10]: Nameplate icon labels (index matches icon byte value)
+    public static final String[] ICON_LABELS = {
+        "Нет", "⚔ Страж", "🛒 Торговец", "💊 Лекарь",
+        "❗ Квест", "🌟 Важный", "💀 Враг", "🔧 Мастер"
+    };
+
     public static final String[] TEXTURE_LAYERS = {
         "base", "hair", "eyes", "top", "bottom", "shoes", "accessory", "overlay"
     };
@@ -132,6 +178,19 @@ public class NpcEntityData {
         c.geckoModel        = this.geckoModel;
         c.geckoAnimation    = this.geckoAnimation;
         c.geckoTexture      = this.geckoTexture;
+        // [INFO-NEW-1..11]:
+        c.maxHealth        = this.maxHealth;
+        c.gender           = this.gender;
+        c.voiceType        = this.voiceType;
+        c.showName         = this.showName;
+        c.npcTag           = this.npcTag;
+        c.editorNote       = this.editorNote;
+        c.deathBehavior    = this.deathBehavior;
+        c.respawnTime      = this.respawnTime;
+        c.invulnerable     = this.invulnerable;
+        c.rainBehavior     = this.rainBehavior;
+        c.nameplateIcon    = this.nameplateIcon;
+        c.npcGroup         = this.npcGroup;
 
         return c;
     }
