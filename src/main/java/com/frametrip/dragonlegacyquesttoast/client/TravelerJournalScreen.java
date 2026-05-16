@@ -183,20 +183,17 @@ public class TravelerJournalScreen extends Screen {
             g.drawString(font, "§f§l" + f.name, x + 6, fy + 2, 0xFFFFFFFF, false);
 
             String rel = f.relations.getOrDefault("player", "NEUTRAL");
-            int repVal = f.reputation.getOrDefault("player", 0);
             int rc = "FRIENDLY".equals(rel) ? 0xFF44DD66 : "HOSTILE".equals(rel) ? 0xFFDD4444 : 0xFFAAAAAA;
-            g.drawString(font, relLabel(rel), ox + W - 120, fy + 2, rc, false);
+            g.drawString(font, relLabel(rel), ox + W - 130, fy + 2, rc, false);
 
-            // Reputation bar
+            // Relation status bar (visual indicator based on enum)
             int barX = x + 6;
-            int barW = W - 160;
+            int barW = W - 180;
             int barY = fy + 14;
-            g.fill(barX, barY, barX + barW, barY + 6, 0xFF222233);
-            int repNorm = Math.max(0, Math.min(100, repVal + 50)); // [-50..50] → [0..100]
-            int filled = (int)(barW * repNorm / 100.0);
-            g.fill(barX, barY, barX + filled, barY + 6, rc);
-            g.fill(barX + barW / 2, barY - 1, barX + barW / 2 + 1, barY + 7, 0xFF666688); // center marker
-            g.drawString(font, "§8" + (repVal >= 0 ? "+" : "") + repVal, barX + barW + 4, barY - 1, 0xFF888899, false);
+            g.fill(barX, barY, barX + barW, barY + 5, 0xFF222233);
+            int filled = "FRIENDLY".equals(rel) ? barW : "HOSTILE".equals(rel) ? barW / 4 : barW / 2;
+            g.fill(barX, barY, barX + filled, barY + 5, rc);
+            g.fill(barX + barW / 2, barY - 1, barX + barW / 2 + 1, barY + 6, 0xFF666688);
         }
 
         if (factions.isEmpty()) {
