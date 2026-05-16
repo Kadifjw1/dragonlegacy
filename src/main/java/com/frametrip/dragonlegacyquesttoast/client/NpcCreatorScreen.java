@@ -95,6 +95,13 @@ public class NpcCreatorScreen extends Screen {
 
         // Top bar: Delete / Reset / Close (no Save button — autosave handles saving)
         int topBtnY = oy + 5;
+        addRenderableWidget(Button.builder(Component.literal("📋 Пресеты"), b -> {
+                    TAB_INSTANCES[activeTab].pullFields(editorState);
+                    activeTab = 0;
+                    ((NpcInfoTab) TAB_INSTANCES[0]).setSubPage(4);
+                    rebuildWidgets();
+                })
+                .bounds(ox + W - 282, topBtnY, 78, 18).build());
         addRenderableWidget(Button.builder(Component.literal("§c✕ Удалить NPC"), b -> {
                     ModNetwork.CHANNEL.sendToServer(
                             new DeleteNpcPacket(editorState.getEntity().getUUID()));

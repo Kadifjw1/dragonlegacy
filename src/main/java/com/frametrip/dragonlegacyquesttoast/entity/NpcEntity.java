@@ -47,6 +47,8 @@ import software.bernie.geckolib.core.object.PlayState;
 import software.bernie.geckolib.core.animation.RawAnimation;
 import software.bernie.geckolib.core.animation.Animation;
 import software.bernie.geckolib.util.GeckoLibUtil;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.server.TickTask;
 import java.util.Objects;
 
 public class NpcEntity extends PathfinderMob implements GeoEntity {
@@ -128,8 +130,50 @@ public class NpcEntity extends PathfinderMob implements GeoEntity {
 
     private void applyDataEffects(NpcEntityData data) {
         setCustomName(Component.literal(data.displayName));
+        setCustomNameVisible(data.showName);
         Objects.requireNonNull(getAttribute(Attributes.MOVEMENT_SPEED))
                 .setBaseValue(data.walkSpeed * 0.25);
+        double hp = Math.max(1, data.maxHealth);
+        Objects.requireNonNull(getAttribute(Attributes.MAX_HEALTH)).setBaseValue(hp);
+        if (getHealth() > hp) setHealth((float) hp);
+    }
+
+    @Override
+    public boolean hurt(DamageSource source, float amount) {
+        NpcEntityData data = getNpcData();
+        if (data.invulnerable && !source.is(net.minecraft.tags.DamageTypeTags.BYPASSES_INVULNERABILITY))
+            return false;
+        return super.hurt(source, amount);
+    }
+
+    @Override
+    public void die(DamageSource cause) {
+        NpcEntityData data = getNpcData();
+        byte behavior = data != null ? data.deathBehavior : 0;
+        super.die(cause);
+        if (behavior == 1) {
+            // Vanish: remove entity immediately
+            discard();
+        } else if (behavior == 0 && !level().isClientSide) {
+            // Respawn: schedule respawn after respawnTime seconds
+            int delayTicks = (data != null ? data.respawnTime : 60) * 20;
+            net.minecraft.server.level.ServerLevel serverLevel =
+                    (net.minecraft.server.level.ServerLevel) level();
+            net.minecraft.core.BlockPos spawnPos = blockPosition();
+            NpcEntityData spawnData = data != null ? data.copy() : new NpcEntityData();
+            float spawnYaw = getYRot();
+            serverLevel.getServer().tell(new TickTask(
+                    serverLevel.getServer().getTickCount() + delayTicks, () -> {
+                        NpcEntity newNpc = new NpcEntity(
+                                com.frametrip.dragonlegacyquesttoast.registry.ModEntities.NPC.get(),
+                                serverLevel);
+                        newNpc.moveTo(spawnPos.getX() + 0.5, spawnPos.getY(),
+                                spawnPos.getZ() + 0.5, spawnYaw, 0);
+                        newNpc.setNpcData(spawnData);
+                        serverLevel.addFreshEntity(newNpc);
+                    }));
+        }
+        // behavior == 2 (StayDown): just die, no respawn
     }
 
     @Override
