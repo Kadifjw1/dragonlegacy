@@ -15,7 +15,7 @@ import java.util.*;
 public class NpcSkinManager {
  
     public static final ResourceLocation DEFAULT_SKIN =
-        new ResourceLocation("textures/entity/player/wide/steve.png");
+        new ResourceLocation("minecraft", "textures/entity/player/wide/steve.png");
  
     private static final Path SKINS_DIR = FMLPaths.CONFIGDIR.get()
         .resolve("dragonlegacyquesttoast/skins");

@@ -6,7 +6,6 @@ import com.mojang.blaze3d.platform.NativeImage;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.fml.loading.FMLPaths;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,15 +15,14 @@ import java.util.*;
 /**
  * Manages per-category NPC texture layers.
  *
- * Directory layout under config/dragonlegacyquesttoast/textures/:
+ * Directory layout under config/dragonlegacyquesttoast/layers/:
  *   base/, hair/, eyes/, top/, bottom/, shoes/, accessory/, overlay/
  *
  * Textures can be blended into a single DynamicTexture for rendering.
  */
 public class NpcLayeredSkinManager {
 
-    private static final Path LAYERS_DIR = FMLPaths.CONFIGDIR.get()
-            .resolve("dragonlegacyquesttoast/textures");
+    private static Path LAYERS_DIR() { return NpcFileUtils.getLayersDir(); }
 
     /** category → list of texture IDs (file names without .png) */
     private static final Map<String, List<String>> availableByCategory = new LinkedHashMap<>();
@@ -38,7 +36,7 @@ public class NpcLayeredSkinManager {
     public static void init() {
         for (String layer : NpcEntityData.TEXTURE_LAYERS) {
             try {
-                Files.createDirectories(LAYERS_DIR.resolve(layer));
+                Files.createDirectories(LAYERS_DIR().resolve(layer));
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -54,7 +52,7 @@ public class NpcLayeredSkinManager {
         for (String layer : NpcEntityData.TEXTURE_LAYERS) {
             List<String> ids = new ArrayList<>();
             ids.add("none");
-            Path dir = LAYERS_DIR.resolve(layer);
+            Path dir = LAYERS_DIR().resolve(layer);
             if (Files.isDirectory(dir)) {
                 try (DirectoryStream<Path> ds = Files.newDirectoryStream(dir, "*.png")) {
                     for (Path p : ds) {
@@ -80,7 +78,7 @@ public class NpcLayeredSkinManager {
         String key = category + ":" + textureId;
         if (textureCache.containsKey(key)) return textureCache.get(key);
 
-        Path file = LAYERS_DIR.resolve(category).resolve(textureId + ".png");
+        Path file = LAYERS_DIR().resolve(category).resolve(textureId + ".png");
         if (!Files.exists(file)) return null;
 
         try (InputStream is = Files.newInputStream(file)) {
@@ -158,10 +156,9 @@ public class NpcLayeredSkinManager {
     private static NativeImage loadNativeImage(String skinId, String category, String textureId) {
         Path file;
         if (skinId != null && !skinId.equals("default")) {
-            file = FMLPaths.CONFIGDIR.get()
-                    .resolve("dragonlegacyquesttoast/skins/" + skinId + ".png");
+            file = NpcFileUtils.getSkinsDir().resolve(skinId + ".png");
         } else if (category != null && textureId != null) {
-            file = LAYERS_DIR.resolve(category).resolve(textureId + ".png");
+            file = LAYERS_DIR().resolve(category).resolve(textureId + ".png");
         } else {
             return null;
         }
@@ -210,14 +207,10 @@ public class NpcLayeredSkinManager {
     }
 
     public static void openLayersFolder(String category) {
-        try {
-            java.awt.Desktop.getDesktop().open(LAYERS_DIR.resolve(category).toFile());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        NpcFileUtils.openInExplorer(LAYERS_DIR().resolve(category));
     }
 
     public static void openLayersRootFolder() {
-        com.frametrip.dragonlegacyquesttoast.client.NpcFileUtils.openInExplorer(LAYERS_DIR);
+        NpcFileUtils.openInExplorer(LAYERS_DIR());
     }
 }
