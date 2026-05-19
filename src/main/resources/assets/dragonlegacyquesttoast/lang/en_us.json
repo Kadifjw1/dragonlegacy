@@ -269,5 +269,17 @@
   "gui.dragonlegacyquesttoast.gui_editor.load_preset": "Load Preset",
   "gui.dragonlegacyquesttoast.gui_editor.canvas":      "Canvas",
   "gui.dragonlegacyquesttoast.gui_editor.elements":    "Elements",
-  "gui.dragonlegacyquesttoast.gui_editor.properties":  "Properties"
+  "gui.dragonlegacyquesttoast.gui_editor.properties":  "Properties",
+
+  "npc.cooldown": "Please wait %s more seconds.",
+  "gui.dragonlegacyquesttoast.interaction.cooldown":    "Interact Cooldown (s)",
+  "gui.dragonlegacyquesttoast.interaction.conditions":  "Conditions",
+  "gui.dragonlegacyquesttoast.interaction.only_day":    "Day Only",
+  "gui.dragonlegacyquesttoast.interaction.only_night":  "Night Only",
+  "gui.dragonlegacyquesttoast.interaction.only_rain":   "Rain Only",
+  "gui.dragonlegacyquesttoast.interaction.only_clear":  "Clear Only",
+  "gui.dragonlegacyquesttoast.interaction.greet":       "Greet Player",
+  "gui.dragonlegacyquesttoast.interaction.greet_range": "Greet Range",
+  "gui.dragonlegacyquesttoast.interaction.greet_msg":   "Greet Message",
+  "gui.dragonlegacyquesttoast.interaction.greet_cd":    "Greet Cooldown"
 }

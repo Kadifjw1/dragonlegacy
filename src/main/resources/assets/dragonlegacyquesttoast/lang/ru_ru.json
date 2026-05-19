@@ -269,5 +269,17 @@
   "gui.dragonlegacyquesttoast.gui_editor.load_preset": "Загрузить пресет",
   "gui.dragonlegacyquesttoast.gui_editor.canvas":      "Холст",
   "gui.dragonlegacyquesttoast.gui_editor.elements":    "Элементы",
-  "gui.dragonlegacyquesttoast.gui_editor.properties":  "Свойства"
+  "gui.dragonlegacyquesttoast.gui_editor.properties":  "Свойства",
+
+  "npc.cooldown": "Подождите ещё %s сек.",
+  "gui.dragonlegacyquesttoast.interaction.cooldown":    "Кулдаун диалога (с)",
+  "gui.dragonlegacyquesttoast.interaction.conditions":  "Условия",
+  "gui.dragonlegacyquesttoast.interaction.only_day":    "Только днём",
+  "gui.dragonlegacyquesttoast.interaction.only_night":  "Только ночью",
+  "gui.dragonlegacyquesttoast.interaction.only_rain":   "Только в дождь",
+  "gui.dragonlegacyquesttoast.interaction.only_clear":  "Только в ясную",
+  "gui.dragonlegacyquesttoast.interaction.greet":       "Приветствовать",
+  "gui.dragonlegacyquesttoast.interaction.greet_range": "Радиус",
+  "gui.dragonlegacyquesttoast.interaction.greet_msg":   "Сообщение",
+  "gui.dragonlegacyquesttoast.interaction.greet_cd":    "Кулдаун приветствия"
 }

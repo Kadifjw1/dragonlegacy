@@ -10,7 +10,8 @@ import com.frametrip.dragonlegacyquesttoast.server.gui.GuiTemplate;
 import com.frametrip.dragonlegacyquesttoast.server.chat.NpcChatConfig;
 import com.frametrip.dragonlegacyquesttoast.server.model.NpcModelConfig;
 import com.frametrip.dragonlegacyquesttoast.server.stealth.StealthConfig;
- 
+import com.frametrip.dragonlegacyquesttoast.server.interaction.DialogConditions;
+
 import java.util.*;
  
 public class NpcEntityData {
@@ -69,6 +70,18 @@ public class NpcEntityData {
 
     // — Stealth / Guard —
     public StealthConfig stealthConfig = new StealthConfig();
+
+    // [INT-1]: Cooldown between interactions (seconds, 0 = no limit)
+    public int interactCooldownSec = 0;
+
+    // [INT-2]: Dialog access conditions
+    public DialogConditions dialogConditions = new DialogConditions();
+
+    // [INT-3]: Greet player on approach
+    public boolean greetEnabled     = false;
+    public float   greetRange       = 5.0f;
+    public String  greetMessage     = "";
+    public int     greetCooldownSec = 30;
 
     // [INFO-NEW-1]: Max health
     public int maxHealth = 20;
@@ -175,6 +188,13 @@ public class NpcEntityData {
         c.chatConfig        = this.chatConfig     != null ? this.chatConfig.copy()     : new NpcChatConfig();
         c.modelConfig       = this.modelConfig    != null ? this.modelConfig.copy()    : new NpcModelConfig();
         c.stealthConfig     = this.stealthConfig  != null ? this.stealthConfig.copy()  : new StealthConfig();
+        // [INT-1..3]:
+        c.interactCooldownSec = this.interactCooldownSec;
+        c.dialogConditions    = this.dialogConditions != null ? this.dialogConditions.copy() : new DialogConditions();
+        c.greetEnabled        = this.greetEnabled;
+        c.greetRange          = this.greetRange;
+        c.greetMessage        = this.greetMessage;
+        c.greetCooldownSec    = this.greetCooldownSec;
         c.geckoModel        = this.geckoModel;
         c.geckoAnimation    = this.geckoAnimation;
         c.geckoTexture      = this.geckoTexture;
