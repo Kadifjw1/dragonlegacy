@@ -6,6 +6,7 @@ import com.frametrip.dragonlegacyquesttoast.network.NpcStartScenePacket;
 import com.frametrip.dragonlegacyquesttoast.network.OpenCompanionScreenPacket;
 import com.frametrip.dragonlegacyquesttoast.network.OpenTraderShopPacket;
 import com.frametrip.dragonlegacyquesttoast.profession.NpcProfessionType;
+import com.frametrip.dragonlegacyquesttoast.server.animation.AnimationTrigger;
 import com.frametrip.dragonlegacyquesttoast.server.animation.NpcAnimationData;
 import com.frametrip.dragonlegacyquesttoast.server.companion.CompanionGoal;
 import com.frametrip.dragonlegacyquesttoast.server.DialogueDefinition;
@@ -188,6 +189,50 @@ public class NpcEntity extends PathfinderMob implements GeoEntity {
         super.tick();
         NpcEntityData data = getNpcData();
         setPose("CROUCHING".equals(data.idlePose) ? Pose.CROUCHING : Pose.STANDING);
+
+        // [ANI-2]: Check animation triggers every second on the server
+        if (!level().isClientSide && tickCount % 20 == 0 && data.animTriggers != null) {
+            boolean triggered = false;
+            for (AnimationTrigger trig : data.animTriggers) {
+                if (!trig.enabled) continue;
+                if (checkAnimTrigger(trig, data)) {
+                    NpcAnimationData target = findAnimById(data, trig.targetAnimId);
+                    if (target != null) {
+                        String animName = "animation.npc." + target.name.toLowerCase().replace(' ', '_');
+                        entityData.set(DATA_ANIM_STATE, animName);
+                    }
+                    triggered = true;
+                    break;
+                }
+            }
+            if (!triggered) {
+                String cur = entityData.get(DATA_ANIM_STATE);
+                if (!"AUTO".equals(cur) && cur.startsWith("trigger:"))
+                    entityData.set(DATA_ANIM_STATE, "AUTO");
+            }
+        }
+    }
+
+    private boolean checkAnimTrigger(AnimationTrigger trig, NpcEntityData data) {
+        return switch (trig.type) {
+            case PLAYER_NEARBY -> level().getNearestPlayer(this, trig.param) != null;
+            case TIME_OF_DAY   -> {
+                long t = level().getDayTime() % 24000;
+                yield trig.param < 0.5f ? (t < 12000) : (t >= 12000);
+            }
+            case WEATHER       -> trig.param < 0.5f ? level().isRaining() : !level().isRaining();
+            case HEALTH_BELOW  -> (getHealth() / (float) Math.max(1, data.maxHealth) * 100f) < trig.param;
+            case NEARBY_MOB    -> !level().getEntitiesOfClass(
+                    net.minecraft.world.entity.Mob.class,
+                    getBoundingBox().inflate(trig.param),
+                    e -> e != this).isEmpty();
+        };
+    }
+
+    private NpcAnimationData findAnimById(NpcEntityData data, String id) {
+        if (id == null || id.isEmpty() || data.animations == null) return null;
+        for (NpcAnimationData a : data.animations) if (id.equals(a.id)) return a;
+        return null;
     }
 
     @Override

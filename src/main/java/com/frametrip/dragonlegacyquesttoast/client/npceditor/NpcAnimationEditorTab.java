@@ -4,6 +4,7 @@ import com.frametrip.dragonlegacyquesttoast.entity.NpcEntityData;
 import com.frametrip.dragonlegacyquesttoast.server.animation.AnimationBone;
 import com.frametrip.dragonlegacyquesttoast.server.animation.AnimationKeyframe;
 import com.frametrip.dragonlegacyquesttoast.server.animation.AnimationState;
+import com.frametrip.dragonlegacyquesttoast.server.animation.AnimationTrigger;
 import com.frametrip.dragonlegacyquesttoast.server.animation.NpcAnimationData;
 import com.frametrip.dragonlegacyquesttoast.server.animation.NpcAnimationLibrary;
 import com.frametrip.dragonlegacyquesttoast.client.NpcFileUtils;
@@ -45,9 +46,18 @@ public class NpcAnimationEditorTab implements NpcEditorTab {
     private float timelineScale = 10f;
     private String channelMode = "rotation";
 
-    // ── Library mode state ────────────────────────────────────────────────────
-    private boolean showLibrary = false;
+    // ── Library / Pose / Trigger mode state ──────────────────────────────────
+    private boolean showLibrary  = false;
+    private boolean showPose     = false;
+    private boolean showTriggers = false;
     private AnimationState libStateFilter = null; // null = ALL
+
+    // [ANI-1]: pose editor boxes [bone][axis]
+    private final EditBox[][] poseBoxes = new EditBox[NpcEntityData.POSE_BONE_IDS.length][3];
+
+    // [ANI-2]: trigger editor state
+    private int     selectedTriggerIdx = -1;
+    private EditBox trigParamBox;
 
     // ── Import/export status ──────────────────────────────────────────────────
     private String ioStatus = "";
@@ -67,17 +77,34 @@ public class NpcAnimationEditorTab implements NpcEditorTab {
         List<NpcAnimationData> anims = draft.animations;
 
         // ── Mode toggle ───────────────────────────────────────────────────────
+        boolean editorMode = !showLibrary && !showPose && !showTriggers;
         add.accept(Button.builder(
-                Component.literal(showLibrary ? "§7Редактор" : "§e§lРедактор"),
-                b -> { showLibrary = false; rebuild.run(); }
-        ).bounds(rx, oy, 80, 14).build());
+                Component.literal(editorMode ? "§e§lРедактор" : "§7Редактор"),
+                b -> { showLibrary = false; showPose = false; showTriggers = false; rebuild.run(); }
+        ).bounds(rx, oy, 76, 14).build());
         add.accept(Button.builder(
                 Component.literal(showLibrary ? "§e§lБиблиотека" : "§7Библиотека"),
-                b -> { showLibrary = true; rebuild.run(); }
-        ).bounds(rx + 84, oy, 80, 14).build());
+                b -> { showLibrary = true; showPose = false; showTriggers = false; rebuild.run(); }
+        ).bounds(rx + 80, oy, 76, 14).build());
+        add.accept(Button.builder(
+                Component.literal(showPose ? "§e§lПоза" : "§7Поза"),
+                b -> { showPose = true; showLibrary = false; showTriggers = false; rebuild.run(); }
+        ).bounds(rx + 160, oy, 60, 14).build());
+        add.accept(Button.builder(
+                Component.literal(showTriggers ? "§e§lТриггеры" : "§7Триггеры"),
+                b -> { showTriggers = true; showLibrary = false; showPose = false; rebuild.run(); }
+        ).bounds(rx + 224, oy, 76, 14).build());
 
         if (showLibrary) {
             initLibraryPanel(add, rebuild, state, draft, rx, oy + 18, rw);
+            return;
+        }
+        if (showPose) {
+            initPosePanel(add, rebuild, state, draft, rx, oy + 18, rw);
+            return;
+        }
+        if (showTriggers) {
+            initTriggersPanel(add, rebuild, state, draft, rx, oy + 18, rw);
             return;
         }
 
@@ -355,6 +382,155 @@ public class NpcAnimationEditorTab implements NpcEditorTab {
         }).bounds(rightX, exportY + 72, RIGHT_W - 2, 12).build());
     }
 
+    // ── [ANI-1]: Pose editor panel ────────────────────────────────────────────
+
+    private void initPosePanel(Consumer<AbstractWidget> add, Runnable rebuild,
+                               NpcEditorState state, NpcEntityData draft, int rx, int oy, int rw) {
+        if (draft.customPose == null) draft.customPose = new java.util.LinkedHashMap<>();
+        for (String boneId : NpcEntityData.POSE_BONE_IDS)
+            draft.customPose.putIfAbsent(boneId, new float[3]);
+
+        add.accept(Button.builder(
+                Component.literal(draft.customPoseEnabled ? "§a✓ Поза" : "§8✗ Поза"),
+                b -> { draft.customPoseEnabled = !draft.customPoseEnabled; state.markDirty(); rebuild.run(); }
+        ).bounds(rx, oy, 90, 14).build());
+
+        add.accept(Button.builder(Component.literal("Сброс"), b -> {
+            draft.customPose.replaceAll((k, v) -> new float[3]);
+            draft.customPoseEnabled = false;
+            state.markDirty();
+            rebuild.run();
+        }).bounds(rx + 94, oy, 60, 14).build());
+
+        oy += 18;
+        for (int bi = 0; bi < NpcEntityData.POSE_BONE_IDS.length; bi++) {
+            final int bIdx = bi;
+            final String boneId = NpcEntityData.POSE_BONE_IDS[bi];
+            float[] angles = draft.customPose.get(boneId);
+            // bone label is drawn in render()
+            for (int ai = 0; ai < 3; ai++) {
+                final int aIdx = ai;
+                int colX = rx + 66 + ai * 90;
+                int rowY = oy + bi * 20;
+
+                add.accept(Button.builder(Component.literal("◄"), b -> {
+                    float[] a = draft.customPose.get(NpcEntityData.POSE_BONE_IDS[bIdx]);
+                    a[aIdx] = Math.round((a[aIdx] - 5) * 10f) / 10f;
+                    poseBoxes[bIdx][aIdx].setValue(String.format("%.1f", a[aIdx]));
+                    state.markDirty();
+                }).bounds(colX, rowY, 14, 14).build());
+
+                poseBoxes[bi][ai] = new EditBox(Minecraft.getInstance().font,
+                        colX + 16, rowY, 42, 14, Component.literal("°"));
+                poseBoxes[bi][ai].setValue(String.format("%.1f", angles[ai]));
+                add.accept(poseBoxes[bi][ai]);
+
+                add.accept(Button.builder(Component.literal("►"), b -> {
+                    float[] a = draft.customPose.get(NpcEntityData.POSE_BONE_IDS[bIdx]);
+                    a[aIdx] = Math.round((a[aIdx] + 5) * 10f) / 10f;
+                    poseBoxes[bIdx][aIdx].setValue(String.format("%.1f", a[aIdx]));
+                    state.markDirty();
+                }).bounds(colX + 60, rowY, 14, 14).build());
+            }
+        }
+    }
+
+    // ── [ANI-2]: Triggers panel ───────────────────────────────────────────────
+
+    private void initTriggersPanel(Consumer<AbstractWidget> add, Runnable rebuild,
+                                   NpcEditorState state, NpcEntityData draft, int rx, int oy, int rw) {
+        if (draft.animTriggers == null) draft.animTriggers = new java.util.ArrayList<>();
+        List<AnimationTrigger> trigs = draft.animTriggers;
+
+        add.accept(Button.builder(Component.literal("+ Триггер"), b -> {
+            trigs.add(new AnimationTrigger());
+            selectedTriggerIdx = trigs.size() - 1;
+            state.markDirty();
+            rebuild.run();
+        }).bounds(rx, oy, 90, 14).build());
+
+        if (selectedTriggerIdx >= 0 && selectedTriggerIdx < trigs.size()) {
+            add.accept(Button.builder(Component.literal("§c✕ Удалить"), b -> {
+                trigs.remove(selectedTriggerIdx);
+                selectedTriggerIdx = Math.min(selectedTriggerIdx, trigs.size() - 1);
+                state.markDirty();
+                rebuild.run();
+            }).bounds(rx + 94, oy, 80, 14).build());
+        }
+
+        oy += 18;
+        int visRows = 7;
+        for (int i = 0; i < Math.min(trigs.size(), visRows); i++) {
+            AnimationTrigger trig = trigs.get(i);
+            boolean sel = i == selectedTriggerIdx;
+            final int idx = i;
+
+            NpcAnimationData targetAnim = findAnimById(draft, trig.targetAnimId);
+            String animLabel = targetAnim != null ? NpcEditorUtils.fitText(targetAnim.name, 60) : "§8(нет)";
+            String rowLabel = (trig.enabled ? "§a✓ " : "§8✗ ") + trig.type.label()
+                    + " §8" + String.format("%.1f", trig.param) + " →§7 " + animLabel;
+
+            add.accept(Button.builder(Component.literal(sel ? "§e▶ " + rowLabel : "  " + rowLabel), b -> {
+                selectedTriggerIdx = idx;
+                rebuild.run();
+            }).bounds(rx, oy + i * 18, rw - 2, 16).build());
+        }
+
+        int editY = oy + visRows * 18 + 6;
+        if (selectedTriggerIdx >= 0 && selectedTriggerIdx < trigs.size()) {
+            AnimationTrigger sel = trigs.get(selectedTriggerIdx);
+
+            // Enable toggle
+            add.accept(Button.builder(
+                    Component.literal(sel.enabled ? "§a✓ Вкл." : "§8✗ Выкл."),
+                    b -> { sel.enabled = !sel.enabled; state.markDirty(); rebuild.run(); }
+            ).bounds(rx, editY, 70, 14).build());
+
+            // Type cycle
+            AnimationTrigger.TriggerType[] types = AnimationTrigger.TriggerType.values();
+            add.accept(Button.builder(
+                    Component.literal("§7" + sel.type.label()),
+                    b -> {
+                        int next = (sel.type.ordinal() + 1) % types.length;
+                        sel.type = types[next];
+                        state.markDirty();
+                        rebuild.run();
+                    }
+            ).bounds(rx + 74, editY, 110, 14).build());
+
+            // Param box
+            trigParamBox = new EditBox(Minecraft.getInstance().font,
+                    rx + 188, editY, 50, 14, Component.literal("param"));
+            trigParamBox.setValue(String.format("%.1f", sel.param));
+            add.accept(trigParamBox);
+
+            editY += 18;
+            // Target animation cycle
+            List<NpcAnimationData> anims = draft.animations;
+            NpcAnimationData targetAnim = findAnimById(draft, sel.targetAnimId);
+            String animLabel = targetAnim != null ? targetAnim.name : "§8(нет)";
+            add.accept(Button.builder(
+                    Component.literal("§7Анимация: " + animLabel),
+                    b -> {
+                        if (anims.isEmpty()) return;
+                        int curIdx = -1;
+                        for (int j = 0; j < anims.size(); j++)
+                            if (anims.get(j).id.equals(sel.targetAnimId)) { curIdx = j; break; }
+                        curIdx = (curIdx + 1) % anims.size();
+                        sel.targetAnimId = anims.get(curIdx).id;
+                        state.markDirty();
+                        rebuild.run();
+                    }
+            ).bounds(rx, editY, 200, 14).build());
+        }
+    }
+
+    private NpcAnimationData findAnimById(NpcEntityData data, String id) {
+        if (id == null || id.isEmpty() || data.animations == null) return null;
+        for (NpcAnimationData a : data.animations) if (id.equals(a.id)) return a;
+        return null;
+    }
+
     private void exportSingle(NpcAnimationData anim) {
         String json = anim.toGeckoLibJson();
         Minecraft.getInstance().keyboardHandler.setClipboard(json);
@@ -466,6 +642,14 @@ public class NpcAnimationEditorTab implements NpcEditorTab {
             renderLibraryPanel(g, rx, oy + 18, rw);
             return;
         }
+        if (showPose) {
+            renderPosePanel(g, state, rx, oy + 18, rw);
+            return;
+        }
+        if (showTriggers) {
+            renderTriggersPanel(g, state, rx, oy + 18, rw);
+            return;
+        }
 
         if (selectedAnim == null) {
             g.drawString(font, "§8Выберите или создайте анимацию.", rx + LIST_W + 8, oy + 30, 0xFF555566, false);
@@ -544,6 +728,33 @@ public class NpcAnimationEditorTab implements NpcEditorTab {
         }
     }
 
+    private void renderPosePanel(GuiGraphics g, NpcEditorState state, int rx, int oy, int rw) {
+        var font = Minecraft.getInstance().font;
+        NpcEditorUtils.sectionCard(g, rx, oy - 2, rw, 16, "ПОЗА КОСТЕЙ", ACCENT);
+        int rowOy = oy + 18;
+        String[] axisLabels = {"X°", "Y°", "Z°"};
+        for (int bi = 0; bi < NpcEntityData.POSE_BONE_IDS.length; bi++) {
+            int rowY = rowOy + bi * 20;
+            g.drawString(font, NpcEntityData.POSE_BONE_LABELS[bi], rx, rowY + 3, 0xFFCCCCCC, false);
+            for (int ai = 0; ai < 3; ai++) {
+                int colX = rx + 66 + ai * 90;
+                g.drawString(font, "§8" + axisLabels[ai], colX + 17, rowY - 8, 0xFF777788, false);
+            }
+        }
+    }
+
+    private void renderTriggersPanel(GuiGraphics g, NpcEditorState state, int rx, int oy, int rw) {
+        var font = Minecraft.getInstance().font;
+        NpcEditorUtils.sectionCard(g, rx, oy - 2, rw, 16, "ТРИГГЕРЫ АНИМАЦИЙ", ACCENT);
+        if (state.getDraft().animTriggers == null || state.getDraft().animTriggers.isEmpty()) {
+            g.drawString(font, "§8Нет триггеров. Нажмите «+ Триггер».", rx + 4, oy + 30, 0xFF444455, false);
+        }
+        int editY = oy + 18 + 7 * 18 + 24;
+        if (selectedTriggerIdx >= 0) {
+            g.drawString(font, "§8Тип / Параметр / Анимация:", rx, editY - 14, 0xFF666677, false);
+        }
+    }
+
     private void renderLibraryPanel(GuiGraphics g, int rx, int oy, int rw) {
         var font = Minecraft.getInstance().font;
         List<NpcAnimationData> lib = libStateFilter == null
@@ -576,6 +787,34 @@ public class NpcAnimationEditorTab implements NpcEditorTab {
 
     @Override
     public void pullFields(NpcEditorState state) {
+        // [ANI-1]: Pull pose box values into draft
+        if (showPose) {
+            NpcEntityData d = state.getDraft();
+            if (d.customPose == null) d.customPose = new java.util.LinkedHashMap<>();
+            for (int bi = 0; bi < NpcEntityData.POSE_BONE_IDS.length; bi++) {
+                float[] angles = d.customPose.computeIfAbsent(
+                        NpcEntityData.POSE_BONE_IDS[bi], k -> new float[3]);
+                for (int ai = 0; ai < 3; ai++) {
+                    EditBox box = poseBoxes[bi][ai];
+                    if (box != null) {
+                        try { angles[ai] = Float.parseFloat(box.getValue()); state.markDirty(); }
+                        catch (Exception ignored) {}
+                    }
+                }
+            }
+        }
+        // [ANI-2]: Pull trigger param box
+        if (showTriggers && trigParamBox != null) {
+            NpcEntityData d = state.getDraft();
+            if (d.animTriggers != null && selectedTriggerIdx >= 0
+                    && selectedTriggerIdx < d.animTriggers.size()) {
+                try {
+                    d.animTriggers.get(selectedTriggerIdx).param =
+                            Float.parseFloat(trigParamBox.getValue());
+                    state.markDirty();
+                } catch (Exception ignored) {}
+            }
+        }
         if (selectedAnim == null) return;
 
         if (nameBox != null) {

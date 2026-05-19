@@ -281,5 +281,15 @@
   "gui.dragonlegacyquesttoast.interaction.greet":       "Приветствовать",
   "gui.dragonlegacyquesttoast.interaction.greet_range": "Радиус",
   "gui.dragonlegacyquesttoast.interaction.greet_msg":   "Сообщение",
-  "gui.dragonlegacyquesttoast.interaction.greet_cd":    "Кулдаун приветствия"
+  "gui.dragonlegacyquesttoast.interaction.greet_cd":    "Кулдаун приветствия",
+
+  "gui.dragonlegacyquesttoast.pose.title":   "Поза костей",
+  "gui.dragonlegacyquesttoast.pose.enable":  "Поза включена",
+  "gui.dragonlegacyquesttoast.pose.reset":   "Сброс",
+  "gui.dragonlegacyquesttoast.trigger.title":          "Триггеры анимаций",
+  "gui.dragonlegacyquesttoast.trigger.player_nearby":  "Игрок рядом",
+  "gui.dragonlegacyquesttoast.trigger.time_of_day":    "Время суток",
+  "gui.dragonlegacyquesttoast.trigger.weather":        "Погода",
+  "gui.dragonlegacyquesttoast.trigger.health_below":   "HP ниже %",
+  "gui.dragonlegacyquesttoast.trigger.nearby_mob":     "Моб рядом"
 }
