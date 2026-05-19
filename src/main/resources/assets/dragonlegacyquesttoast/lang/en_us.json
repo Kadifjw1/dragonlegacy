@@ -312,5 +312,14 @@
   "gui.dragonlegacyquesttoast.job.cond.schedule":       "Requires Schedule",
   "gui.dragonlegacyquesttoast.job.cond.weather":        "Fair Weather Only",
   "gui.dragonlegacyquesttoast.job.cond.daytime":        "Daytime Only",
-  "gui.dragonlegacyquesttoast.job.cond.minhp":          "Min HP %"
+  "gui.dragonlegacyquesttoast.job.cond.minhp":          "Min HP %",
+
+  "gui.dragonlegacyquesttoast.model.search":            "Search model...",
+  "gui.dragonlegacyquesttoast.model.category.all":      "All",
+  "gui.dragonlegacyquesttoast.model.category.humanoid": "Humanoids",
+  "gui.dragonlegacyquesttoast.model.category.animal":   "Animals",
+  "gui.dragonlegacyquesttoast.model.category.golem":    "Golems",
+  "gui.dragonlegacyquesttoast.model.gecko_presets":     "GeckoLib Presets",
+  "gui.dragonlegacyquesttoast.model.preset_save":       "Save Preset",
+  "gui.dragonlegacyquesttoast.model.preset_name":       "Preset name..."
 }

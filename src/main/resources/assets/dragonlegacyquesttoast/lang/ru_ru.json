@@ -312,5 +312,14 @@
   "gui.dragonlegacyquesttoast.job.cond.schedule":       "Требует расписание",
   "gui.dragonlegacyquesttoast.job.cond.weather":        "Только ясная погода",
   "gui.dragonlegacyquesttoast.job.cond.daytime":        "Только днём",
-  "gui.dragonlegacyquesttoast.job.cond.minhp":          "Мин. HP %"
+  "gui.dragonlegacyquesttoast.job.cond.minhp":          "Мин. HP %",
+
+  "gui.dragonlegacyquesttoast.model.search":            "Поиск модели...",
+  "gui.dragonlegacyquesttoast.model.category.all":      "Все",
+  "gui.dragonlegacyquesttoast.model.category.humanoid": "Гуманоиды",
+  "gui.dragonlegacyquesttoast.model.category.animal":   "Животные",
+  "gui.dragonlegacyquesttoast.model.category.golem":    "Големы",
+  "gui.dragonlegacyquesttoast.model.gecko_presets":     "GeckoLib Пресеты",
+  "gui.dragonlegacyquesttoast.model.preset_save":       "Сохранить пресет",
+  "gui.dragonlegacyquesttoast.model.preset_name":       "Имя пресета..."
 }

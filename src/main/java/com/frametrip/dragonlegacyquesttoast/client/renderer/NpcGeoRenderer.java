@@ -14,12 +14,17 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.util.Mth;
 import software.bernie.geckolib.cache.object.BakedGeoModel;
 import software.bernie.geckolib.renderer.GeoEntityRenderer;
 
 import java.util.Map;
+import java.util.WeakHashMap;
 
 public class NpcGeoRenderer extends GeoEntityRenderer<NpcEntity> {
+
+    // [MOD-4]: Per-entity smoothed limb-swing amount for vanilla-profile NPCs.
+    private static final WeakHashMap<NpcEntity, Float> LIMB_SMOOTH = new WeakHashMap<>();
 
     public NpcGeoRenderer(EntityRendererProvider.Context ctx) {
         super(ctx, new NpcGeoModel());
@@ -75,7 +80,13 @@ public class NpcGeoRenderer extends GeoEntityRenderer<NpcEntity> {
         Entity tmp = type.create(mc.level);
         if (!(tmp instanceof LivingEntity living)) return;
 
-        living.walkAnimation.update(npc.walkAnimation.speed(partialTick), 1.0f);
+        // [MOD-4]: Smooth limb-swing amount — prevents vanilla models always animating
+        // as if walking even when the NPC is standing still.
+        boolean isMoving = npc.getDeltaMovement().horizontalDistanceSqr() > 0.0004;
+        float prevAmt = LIMB_SMOOTH.getOrDefault(npc, 0f);
+        float smoothed = Mth.lerp(0.35f, prevAmt, isMoving ? 1.0f : 0.0f);
+        LIMB_SMOOTH.put(npc, smoothed);
+        living.walkAnimation.update(npc.walkAnimation.speed(partialTick), smoothed);
 
         float scale = (npc.getNpcData().modelConfig != null)
                 ? npc.getNpcData().modelConfig.scale : 1.0f;

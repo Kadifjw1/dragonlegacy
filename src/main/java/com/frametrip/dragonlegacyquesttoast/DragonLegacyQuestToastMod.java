@@ -3,6 +3,7 @@ package com.frametrip.dragonlegacyquesttoast;
 
 import com.frametrip.dragonlegacyquesttoast.client.NpcDialogueOverlay;
 import com.frametrip.dragonlegacyquesttoast.client.NpcAppearancePresetManager;
+import com.frametrip.dragonlegacyquesttoast.client.NpcGeckoPresetManager;
 import com.frametrip.dragonlegacyquesttoast.client.NpcLayeredSkinManager;
 import com.frametrip.dragonlegacyquesttoast.client.NpcSkinManager;
 import com.frametrip.dragonlegacyquesttoast.client.QuestToastOverlay;
@@ -127,6 +128,7 @@ public class DragonLegacyQuestToastMod {
         NpcSkinManager.init();
         NpcLayeredSkinManager.init();
         NpcAppearancePresetManager.load();
+        NpcGeckoPresetManager.load(); // [MOD-3]
     }
 
     private void registerOverlays(RegisterGuiOverlaysEvent event) {
