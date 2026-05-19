@@ -50,6 +50,9 @@ import software.bernie.geckolib.util.GeckoLibUtil;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.server.TickTask;
 import java.util.Objects;
+import java.util.HashMap;
+import java.util.UUID;
+import com.frametrip.dragonlegacyquesttoast.entity.goal.NpcGreetGoal;
 
 public class NpcEntity extends PathfinderMob implements GeoEntity {
 
@@ -59,6 +62,9 @@ public class NpcEntity extends PathfinderMob implements GeoEntity {
     // Parsed NpcEntityData cache — invalidated whenever DATA_NPC_JSON changes.
     // Avoids repeated GSON.fromJson() in tick(), movementPredicate(), and render methods.
     private NpcEntityData cachedNpcData;
+
+    // [INT-1]: per-player interact cooldown tracker (not persisted)
+    private final Map<UUID, Long> interactCooldowns = new HashMap<>();
 
     private static final Gson GSON = new Gson();
 
@@ -85,6 +91,7 @@ public class NpcEntity extends PathfinderMob implements GeoEntity {
     @Override
     protected void registerGoals() {
         goalSelector.addGoal(1, new FloatGoal(this));
+        goalSelector.addGoal(1, new NpcGreetGoal(this)); // [INT-3]
         goalSelector.addGoal(2, new CompanionGoal(this));
         goalSelector.addGoal(2, new com.frametrip.dragonlegacyquesttoast.server.companion.CompanionGuardGoal(this));
         goalSelector.addGoal(3, new NpcLookAtPlayerGoal());
@@ -204,10 +211,34 @@ public class NpcEntity extends PathfinderMob implements GeoEntity {
         }
     }
 
+    // [INT-1]: Returns false and notifies player if cooldown hasn't expired
+    private boolean checkInteractCooldown(Player player) {
+        int cooldownSec = getNpcData().interactCooldownSec;
+        if (cooldownSec <= 0) return true;
+        long lastTime = interactCooldowns.getOrDefault(player.getUUID(), 0L);
+        long now = level().getGameTime();
+        if (now - lastTime < cooldownSec * 20L) {
+            long remaining = (cooldownSec * 20L - (now - lastTime)) / 20;
+            if (player instanceof net.minecraft.server.level.ServerPlayer sp) {
+                sp.sendSystemMessage(net.minecraft.network.chat.Component.translatable(
+                        "npc.cooldown", remaining));
+            }
+            return false;
+        }
+        interactCooldowns.put(player.getUUID(), now);
+        return true;
+    }
+
     @Override
     public InteractionResult mobInteract(Player player, InteractionHand hand) {
         if (!level().isClientSide && !player.isShiftKeyDown()) {
+            // [INT-1]: cooldown check
+            if (!checkInteractCooldown(player)) return InteractionResult.FAIL;
             NpcEntityData data = getNpcData();
+            // [INT-2]: dialog conditions check
+            if (data.dialogConditions != null && !data.dialogConditions.check(level())) {
+                return InteractionResult.PASS;
+            }
         if (player instanceof ServerPlayer sp) {
                 // Profession: Trader → open shop window
                 if (data.professionData != null

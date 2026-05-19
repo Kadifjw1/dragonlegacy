@@ -14,6 +14,7 @@ import com.frametrip.dragonlegacyquesttoast.server.chat.ChatReactionType;
 import com.frametrip.dragonlegacyquesttoast.server.chat.ChatTrigger;
 import com.frametrip.dragonlegacyquesttoast.server.chat.NpcChatConfig;
 import com.frametrip.dragonlegacyquesttoast.network.SaveNpcScenePacket;
+import com.frametrip.dragonlegacyquesttoast.server.interaction.DialogConditions;
 import com.frametrip.dragonlegacyquesttoast.server.DialogueDefinition;
 import com.frametrip.dragonlegacyquesttoast.server.QuestDefinition;
 import com.frametrip.dragonlegacyquesttoast.server.dialogue.LegacyDialogueMigration;
@@ -39,10 +40,11 @@ import java.util.function.Consumer;
 public class NpcInteractionTab implements NpcEditorTab {
 
     public static final int ACCENT = 0xFF44CC88;
-    private static final int ROWS = 6;
+    private static final int ROWS = 5;
 
     private int questScroll = 0;
     private EditBox searchField;
+    private EditBox greetMessageBox;
     private String searchQuery = "";
 
     // chat trigger state
@@ -152,8 +154,67 @@ public class NpcInteractionTab implements NpcEditorTab {
             Minecraft.getInstance().setScreen(new EventChainScreen(state.getEntity()));
         }).bounds(rx, oy + 96, rw, 16).build());
 
+        // ── [INT-1/2/3] Interaction settings ────────────────────────────────
+        // Cooldown: ◄ value ►
+        add.accept(Button.builder(Component.literal("◄"), b -> {
+            d.interactCooldownSec = Math.max(0, d.interactCooldownSec - 5);
+            state.markDirty(); rebuild.run();
+        }).bounds(rx + 90, oy + 116, 14, 12).build());
+        add.accept(Button.builder(Component.literal("►"), b -> {
+            d.interactCooldownSec = Math.min(3600, d.interactCooldownSec + 5);
+            state.markDirty(); rebuild.run();
+        }).bounds(rx + 130, oy + 116, 14, 12).build());
+
+        // [INT-2] Conditions — 4 toggles
+        add.accept(Button.builder(
+                Component.literal(cond(d).onlyDay ? "§a[☀]" : "§8[☀]"),
+                b -> { cond(d).onlyDay = !cond(d).onlyDay; if (cond(d).onlyDay) cond(d).onlyNight = false; state.markDirty(); rebuild.run(); }
+        ).bounds(rx + 152, oy + 116, 22, 12).build());
+        add.accept(Button.builder(
+                Component.literal(cond(d).onlyNight ? "§9[☾]" : "§8[☾]"),
+                b -> { cond(d).onlyNight = !cond(d).onlyNight; if (cond(d).onlyNight) cond(d).onlyDay = false; state.markDirty(); rebuild.run(); }
+        ).bounds(rx + 176, oy + 116, 22, 12).build());
+        add.accept(Button.builder(
+                Component.literal(cond(d).onlyRain ? "§b[~]" : "§8[~]"),
+                b -> { cond(d).onlyRain = !cond(d).onlyRain; if (cond(d).onlyRain) cond(d).onlyClear = false; state.markDirty(); rebuild.run(); }
+        ).bounds(rx + 200, oy + 116, 22, 12).build());
+        add.accept(Button.builder(
+                Component.literal(cond(d).onlyClear ? "§e[○]" : "§8[○]"),
+                b -> { cond(d).onlyClear = !cond(d).onlyClear; if (cond(d).onlyClear) cond(d).onlyRain = false; state.markDirty(); rebuild.run(); }
+        ).bounds(rx + 224, oy + 116, 22, 12).build());
+
+        // [INT-3] Greet: toggle + range ◄► + cooldown ◄►
+        add.accept(Button.builder(
+                Component.literal(d.greetEnabled ? "§a◉ Привет" : "§8○ Привет"),
+                b -> { d.greetEnabled = !d.greetEnabled; state.markDirty(); rebuild.run(); }
+        ).bounds(rx, oy + 132, 72, 12).build());
+        add.accept(Button.builder(Component.literal("◄"), b -> {
+            d.greetRange = Math.max(1, d.greetRange - 1);
+            state.markDirty(); rebuild.run();
+        }).bounds(rx + 108, oy + 132, 14, 12).build());
+        add.accept(Button.builder(Component.literal("►"), b -> {
+            d.greetRange = Math.min(32, d.greetRange + 1);
+            state.markDirty(); rebuild.run();
+        }).bounds(rx + 134, oy + 132, 14, 12).build());
+        add.accept(Button.builder(Component.literal("◄"), b -> {
+            d.greetCooldownSec = Math.max(5, d.greetCooldownSec - 5);
+            state.markDirty(); rebuild.run();
+        }).bounds(rx + 198, oy + 132, 14, 12).build());
+        add.accept(Button.builder(Component.literal("►"), b -> {
+            d.greetCooldownSec = Math.min(3600, d.greetCooldownSec + 5);
+            state.markDirty(); rebuild.run();
+        }).bounds(rx + 224, oy + 132, 14, 12).build());
+
+        // Greet message EditBox
+        greetMessageBox = new EditBox(mc.font, rx, oy + 148, rw, 12,
+                Component.literal("Приветственное сообщение"));
+        greetMessageBox.setMaxLength(128);
+        greetMessageBox.setValue(d.greetMessage != null ? d.greetMessage : "");
+        greetMessageBox.setHint(Component.literal("Привет, путник!").withStyle(s -> s.withColor(0xFF444455)));
+        add.accept(greetMessageBox);
+
         // ── Quest search + list ──────────────────────────────────────────────
-        searchField = new EditBox(mc.font, rx, oy + 132, rw, 14, Component.literal("Поиск квестов"));
+        searchField = new EditBox(mc.font, rx, oy + 166, rw, 14, Component.literal("Поиск квестов"));
         searchField.setMaxLength(48);
         searchField.setValue(searchQuery);
         searchField.setHint(Component.literal("🔍 Поиск...").withStyle(s -> s.withColor(0xFF555566)));
@@ -161,7 +222,7 @@ public class NpcInteractionTab implements NpcEditorTab {
         add.accept(searchField);
 
         List<QuestDefinition> quests = filteredQuests();
-        int qY = oy + 152;
+        int qY = oy + 184;
         for (int i = questScroll; i < Math.min(quests.size(), questScroll + ROWS); i++) {
             QuestDefinition q = quests.get(i);
             boolean linked = d.questIds.contains(q.id);
@@ -177,7 +238,7 @@ public class NpcInteractionTab implements NpcEditorTab {
         }
 
         // ── Chat Triggers ────────────────────────────────────────────────────
-        initChatTriggers(add, rebuild, state, d, mc, rx, oy + 260, rw);
+        initChatTriggers(add, rebuild, state, d, mc, rx, oy + 300, rw);
     }
 
     private void initChatTriggers(Consumer<AbstractWidget> add, Runnable rebuild,
@@ -334,25 +395,32 @@ public class NpcInteractionTab implements NpcEditorTab {
                         .map(dd -> "§7" + dd.npcName).findFirst().orElse("§c" + d.dialogueId);
         g.drawCenteredString(font, dlgLabel, rx + 60, oy + 83, 0xFFCCCCCC);
 
+        // [INT-1/2/3] Interaction settings labels
+        g.drawString(font, "§7Кулдаун: §f" + d.interactCooldownSec + "с", rx, oy + 118, 0xFF888877, false);
+        g.drawString(font, "§8Усл:", rx + 150, oy + 118, 0xFF888877, false);
+        g.drawString(font, "§7Приветствие  Радиус:§f" + (int)d.greetRange + "б  §7КД:§f" + d.greetCooldownSec + "с",
+                rx, oy + 134, 0xFF888877, false);
+        g.drawString(font, "§8Сообщение:", rx, oy + 150, 0xFF888877, false);
+
         List<QuestDefinition> quests = filteredQuests();
         int total = ClientQuestState.getAll().size();
-        NpcEditorUtils.sectionCard(g, rx, oy + 118, rw, 14,
+        NpcEditorUtils.sectionCard(g, rx, oy + 162, rw, 14,
                 "КВЕСТЫ (" + d.questIds.size() + "/" + total + " выбрано)", ACCENT);
 
         if (quests.isEmpty() && !searchQuery.isBlank()) {
             g.drawString(font, "§8Нет совпадений по запросу «" + searchQuery + "»",
-                    rx + 4, oy + 154, 0xFF555566, false);
+                    rx + 4, oy + 198, 0xFF555566, false);
         } else if (ClientQuestState.getAll().isEmpty()) {
-            g.drawString(font, "§8Квестов ещё нет...", rx + 4, oy + 154, 0xFF555566, false);
+            g.drawString(font, "§8Квестов ещё нет...", rx + 4, oy + 198, 0xFF555566, false);
         }
 
         if (quests.size() > ROWS) {
-            g.drawString(font, "§8↑↓ прокрутка", rx + rw - 60, oy + 152, 0xFF444455, false);
+            g.drawString(font, "§8↑↓ прокрутка", rx + rw - 60, oy + 196, 0xFF444455, false);
         }
-        
+
         // ── Chat triggers summary ─────────────────────────────────────────────
         NpcChatConfig cfg = ensureChat(d);
-        int sy = oy + 260;
+        int sy = oy + 300;
         NpcEditorUtils.sectionCard(g, rx, sy - 2, rw, 14,
                 "ЧАТ-ТРИГГЕРЫ" + (cfg.enabled ? " §a(ВКЛ)" : " §8(ВЫКЛ)"), ACCENT);
         if (cfg.enabled) {
@@ -370,6 +438,8 @@ public class NpcInteractionTab implements NpcEditorTab {
     @Override
     public void pullFields(NpcEditorState state) {
         if (searchField != null) searchQuery = searchField.getValue();
+        if (greetMessageBox != null)
+            state.getDraft().greetMessage = greetMessageBox.getValue();
 
         NpcChatConfig cfg = ensureChat(state.getDraft());
         if (selectedTriggerIdx >= 0 && selectedTriggerIdx < cfg.triggers.size()) {
@@ -389,6 +459,11 @@ public class NpcInteractionTab implements NpcEditorTab {
     }
 
     // ── Util ──────────────────────────────────────────────────────────────────
+
+    private static DialogConditions cond(NpcEntityData d) {
+        if (d.dialogConditions == null) d.dialogConditions = new DialogConditions();
+        return d.dialogConditions;
+    }
 
     private static NpcChatConfig ensureChat(NpcEntityData d) {
         if (d.chatConfig == null) d.chatConfig = new NpcChatConfig();
@@ -444,5 +519,11 @@ public class NpcInteractionTab implements NpcEditorTab {
         for (DialogueDefinition d : ClientDialogueState.getAll())
             if (id.equals(d.id)) return d;
         return null;
+    }
+
+    // [INT-2]: Null-safe accessor for dialog conditions
+    private static DialogConditions cond(NpcEntityData d) {
+        if (d.dialogConditions == null) d.dialogConditions = new DialogConditions();
+        return d.dialogConditions;
     }
 }
