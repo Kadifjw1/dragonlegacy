@@ -1,6 +1,7 @@
 package com.frametrip.dragonlegacyquesttoast.client.npceditor;
 
 import com.frametrip.dragonlegacyquesttoast.client.NpcAppearancePresetManager;
+import com.frametrip.dragonlegacyquesttoast.client.NpcCreatorScreen;
 import com.frametrip.dragonlegacyquesttoast.client.NpcFileUtils;
 import com.frametrip.dragonlegacyquesttoast.client.NpcLayeredSkinManager;
 import com.frametrip.dragonlegacyquesttoast.client.NpcSkinManager;
