@@ -10,6 +10,7 @@ import com.frametrip.dragonlegacyquesttoast.server.gui.GuiTemplate;
 import com.frametrip.dragonlegacyquesttoast.server.chat.NpcChatConfig;
 import com.frametrip.dragonlegacyquesttoast.server.model.NpcModelConfig;
 import com.frametrip.dragonlegacyquesttoast.server.stealth.StealthConfig;
+import com.frametrip.dragonlegacyquesttoast.server.animation.AnimationTrigger;
 import com.frametrip.dragonlegacyquesttoast.server.interaction.DialogConditions;
 
 import java.util.*;
@@ -71,6 +72,14 @@ public class NpcEntityData {
     // — Stealth / Guard —
     public StealthConfig stealthConfig = new StealthConfig();
 
+    // [ANI-1]: Custom static pose applied on top of GeckoLib animation
+    public boolean customPoseEnabled = false;
+    // GeckoLib bone name -> [xDeg, yDeg, zDeg]
+    public Map<String, float[]> customPose = new LinkedHashMap<>();
+
+    // [ANI-2]: Server-side animation triggers
+    public List<AnimationTrigger> animTriggers = new ArrayList<>();
+
     // [INT-1]: Cooldown between interactions (seconds, 0 = no limit)
     public int interactCooldownSec = 0;
 
@@ -117,6 +126,10 @@ public class NpcEntityData {
     // [INFO-NEW-11]: Group / Squad identifier (max 32 chars)
     public String npcGroup = "";
  
+    // [ANI-1]: GeckoLib bone names and labels for the pose editor
+    public static final String[] POSE_BONE_IDS    = {"head","body","rightArm","leftArm","rightLeg","leftLeg"};
+    public static final String[] POSE_BONE_LABELS = {"Голова","Тело","Прав.рука","Лев.рука","Прав.нога","Лев.нога"};
+
     // ── Pose labels (for UI) ──────────────────────────────────────────────────
     public static final String[] IDLE_POSES       = {"STANDING", "CROUCHING"};
     public static final String[] IDLE_POSE_LABELS = {"Стоит", "Крадётся"};
@@ -188,6 +201,15 @@ public class NpcEntityData {
         c.chatConfig        = this.chatConfig     != null ? this.chatConfig.copy()     : new NpcChatConfig();
         c.modelConfig       = this.modelConfig    != null ? this.modelConfig.copy()    : new NpcModelConfig();
         c.stealthConfig     = this.stealthConfig  != null ? this.stealthConfig.copy()  : new StealthConfig();
+        // [ANI-1..2]:
+        c.customPoseEnabled = this.customPoseEnabled;
+        c.customPose = new LinkedHashMap<>();
+        if (this.customPose != null)
+            for (Map.Entry<String, float[]> e : this.customPose.entrySet())
+                c.customPose.put(e.getKey(), e.getValue().clone());
+        c.animTriggers = new ArrayList<>();
+        if (this.animTriggers != null)
+            for (AnimationTrigger t : this.animTriggers) c.animTriggers.add(t.copy());
         // [INT-1..3]:
         c.interactCooldownSec = this.interactCooldownSec;
         c.dialogConditions    = this.dialogConditions != null ? this.dialogConditions.copy() : new DialogConditions();

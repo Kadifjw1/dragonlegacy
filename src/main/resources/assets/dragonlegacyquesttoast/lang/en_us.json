@@ -281,5 +281,15 @@
   "gui.dragonlegacyquesttoast.interaction.greet":       "Greet Player",
   "gui.dragonlegacyquesttoast.interaction.greet_range": "Greet Range",
   "gui.dragonlegacyquesttoast.interaction.greet_msg":   "Greet Message",
-  "gui.dragonlegacyquesttoast.interaction.greet_cd":    "Greet Cooldown"
+  "gui.dragonlegacyquesttoast.interaction.greet_cd":    "Greet Cooldown",
+
+  "gui.dragonlegacyquesttoast.pose.title":   "Bone Pose",
+  "gui.dragonlegacyquesttoast.pose.enable":  "Pose Enabled",
+  "gui.dragonlegacyquesttoast.pose.reset":   "Reset",
+  "gui.dragonlegacyquesttoast.trigger.title":          "Animation Triggers",
+  "gui.dragonlegacyquesttoast.trigger.player_nearby":  "Player Nearby",
+  "gui.dragonlegacyquesttoast.trigger.time_of_day":    "Time of Day",
+  "gui.dragonlegacyquesttoast.trigger.weather":        "Weather",
+  "gui.dragonlegacyquesttoast.trigger.health_below":   "HP Below %",
+  "gui.dragonlegacyquesttoast.trigger.nearby_mob":     "Mob Nearby"
 }
