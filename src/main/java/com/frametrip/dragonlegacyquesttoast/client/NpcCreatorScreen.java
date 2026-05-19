@@ -395,7 +395,7 @@ public class NpcCreatorScreen extends Screen {
     private int ox() { return (width  - W) / 2; }
     private int oy() { return (height - H) / 2; }
 
-    static void brd(GuiGraphics g, int x, int y, int w, int h, int c) {
+    public static void brd(GuiGraphics g, int x, int y, int w, int h, int c) {
         g.fill(x,     y,     x + w, y + 1, c);
         g.fill(x,     y+h-1, x + w, y + h, c);
         g.fill(x,     y,     x + 1, y + h, c);
