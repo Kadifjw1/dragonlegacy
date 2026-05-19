@@ -291,5 +291,11 @@
   "gui.dragonlegacyquesttoast.trigger.time_of_day":    "Time of Day",
   "gui.dragonlegacyquesttoast.trigger.weather":        "Weather",
   "gui.dragonlegacyquesttoast.trigger.health_below":   "HP Below %",
-  "gui.dragonlegacyquesttoast.trigger.nearby_mob":     "Mob Nearby"
+  "gui.dragonlegacyquesttoast.trigger.nearby_mob":     "Mob Nearby",
+
+  "npc.reputation.lost": "Reputation with faction '%s' decreased by %s",
+  "npc.reputation.gain": "Reputation with faction '%s' increased by %s",
+  "gui.dragonlegacyquesttoast.faction.graph":           "Faction Graph",
+  "gui.dragonlegacyquesttoast.faction.kill_penalty":    "Kill Penalty",
+  "gui.dragonlegacyquesttoast.faction.reputation":      "Reputation"
 }

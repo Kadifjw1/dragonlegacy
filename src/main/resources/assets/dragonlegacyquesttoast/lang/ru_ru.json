@@ -291,5 +291,11 @@
   "gui.dragonlegacyquesttoast.trigger.time_of_day":    "Время суток",
   "gui.dragonlegacyquesttoast.trigger.weather":        "Погода",
   "gui.dragonlegacyquesttoast.trigger.health_below":   "HP ниже %",
-  "gui.dragonlegacyquesttoast.trigger.nearby_mob":     "Моб рядом"
+  "gui.dragonlegacyquesttoast.trigger.nearby_mob":     "Моб рядом",
+
+  "npc.reputation.lost": "Репутация во фракции «%s» снизилась на %s",
+  "npc.reputation.gain": "Репутация во фракции «%s» выросла на %s",
+  "gui.dragonlegacyquesttoast.faction.graph":           "Граф фракций",
+  "gui.dragonlegacyquesttoast.faction.kill_penalty":    "Штраф за убийство",
+  "gui.dragonlegacyquesttoast.faction.reputation":      "Репутация"
 }

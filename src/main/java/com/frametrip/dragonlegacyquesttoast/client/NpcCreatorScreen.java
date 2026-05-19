@@ -298,6 +298,13 @@ public class NpcCreatorScreen extends Screen {
             previewPitch  = Mth.clamp(previewPitch + (float)(dy * 0.3f), -89f, 89f);
             return true;
         }
+        // Forward drag to the active tab (e.g. faction graph node dragging)
+        int rx = ox() + SIDEBAR_W + 8;
+        int rw = CONTENT_W - 16;
+        int tabOy = oy() + TOP_H + 18;
+        if (TAB_INSTANCES[activeTab].onMouseDragged(mouseX, mouseY, button, dx, dy, editorState, rx, tabOy, rw)) {
+            return true;
+        }
         return super.mouseDragged(mouseX, mouseY, button, dx, dy);
     }
     

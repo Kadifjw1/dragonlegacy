@@ -43,6 +43,8 @@ import com.frametrip.dragonlegacyquesttoast.server.chat.NpcChatHandler;
 import com.frametrip.dragonlegacyquesttoast.server.data.DataPackManager;
 import com.frametrip.dragonlegacyquesttoast.server.dialogue.NpcSceneManager;
 import com.frametrip.dragonlegacyquesttoast.server.stealth.NpcDetectionHandler;
+import com.frametrip.dragonlegacyquesttoast.server.NpcFactionDeathHandler;
+import com.frametrip.dragonlegacyquesttoast.network.SyncReputationPacket;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RegisterGuiOverlaysEvent;
@@ -106,6 +108,9 @@ public class DragonLegacyQuestToastMod {
         // Trader restock tick
         MinecraftForge.EVENT_BUS.register(new TraderManager());
 
+        // [REL-3]: NPC kill → faction reputation penalty
+        MinecraftForge.EVENT_BUS.register(new NpcFactionDeathHandler());
+
         if (FMLEnvironment.dist == Dist.CLIENT) {
             modBus.addListener(this::onClientSetup);
             modBus.addListener(this::registerOverlays);
@@ -162,6 +167,10 @@ public class DragonLegacyQuestToastMod {
                 new SyncNpcProfilesPacket(NpcProfileManager.getAll()));
         ModNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player),
                 new SyncFactionsPacket(FactionManager.getAll()));
+        // [REL-2]: sync player reputation for all factions
+        ModNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player),
+                new SyncReputationPacket(
+                        PlayerFactionReputationManager.getAllForPlayer(player.getUUID())));
         ModNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player),
                 new SyncNpcScenesPacket(NpcSceneManager.getAll()));
          ModNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player),

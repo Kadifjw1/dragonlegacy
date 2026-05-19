@@ -65,5 +65,7 @@ public class ModNetwork {
         CHANNEL.registerMessage(packetId++, OpenCompanionScreenPacket.class, OpenCompanionScreenPacket::encode, OpenCompanionScreenPacket::decode, OpenCompanionScreenPacket::handle);
         CHANNEL.registerMessage(packetId++, SyncDataPresetsPacket.class, SyncDataPresetsPacket::encode, SyncDataPresetsPacket::decode, SyncDataPresetsPacket::handle);
         CHANNEL.registerMessage(packetId++, NpcAnimStatePacket.class,    NpcAnimStatePacket::encode,    NpcAnimStatePacket::decode,    NpcAnimStatePacket::handle);
+        // [REL-2]:
+        CHANNEL.registerMessage(packetId++, SyncReputationPacket.class,  SyncReputationPacket::encode,  SyncReputationPacket::decode,  SyncReputationPacket::handle);
     }
 }

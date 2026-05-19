@@ -38,4 +38,10 @@ public interface NpcEditorTab {
                                    NpcEditorState state, int rx, int oy, int rw) {
         return false;
     }
+
+    /** Optional drag handling. Return true if consumed. */
+    default boolean onMouseDragged(double mx, double my, int btn, double dx, double dy,
+                                   NpcEditorState state, int rx, int oy, int rw) {
+        return false;
+    }
 }
