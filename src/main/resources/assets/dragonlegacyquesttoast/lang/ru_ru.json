@@ -297,5 +297,20 @@
   "npc.reputation.gain": "Репутация во фракции «%s» выросла на %s",
   "gui.dragonlegacyquesttoast.faction.graph":           "Граф фракций",
   "gui.dragonlegacyquesttoast.faction.kill_penalty":    "Штраф за убийство",
-  "gui.dragonlegacyquesttoast.faction.reputation":      "Репутация"
+  "gui.dragonlegacyquesttoast.faction.reputation":      "Репутация",
+
+  "gui.dragonlegacyquesttoast.job.schedule":            "Рабочее расписание",
+  "gui.dragonlegacyquesttoast.job.schedule.enabled":    "Расписание: ВКЛ",
+  "gui.dragonlegacyquesttoast.job.schedule.disabled":   "Расписание: ВЫКЛ",
+  "gui.dragonlegacyquesttoast.job.schedule.from":       "С",
+  "gui.dragonlegacyquesttoast.job.schedule.to":         "По",
+  "gui.dragonlegacyquesttoast.job.route":               "Рабочий маршрут",
+  "gui.dragonlegacyquesttoast.job.route.add":           "+ Добавить точку",
+  "gui.dragonlegacyquesttoast.job.route.loop":          "Цикл: ВКЛ",
+  "gui.dragonlegacyquesttoast.job.route.noloop":        "Цикл: ВЫКЛ",
+  "gui.dragonlegacyquesttoast.job.conditions":          "Условия работы",
+  "gui.dragonlegacyquesttoast.job.cond.schedule":       "Требует расписание",
+  "gui.dragonlegacyquesttoast.job.cond.weather":        "Только ясная погода",
+  "gui.dragonlegacyquesttoast.job.cond.daytime":        "Только днём",
+  "gui.dragonlegacyquesttoast.job.cond.minhp":          "Мин. HP %"
 }

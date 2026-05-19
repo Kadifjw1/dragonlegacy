@@ -54,6 +54,7 @@ import java.util.Objects;
 import java.util.HashMap;
 import java.util.UUID;
 import com.frametrip.dragonlegacyquesttoast.entity.goal.NpcGreetGoal;
+import com.frametrip.dragonlegacyquesttoast.entity.goal.NpcWorkPatrolGoal;
 
 public class NpcEntity extends PathfinderMob implements GeoEntity {
 
@@ -95,9 +96,10 @@ public class NpcEntity extends PathfinderMob implements GeoEntity {
         goalSelector.addGoal(1, new NpcGreetGoal(this)); // [INT-3]
         goalSelector.addGoal(2, new CompanionGoal(this));
         goalSelector.addGoal(2, new com.frametrip.dragonlegacyquesttoast.server.companion.CompanionGuardGoal(this));
-        goalSelector.addGoal(3, new NpcLookAtPlayerGoal());
-        goalSelector.addGoal(4, new RandomLookAroundGoal(this));
-        goalSelector.addGoal(5, new WaterAvoidingRandomStrollGoal(this, 0.4));
+        goalSelector.addGoal(3, new NpcWorkPatrolGoal(this)); // [JOB-2]
+        goalSelector.addGoal(4, new NpcLookAtPlayerGoal());
+        goalSelector.addGoal(5, new RandomLookAroundGoal(this));
+        goalSelector.addGoal(6, new WaterAvoidingRandomStrollGoal(this, 0.4));
     }
 
     public static AttributeSupplier.Builder createAttributes() {

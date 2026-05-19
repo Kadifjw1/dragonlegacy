@@ -297,5 +297,20 @@
   "npc.reputation.gain": "Reputation with faction '%s' increased by %s",
   "gui.dragonlegacyquesttoast.faction.graph":           "Faction Graph",
   "gui.dragonlegacyquesttoast.faction.kill_penalty":    "Kill Penalty",
-  "gui.dragonlegacyquesttoast.faction.reputation":      "Reputation"
+  "gui.dragonlegacyquesttoast.faction.reputation":      "Reputation",
+
+  "gui.dragonlegacyquesttoast.job.schedule":            "Work Schedule",
+  "gui.dragonlegacyquesttoast.job.schedule.enabled":    "Schedule: ON",
+  "gui.dragonlegacyquesttoast.job.schedule.disabled":   "Schedule: OFF",
+  "gui.dragonlegacyquesttoast.job.schedule.from":       "From",
+  "gui.dragonlegacyquesttoast.job.schedule.to":         "To",
+  "gui.dragonlegacyquesttoast.job.route":               "Work Route",
+  "gui.dragonlegacyquesttoast.job.route.add":           "+ Add Point",
+  "gui.dragonlegacyquesttoast.job.route.loop":          "Loop: ON",
+  "gui.dragonlegacyquesttoast.job.route.noloop":        "Loop: OFF",
+  "gui.dragonlegacyquesttoast.job.conditions":          "Job Conditions",
+  "gui.dragonlegacyquesttoast.job.cond.schedule":       "Requires Schedule",
+  "gui.dragonlegacyquesttoast.job.cond.weather":        "Fair Weather Only",
+  "gui.dragonlegacyquesttoast.job.cond.daytime":        "Daytime Only",
+  "gui.dragonlegacyquesttoast.job.cond.minhp":          "Min HP %"
 }
