@@ -348,5 +348,15 @@
   "gui.dragonlegacyquesttoast.scr.node_condition":      "CONDITION",
   "gui.dragonlegacyquesttoast.scr.node_action":         "ACTION",
   "gui.dragonlegacyquesttoast.scr.node_delay":          "DELAY",
-  "gui.dragonlegacyquesttoast.scr.node_output":         "END"
+  "gui.dragonlegacyquesttoast.scr.node_output":         "END",
+
+  "gui.dragonlegacyquesttoast.sta.tab":                 "Statistics",
+  "gui.dragonlegacyquesttoast.sta.times_killed":        "Times killed:",
+  "gui.dragonlegacyquesttoast.sta.quests_given":        "Quests given:",
+  "gui.dragonlegacyquesttoast.sta.items_sold":          "Items sold:",
+  "gui.dragonlegacyquesttoast.sta.dialogs_started":     "Dialogs started:",
+  "gui.dragonlegacyquesttoast.sta.interactions":        "Interactions:",
+  "gui.dragonlegacyquesttoast.sta.created":             "Created:",
+  "gui.dragonlegacyquesttoast.sta.author":              "Author:",
+  "gui.dragonlegacyquesttoast.sta.reset":               "↺ Reset Statistics"
 }

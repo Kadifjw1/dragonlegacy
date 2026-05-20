@@ -348,5 +348,15 @@
   "gui.dragonlegacyquesttoast.scr.node_condition":      "УСЛОВИЕ",
   "gui.dragonlegacyquesttoast.scr.node_action":         "ДЕЙСТВИЕ",
   "gui.dragonlegacyquesttoast.scr.node_delay":          "ЗАДЕРЖКА",
-  "gui.dragonlegacyquesttoast.scr.node_output":         "КОНЕЦ"
+  "gui.dragonlegacyquesttoast.scr.node_output":         "КОНЕЦ",
+
+  "gui.dragonlegacyquesttoast.sta.tab":                 "Статистика",
+  "gui.dragonlegacyquesttoast.sta.times_killed":        "Убит раз:",
+  "gui.dragonlegacyquesttoast.sta.quests_given":        "Квестов выдано:",
+  "gui.dragonlegacyquesttoast.sta.items_sold":          "Предметов продано:",
+  "gui.dragonlegacyquesttoast.sta.dialogs_started":     "Диалогов начато:",
+  "gui.dragonlegacyquesttoast.sta.interactions":        "Взаимодействий:",
+  "gui.dragonlegacyquesttoast.sta.created":             "Создан:",
+  "gui.dragonlegacyquesttoast.sta.author":              "Автор:",
+  "gui.dragonlegacyquesttoast.sta.reset":               "↺ Сбросить статистику"
 }

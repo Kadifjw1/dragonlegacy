@@ -65,6 +65,11 @@ public class SaveNpcEntityDataPacket {
             for (ServerLevel level : server.getAllLevels()) {
                 Entity e = level.getEntity(msg.entityUuid);
                 if (e instanceof NpcEntity npc) {
+                    // [STA-1]: Record first creator on first save
+                    if (data.stats != null && data.stats.createdBy.isEmpty()) {
+                        data.stats.createdBy = player.getGameProfile().getName();
+                        data.stats.firstSpawnTime = System.currentTimeMillis();
+                    }
                     npc.setNpcData(data);
                     break;
                 }

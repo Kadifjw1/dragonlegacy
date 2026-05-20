@@ -14,6 +14,7 @@ import com.frametrip.dragonlegacyquesttoast.server.animation.AnimationTrigger;
 import com.frametrip.dragonlegacyquesttoast.server.interaction.DialogConditions;
 import com.frametrip.dragonlegacyquesttoast.currency.NpcEconomyData;
 import com.frametrip.dragonlegacyquesttoast.server.script.ScriptGraph;
+import com.frametrip.dragonlegacyquesttoast.server.stats.NpcStatisticsData;
 
 import java.util.*;
  
@@ -134,6 +135,9 @@ public class NpcEntityData {
     // [SCR-1]: Visual script graphs for this NPC (each compiles to one EventChain on save)
     public List<ScriptGraph> scriptGraphs = new ArrayList<>();
 
+    // [STA-1]: Per-NPC aggregate statistics (server-side tracking)
+    public NpcStatisticsData stats = new NpcStatisticsData();
+
     // [ANI-1]: GeckoLib bone names and labels for the pose editor
     public static final String[] POSE_BONE_IDS    = {"head","body","rightArm","leftArm","rightLeg","leftLeg"};
     public static final String[] POSE_BONE_LABELS = {"Голова","Тело","Прав.рука","Лев.рука","Прав.нога","Лев.нога"};
@@ -247,6 +251,8 @@ public class NpcEntityData {
         c.scriptGraphs = new ArrayList<>();
         if (this.scriptGraphs != null)
             for (ScriptGraph g : this.scriptGraphs) c.scriptGraphs.add(g.copy());
+        // [STA-1]:
+        c.stats = this.stats != null ? this.stats.copy() : new NpcStatisticsData();
 
         return c;
     }

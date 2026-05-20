@@ -70,5 +70,7 @@ public class ModNetwork {
         // [ECO-1]:
         CHANNEL.registerMessage(packetId++, SyncCurrencyConfigPacket.class,  SyncCurrencyConfigPacket::encode,  SyncCurrencyConfigPacket::decode,  SyncCurrencyConfigPacket::handle);
         CHANNEL.registerMessage(packetId++, SaveCurrencyConfigPacket.class,  SaveCurrencyConfigPacket::encode,  SaveCurrencyConfigPacket::decode,  SaveCurrencyConfigPacket::handle);
+        // [STA-1]:
+        CHANNEL.registerMessage(packetId++, ResetNpcStatsPacket.class, ResetNpcStatsPacket::encode, ResetNpcStatsPacket::decode, ResetNpcStatsPacket::handle);
     }
 }

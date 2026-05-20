@@ -108,6 +108,10 @@ public class BuyTradeOfferPacket {
 
             CurrencyManager.removeBalance(player, price.finalPrice);
 
+            // [STA-1]: Increment items-sold counter
+            NpcEntityData statData = npc.getNpcData();
+            if (statData.stats != null) { statData.stats.itemsSold++; npc.setNpcData(statData); }
+
             if (!offer.infiniteStock) {
                 offer.stock = Math.max(0, offer.stock - 1);
                 npc.setNpcData(npc.getNpcData());

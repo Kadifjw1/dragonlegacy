@@ -34,6 +34,12 @@ public class EventChainHandler {
         if (!(event.getTarget() instanceof NpcEntity npc)) return;
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
         NpcEntityData data = npc.getNpcData();
+        // [STA-1]: Count interactions and dialogue starts on each right-click
+        if (data.stats != null) {
+            data.stats.interactionCount++;
+            data.stats.dialogsStarted++;
+            npc.setNpcData(data);
+        }
         fireChains(npc, data, player, EventTriggerType.NPC_CLICK, null);
     }
 
@@ -271,6 +277,12 @@ public class EventChainHandler {
                 String questId = action.param("questId");
                 if (!questId.isEmpty()) {
                     QuestProgressManager.accept(player.getUUID(), questId);
+                    // [STA-1]: Count quests given by this NPC
+                    NpcEntityData mutableData = npc.getNpcData();
+                    if (mutableData.stats != null) {
+                        mutableData.stats.questsGiven++;
+                        npc.setNpcData(mutableData);
+                    }
                 }
             }
             case COMPLETE_QUEST -> {

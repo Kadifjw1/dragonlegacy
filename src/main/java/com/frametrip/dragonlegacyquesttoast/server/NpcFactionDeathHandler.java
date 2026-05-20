@@ -2,6 +2,7 @@ package com.frametrip.dragonlegacyquesttoast.server;
 
 import com.frametrip.dragonlegacyquesttoast.entity.FactionData;
 import com.frametrip.dragonlegacyquesttoast.entity.NpcEntity;
+import com.frametrip.dragonlegacyquesttoast.entity.NpcEntityData;
 import com.frametrip.dragonlegacyquesttoast.network.ModNetwork;
 import com.frametrip.dragonlegacyquesttoast.network.SyncReputationPacket;
 import net.minecraft.network.chat.Component;
@@ -19,7 +20,14 @@ public class NpcFactionDeathHandler {
         if (!(event.getEntity() instanceof NpcEntity npc)) return;
         if (!(event.getSource().getEntity() instanceof Player player)) return;
 
-        String factionId = npc.getNpcData().factionId;
+        // [STA-1]: Increment death counter
+        NpcEntityData npcData = npc.getNpcData();
+        if (npcData.stats != null) {
+            npcData.stats.timesKilled++;
+            npc.setNpcData(npcData);
+        }
+
+        String factionId = npcData.factionId;
         if (factionId == null || factionId.isEmpty()) return;
 
         FactionData faction = FactionManager.get(factionId);
