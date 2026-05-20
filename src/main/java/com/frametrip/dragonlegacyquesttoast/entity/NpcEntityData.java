@@ -168,6 +168,9 @@ public class NpcEntityData {
     public float   arenaRadius  = 20.0f;
     public String  arenaCenter  = ""; // "x,y,z" — set to NPC's current position on enable
 
+    // [EDT-3]: AI debug mode — shows live debug panel above NPC on the HUD
+    public boolean debugAi = false;
+
     // [SRV-1]: Edit permissions
     public byte   editPermission = 0;  // 0=AllOP, 1=CreatorOnly, 2=Group
     public String editGroup      = ""; // group name
@@ -332,6 +335,8 @@ public class NpcEntityData {
         c.arenaEnabled = this.arenaEnabled;
         c.arenaRadius  = this.arenaRadius;
         c.arenaCenter  = this.arenaCenter;
+        // [EDT-3]:
+        c.debugAi = this.debugAi;
         // [SRV-1]:
         c.editPermission = this.editPermission;
         c.editGroup      = this.editGroup;

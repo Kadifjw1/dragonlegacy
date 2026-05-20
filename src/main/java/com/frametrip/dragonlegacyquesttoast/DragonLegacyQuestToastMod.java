@@ -6,6 +6,7 @@ import com.frametrip.dragonlegacyquesttoast.client.NpcAppearancePresetManager;
 import com.frametrip.dragonlegacyquesttoast.client.NpcGeckoPresetManager;
 import com.frametrip.dragonlegacyquesttoast.client.NpcLayeredSkinManager;
 import com.frametrip.dragonlegacyquesttoast.client.NpcSkinManager;
+import com.frametrip.dragonlegacyquesttoast.client.NpcAiDebugOverlay;
 import com.frametrip.dragonlegacyquesttoast.client.QuestTimerHudOverlay;
 import com.frametrip.dragonlegacyquesttoast.client.QuestToastOverlay;
 import com.frametrip.dragonlegacyquesttoast.client.dialogue.NpcSceneTickHandler;
@@ -154,6 +155,7 @@ public class DragonLegacyQuestToastMod {
         event.registerAboveAll("quest_toast_overlay",   QuestToastOverlay.OVERLAY);
         event.registerAboveAll("npc_dialogue_overlay",  NpcDialogueOverlay.OVERLAY);
         event.registerAboveAll("quest_timer_hud",       QuestTimerHudOverlay.OVERLAY); // [QST-3]
+        event.registerAboveAll("npc_ai_debug",          NpcAiDebugOverlay.OVERLAY);   // [EDT-3]
     }
 
     private void registerCommands(RegisterCommandsEvent event) {

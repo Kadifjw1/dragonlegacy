@@ -114,27 +114,58 @@ public class NpcCreatorScreen extends Screen {
 
         // Top bar: Delete / Reset / Close (no Save button — autosave handles saving)
         int topBtnY = oy + 5;
+
+        // [EDT-1]: Duplicate NPC
+        addRenderableWidget(Button.builder(Component.literal("📋 Копировать"), b -> {
+                    TAB_INSTANCES[activeTab].pullFields(editorState);
+                    ModNetwork.CHANNEL.sendToServer(
+                            new com.frametrip.dragonlegacyquesttoast.network.DuplicateNpcPacket(
+                                    editorState.getEntity().getUUID()));
+                })
+                .bounds(ox + W - 480, topBtnY, 90, 18).build());
+
+        // [EDT-2]: Templates
+        addRenderableWidget(Button.builder(Component.literal("📚 Шаблоны"), b -> {
+                    TAB_INSTANCES[activeTab].pullFields(editorState);
+                    minecraft.setScreen(new NpcTemplateScreen(template -> {
+                        editorState.setDraft(template);
+                        minecraft.setScreen(this);
+                        rebuildWidgets();
+                    }));
+                })
+                .bounds(ox + W - 386, topBtnY, 82, 18).build());
+
+        // [EDT-4]: Remote editor
+        addRenderableWidget(Button.builder(Component.literal("📡 Все NPC"), b -> {
+                    ModNetwork.CHANNEL.sendToServer(
+                            new com.frametrip.dragonlegacyquesttoast.network.RequestRemoteNpcListPacket());
+                })
+                .bounds(ox + W - 300, topBtnY, 74, 18).build());
+
+        // [EDT-5]: Preview
+        addRenderableWidget(Button.builder(Component.literal("👁 Превью"), b -> {
+                    TAB_INSTANCES[activeTab].pullFields(editorState);
+                    ModNetwork.CHANNEL.sendToServer(
+                            new com.frametrip.dragonlegacyquesttoast.network.PreviewNpcDataPacket(
+                                    editorState.getEntity().getUUID(), editorState.getDraft()));
+                })
+                .bounds(ox + W - 222, topBtnY, 68, 18).build());
+
         addRenderableWidget(Button.builder(Component.literal("📋 Пресеты"), b -> {
                     TAB_INSTANCES[activeTab].pullFields(editorState);
                     activeTab = 0;
                     ((NpcInfoTab) TAB_INSTANCES[0]).setSubPage(4);
                     rebuildWidgets();
                 })
-                .bounds(ox + W - 282, topBtnY, 78, 18).build());
-        addRenderableWidget(Button.builder(Component.literal("§c✕ Удалить NPC"), b -> {
+                .bounds(ox + W - 150, topBtnY, 50, 18).build());
+        addRenderableWidget(Button.builder(Component.literal("§c✕ Удалить"), b -> {
                     ModNetwork.CHANNEL.sendToServer(
                             new DeleteNpcPacket(editorState.getEntity().getUUID()));
                     onClose();
                 })
-                .bounds(ox + W - 200, topBtnY, 80, 18).build());
-        addRenderableWidget(Button.builder(Component.literal("↺ Сбросить"), b -> {
-                    editorState.reset();
-                    dirtyTicks = 0;
-                    rebuildWidgets();
-                })
-                .bounds(ox + W - 116, topBtnY, 70, 18).build());
-        addRenderableWidget(Button.builder(Component.literal("✕ Закрыть"),
-                b -> onClose()).bounds(ox + W - 42, topBtnY, 38, 18).build());
+                .bounds(ox + W - 96, topBtnY, 54, 18).build());
+        addRenderableWidget(Button.builder(Component.literal("✕"),
+                b -> onClose()).bounds(ox + W - 38, topBtnY, 34, 18).build());
 
         // Sidebar: tab buttons
         for (int i = 0; i < TAB_LABELS.length; i++) {
