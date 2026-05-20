@@ -6,6 +6,7 @@ import com.frametrip.dragonlegacyquesttoast.client.NpcAppearancePresetManager;
 import com.frametrip.dragonlegacyquesttoast.client.NpcGeckoPresetManager;
 import com.frametrip.dragonlegacyquesttoast.client.NpcLayeredSkinManager;
 import com.frametrip.dragonlegacyquesttoast.client.NpcSkinManager;
+import com.frametrip.dragonlegacyquesttoast.client.QuestTimerHudOverlay;
 import com.frametrip.dragonlegacyquesttoast.client.QuestToastOverlay;
 import com.frametrip.dragonlegacyquesttoast.client.dialogue.NpcSceneTickHandler;
 import com.frametrip.dragonlegacyquesttoast.command.ModCommands;
@@ -48,6 +49,12 @@ import com.frametrip.dragonlegacyquesttoast.server.dialogue.NpcSceneManager;
 import com.frametrip.dragonlegacyquesttoast.server.stealth.NpcDetectionHandler;
 import com.frametrip.dragonlegacyquesttoast.server.NpcFactionDeathHandler;
 import com.frametrip.dragonlegacyquesttoast.network.SyncReputationPacket;
+import com.frametrip.dragonlegacyquesttoast.network.SyncQuestChainsPacket;
+import com.frametrip.dragonlegacyquesttoast.network.SyncBranchingDialogsPacket;
+import com.frametrip.dragonlegacyquesttoast.network.SyncQuestDeadlinesPacket;
+import com.frametrip.dragonlegacyquesttoast.server.quest.BranchingDialogManager;
+import com.frametrip.dragonlegacyquesttoast.server.quest.QuestChainController;
+import com.frametrip.dragonlegacyquesttoast.server.quest.QuestTimerHandler;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RegisterGuiOverlaysEvent;
@@ -86,6 +93,8 @@ public class DragonLegacyQuestToastMod {
         NpcSceneManager.load();
         BuildingTemplateManager.load();
         CurrencyConfigManager.load(); // [ECO-1]
+        QuestChainController.load();      // [QST-1]
+        BranchingDialogManager.load();    // [QST-2]
 
         MinecraftForge.EVENT_BUS.addListener(this::registerCommands);
         MinecraftForge.EVENT_BUS.addListener(this::onPlayerLogin);
@@ -115,6 +124,9 @@ public class DragonLegacyQuestToastMod {
         // [REL-3]: NPC kill → faction reputation penalty
         MinecraftForge.EVENT_BUS.register(new NpcFactionDeathHandler());
 
+        // [QST-3]: Timed quest expiry handler.
+        QuestTimerHandler.register();
+
         if (FMLEnvironment.dist == Dist.CLIENT) {
             modBus.addListener(this::onClientSetup);
             modBus.addListener(this::registerOverlays);
@@ -135,8 +147,9 @@ public class DragonLegacyQuestToastMod {
     }
 
     private void registerOverlays(RegisterGuiOverlaysEvent event) {
-        event.registerAboveAll("quest_toast_overlay", QuestToastOverlay.OVERLAY);
-        event.registerAboveAll("npc_dialogue_overlay", NpcDialogueOverlay.OVERLAY);
+        event.registerAboveAll("quest_toast_overlay",   QuestToastOverlay.OVERLAY);
+        event.registerAboveAll("npc_dialogue_overlay",  NpcDialogueOverlay.OVERLAY);
+        event.registerAboveAll("quest_timer_hud",       QuestTimerHudOverlay.OVERLAY); // [QST-3]
     }
 
     private void registerCommands(RegisterCommandsEvent event) {
@@ -184,6 +197,20 @@ public class DragonLegacyQuestToastMod {
                 new SyncDataPresetsPacket(DataPackManager.animationPresets, DataPackManager.guiPresets));
         // [ECO-1]: sync global currency config
         CurrencyConfigManager.syncToPlayer(player);
+        // [QST-1]: sync quest chains
+        ModNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player),
+                new SyncQuestChainsPacket(QuestChainController.getAll()));
+        // [QST-2]: sync branching dialogs
+        ModNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player),
+                new SyncBranchingDialogsPacket(BranchingDialogManager.getAll()));
+        // [QST-3]: sync quest deadlines
+        java.util.Map<String, Long> deadlines = new java.util.HashMap<>();
+        for (String qid : QuestProgressManager.getActive(player.getUUID())) {
+            long dl = QuestProgressManager.getDeadlineMillis(player.getUUID(), qid);
+            if (dl > 0) deadlines.put(qid, dl);
+        }
+        ModNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player),
+                new SyncQuestDeadlinesPacket(deadlines));
     }
 
     private void onAddReloadListeners(AddReloadListenerEvent event) {

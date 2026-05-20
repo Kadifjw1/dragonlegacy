@@ -42,6 +42,17 @@ public class QuestDefinition {
     // ── Quest logic ───────────────────────────────────────────────────────────
     public String questLogicType = "COLLECT";
     public Map<String, String> logicData = new LinkedHashMap<>();
+
+    // [QST-3]: Timed quest — 0 means no time limit.
+    public int timeLimitSec = 0;
+
+    // [QST-4]: Group quest settings.
+    public boolean groupQuestEnabled   = false;
+    public int     groupQuestMinPlayers = 2;
+
+    // [QST-5]: Hidden quest — not listed in journal until unlock condition is met.
+    public boolean hiddenQuest             = false;
+    public String  hiddenUnlockCondition   = ""; // ConditionParser syntax
  
     // ── Logic type constants ──────────────────────────────────────────────────
     public static final String[] LOGIC_IDS = {
@@ -153,6 +164,12 @@ public class QuestDefinition {
  
         c.questLogicType = this.questLogicType;
         c.logicData      = new LinkedHashMap<>(this.logicData);
+
+        c.timeLimitSec           = this.timeLimitSec;
+        c.groupQuestEnabled      = this.groupQuestEnabled;
+        c.groupQuestMinPlayers   = this.groupQuestMinPlayers;
+        c.hiddenQuest            = this.hiddenQuest;
+        c.hiddenUnlockCondition  = this.hiddenUnlockCondition;
         return c;
     }
  

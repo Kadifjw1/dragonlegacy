@@ -72,5 +72,15 @@ public class ModNetwork {
         CHANNEL.registerMessage(packetId++, SaveCurrencyConfigPacket.class,  SaveCurrencyConfigPacket::encode,  SaveCurrencyConfigPacket::decode,  SaveCurrencyConfigPacket::handle);
         // [STA-1]:
         CHANNEL.registerMessage(packetId++, ResetNpcStatsPacket.class, ResetNpcStatsPacket::encode, ResetNpcStatsPacket::decode, ResetNpcStatsPacket::handle);
+        // [QST-1]:
+        CHANNEL.registerMessage(packetId++, SaveQuestChainPacket.class,   SaveQuestChainPacket::encode,   SaveQuestChainPacket::decode,   SaveQuestChainPacket::handle);
+        CHANNEL.registerMessage(packetId++, SyncQuestChainsPacket.class,  SyncQuestChainsPacket::encode,  SyncQuestChainsPacket::decode,  SyncQuestChainsPacket::handle);
+        // [QST-2]:
+        CHANNEL.registerMessage(packetId++, SaveBranchingDialogPacket.class,  SaveBranchingDialogPacket::encode,  SaveBranchingDialogPacket::decode,  SaveBranchingDialogPacket::handle);
+        CHANNEL.registerMessage(packetId++, SyncBranchingDialogsPacket.class, SyncBranchingDialogsPacket::encode, SyncBranchingDialogsPacket::decode, SyncBranchingDialogsPacket::handle);
+        // [QST-3]:
+        CHANNEL.registerMessage(packetId++, SyncQuestDeadlinesPacket.class, SyncQuestDeadlinesPacket::encode, SyncQuestDeadlinesPacket::decode, SyncQuestDeadlinesPacket::handle);
+        // [QST-4]:
+        CHANNEL.registerMessage(packetId++, AcceptGroupQuestPacket.class, AcceptGroupQuestPacket::encode, AcceptGroupQuestPacket::decode, AcceptGroupQuestPacket::handle);
     }
 }
