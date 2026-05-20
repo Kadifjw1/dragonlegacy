@@ -334,5 +334,19 @@
   "gui.dragonlegacyquesttoast.eco.high_rep_bonus":      "High rep bonus %",
   "gui.dragonlegacyquesttoast.eco.low_rep_penalty":     "Low rep penalty %",
   "gui.dragonlegacyquesttoast.eco.min_rep":             "Min rep to trade",
-  "npc.trade.rep_too_low":                              "Your reputation is too low to trade."
+  "npc.trade.rep_too_low":                              "Your reputation is too low to trade.",
+
+  "gui.dragonlegacyquesttoast.scr.tab":                 "Scripts",
+  "gui.dragonlegacyquesttoast.scr.add_graph":           "+Graph",
+  "gui.dragonlegacyquesttoast.scr.del_graph":           "✕Graph",
+  "gui.dragonlegacyquesttoast.scr.add_node":            "+Node",
+  "gui.dragonlegacyquesttoast.scr.del_node":            "✕Node",
+  "gui.dragonlegacyquesttoast.scr.graph_name":          "Graph name",
+  "gui.dragonlegacyquesttoast.scr.compile_save":        "▶ Compile & Save",
+  "gui.dragonlegacyquesttoast.scr.node_param":          "Parameter",
+  "gui.dragonlegacyquesttoast.scr.node_event":          "EVENT",
+  "gui.dragonlegacyquesttoast.scr.node_condition":      "CONDITION",
+  "gui.dragonlegacyquesttoast.scr.node_action":         "ACTION",
+  "gui.dragonlegacyquesttoast.scr.node_delay":          "DELAY",
+  "gui.dragonlegacyquesttoast.scr.node_output":         "END"
 }

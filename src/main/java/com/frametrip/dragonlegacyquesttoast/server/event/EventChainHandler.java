@@ -314,6 +314,9 @@ public class EventChainHandler {
             case START_PATROL, START_BUILD_SCENE, OPEN_GUI -> {
                 // Reserved for future patrol/scene/GUI systems
             }
+            case DELAY -> {
+                // [SCR-1]: No-op at runtime — delay semantics are handled by the graph compiler order
+            }
         }
     }
 

@@ -46,6 +46,7 @@ public class NpcCreatorScreen extends Screen {
     private static final String[] TAB_LABELS = {
             "  Информация", "  Взаимодействие", "  Анимация ▸",
             "  Отношения", "  Профессия", "  Экономика",
+            "  Скрипты",                          // [SCR-1..3]
             "  Строительство", "  Модель", "  Стелс"
     };
     private static final int[] TAB_ACCENT = {
@@ -54,7 +55,8 @@ public class NpcCreatorScreen extends Screen {
             NpcAnimationEditorTab.ACCENT,
             NpcRelationsTab.ACCENT,
             NpcProfessionTab.ACCENT,
-            NpcEconomyTab.ACCENT,       // [ECO-1..2]
+            NpcEconomyTab.ACCENT,
+            NpcScriptTab.ACCENT,         // [SCR-1..3]
             NpcBuildingTab.ACCENT,
             NpcModelTab.ACCENT,
             NpcStealthTab.ACCENT
@@ -65,7 +67,8 @@ public class NpcCreatorScreen extends Screen {
             new NpcAnimationEditorTab(),
             new NpcRelationsTab(),
             new NpcProfessionTab(),
-            new NpcEconomyTab(),         // [ECO-1..2]
+            new NpcEconomyTab(),
+            new NpcScriptTab(),          // [SCR-1..3]
             new NpcBuildingTab(),
             new NpcModelTab(),
             new NpcStealthTab()
@@ -353,6 +356,15 @@ public class NpcCreatorScreen extends Screen {
             return true;
         }
         return super.mouseClicked(mx, my, btn);
+    }
+
+    @Override
+    public boolean mouseReleased(double mx, double my, int btn) {
+        int rx = ox() + SIDEBAR_W + 8;
+        int rw = CONTENT_W - 16;
+        int tabOy = oy() + TOP_H + 18;
+        TAB_INSTANCES[activeTab].onMouseReleased(mx, my, btn, editorState, rx, tabOy, rw);
+        return super.mouseReleased(mx, my, btn);
     }
 
     // ── Tick / autosave ───────────────────────────────────────────────────────

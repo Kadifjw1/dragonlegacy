@@ -13,6 +13,7 @@ import com.frametrip.dragonlegacyquesttoast.server.stealth.StealthConfig;
 import com.frametrip.dragonlegacyquesttoast.server.animation.AnimationTrigger;
 import com.frametrip.dragonlegacyquesttoast.server.interaction.DialogConditions;
 import com.frametrip.dragonlegacyquesttoast.currency.NpcEconomyData;
+import com.frametrip.dragonlegacyquesttoast.server.script.ScriptGraph;
 
 import java.util.*;
  
@@ -130,6 +131,9 @@ public class NpcEntityData {
     // [ECO-2]: Per-NPC economy settings (wallet + reputation-based pricing)
     public NpcEconomyData economyData = new NpcEconomyData();
 
+    // [SCR-1]: Visual script graphs for this NPC (each compiles to one EventChain on save)
+    public List<ScriptGraph> scriptGraphs = new ArrayList<>();
+
     // [ANI-1]: GeckoLib bone names and labels for the pose editor
     public static final String[] POSE_BONE_IDS    = {"head","body","rightArm","leftArm","rightLeg","leftLeg"};
     public static final String[] POSE_BONE_LABELS = {"Голова","Тело","Прав.рука","Лев.рука","Прав.нога","Лев.нога"};
@@ -239,6 +243,10 @@ public class NpcEntityData {
         c.npcGroup         = this.npcGroup;
         // [ECO-2]:
         c.economyData      = this.economyData != null ? this.economyData.copy() : new NpcEconomyData();
+        // [SCR-1]:
+        c.scriptGraphs = new ArrayList<>();
+        if (this.scriptGraphs != null)
+            for (ScriptGraph g : this.scriptGraphs) c.scriptGraphs.add(g.copy());
 
         return c;
     }

@@ -334,5 +334,19 @@
   "gui.dragonlegacyquesttoast.eco.high_rep_bonus":      "Бонус высокой реп. %",
   "gui.dragonlegacyquesttoast.eco.low_rep_penalty":     "Штраф низкой реп. %",
   "gui.dragonlegacyquesttoast.eco.min_rep":             "Мин. реп. для торговли",
-  "npc.trade.rep_too_low":                              "Ваша репутация слишком низкая для торговли."
+  "npc.trade.rep_too_low":                              "Ваша репутация слишком низкая для торговли.",
+
+  "gui.dragonlegacyquesttoast.scr.tab":                 "Скрипты",
+  "gui.dragonlegacyquesttoast.scr.add_graph":           "+Граф",
+  "gui.dragonlegacyquesttoast.scr.del_graph":           "✕Граф",
+  "gui.dragonlegacyquesttoast.scr.add_node":            "+Узел",
+  "gui.dragonlegacyquesttoast.scr.del_node":            "✕Узел",
+  "gui.dragonlegacyquesttoast.scr.graph_name":          "Имя графа",
+  "gui.dragonlegacyquesttoast.scr.compile_save":        "▶ Скомп. и сохр.",
+  "gui.dragonlegacyquesttoast.scr.node_param":          "Параметр",
+  "gui.dragonlegacyquesttoast.scr.node_event":          "СОБЫТИЕ",
+  "gui.dragonlegacyquesttoast.scr.node_condition":      "УСЛОВИЕ",
+  "gui.dragonlegacyquesttoast.scr.node_action":         "ДЕЙСТВИЕ",
+  "gui.dragonlegacyquesttoast.scr.node_delay":          "ЗАДЕРЖКА",
+  "gui.dragonlegacyquesttoast.scr.node_output":         "КОНЕЦ"
 }
