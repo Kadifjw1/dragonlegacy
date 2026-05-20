@@ -55,6 +55,8 @@ import java.util.HashMap;
 import java.util.UUID;
 import com.frametrip.dragonlegacyquesttoast.entity.goal.NpcGreetGoal;
 import com.frametrip.dragonlegacyquesttoast.entity.goal.NpcWorkPatrolGoal;
+import com.frametrip.dragonlegacyquesttoast.server.PlayerFactionReputationManager;
+import com.frametrip.dragonlegacyquesttoast.server.NpcInteractionLogger;
 
 public class NpcEntity extends PathfinderMob implements GeoEntity {
 
@@ -304,6 +306,23 @@ public class NpcEntity extends PathfinderMob implements GeoEntity {
             if (data.dialogConditions != null && !data.dialogConditions.check(level())) {
                 return InteractionResult.PASS;
             }
+            // [SRV-3]: banned player check
+            if (data.ignoreBannedPlayers && player instanceof ServerPlayer sp) {
+                if (sp.getServer() != null && sp.getServer().getPlayerList()
+                        .getBans().isBanned(sp.getGameProfile())) {
+                    return InteractionResult.FAIL;
+                }
+            }
+            // [SRV-3]: minimum reputation check
+            if (data.minReputationToInteract > -1000 && player instanceof ServerPlayer sp) {
+                if (!data.factionId.isEmpty()) {
+                    int rep = PlayerFactionReputationManager.get(sp.getUUID(), data.factionId);
+                    if (rep < data.minReputationToInteract) {
+                        sp.sendSystemMessage(Component.literal("§c[" + data.displayName + "] §fНедостаточно репутации."));
+                        return InteractionResult.FAIL;
+                    }
+                }
+            }
         if (player instanceof ServerPlayer sp) {
                 // [IMM-6]: Check if this player previously killed the NPC → vengeance dialog
                 String deathDlg = com.frametrip.dragonlegacyquesttoast.server.immersion.NpcImmersionHandler
@@ -361,6 +380,8 @@ public class NpcEntity extends PathfinderMob implements GeoEntity {
                         );
                     }
                 }
+                // [SRV-4]: log dialog start
+                NpcInteractionLogger.log(sp, data.displayName, this.getUUID(), "DIALOG_START");
             }
             return InteractionResult.CONSUME;
         }

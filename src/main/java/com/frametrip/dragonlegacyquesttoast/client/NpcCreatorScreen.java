@@ -51,7 +51,7 @@ public class NpcCreatorScreen extends Screen {
             "  Внешний вид+",   // [APP-1..3]
             "  Иммерсия",       // [IMM-1..6]
             "  Боёвка",         // [CMB-1..5]
-            "  Строительство", "  Модель", "  Стелс"
+            "  Строительство", "  Модель", "  Стелс", "  Сервер"     // [SRV-1..4]
     };
     private static final int[] TAB_ACCENT = {
             NpcInfoTab.ACCENT,
@@ -67,7 +67,8 @@ public class NpcCreatorScreen extends Screen {
             NpcCombatTab.ACCENT,             // [CMB-1..5]
             NpcBuildingTab.ACCENT,
             NpcModelTab.ACCENT,
-            NpcStealthTab.ACCENT
+            NpcStealthTab.ACCENT,
+            NpcServerTab.ACCENT              // [SRV-1..4]
     };
     private static final NpcEditorTab[] TAB_INSTANCES = {
             new NpcInfoTab(),
@@ -83,7 +84,8 @@ public class NpcCreatorScreen extends Screen {
             new NpcCombatTab(),              // [CMB-1..5]
             new NpcBuildingTab(),
             new NpcModelTab(),
-            new NpcStealthTab()
+            new NpcStealthTab(),
+            new NpcServerTab()               // [SRV-1..4]
     };
 
     // ── State ─────────────────────────────────────────────────────────────────

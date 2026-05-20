@@ -2,6 +2,7 @@ package com.frametrip.dragonlegacyquesttoast.network;
  
 import com.frametrip.dragonlegacyquesttoast.entity.NpcEntity;
 import com.frametrip.dragonlegacyquesttoast.entity.NpcEntityData;
+import com.frametrip.dragonlegacyquesttoast.server.NpcEditPermissionChecker;
 import com.google.gson.Gson;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerLevel;
@@ -65,6 +66,15 @@ public class SaveNpcEntityDataPacket {
             for (ServerLevel level : server.getAllLevels()) {
                 Entity e = level.getEntity(msg.entityUuid);
                 if (e instanceof NpcEntity npc) {
+                    // [SRV-1]: check if player is allowed to edit
+                    NpcEntityData existing = npc.getNpcData();
+                    if (!NpcEditPermissionChecker.canEdit(player, existing)) return;
+
+                    // [SRV-1]: set creatorUUID on first save
+                    if (data.creatorUUID == null || data.creatorUUID.isEmpty()) {
+                        data.creatorUUID = player.getStringUUID();
+                    }
+
                     // [STA-1]: Record first creator on first save
                     if (data.stats != null && data.stats.createdBy.isEmpty()) {
                         data.stats.createdBy = player.getGameProfile().getName();

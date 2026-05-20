@@ -168,6 +168,18 @@ public class NpcEntityData {
     public float   arenaRadius  = 20.0f;
     public String  arenaCenter  = ""; // "x,y,z" — set to NPC's current position on enable
 
+    // [SRV-1]: Edit permissions
+    public byte   editPermission = 0;  // 0=AllOP, 1=CreatorOnly, 2=Group
+    public String editGroup      = ""; // group name
+    public String creatorUUID    = ""; // set on first save
+
+    // [SRV-2]: WorldGuard region lock (no hard WG dependency — stores region name only)
+    public String regionLock = ""; // WorldGuard region name; empty = no lock
+
+    // [SRV-3]: Anti-spam interaction guards
+    public boolean ignoreBannedPlayers     = true;
+    public int     minReputationToInteract = -1000; // -1000 = disabled
+
     // [WLD-2]: Farmer role configuration
     public FarmerData farmerData = new FarmerData();
 
@@ -320,6 +332,15 @@ public class NpcEntityData {
         c.arenaEnabled = this.arenaEnabled;
         c.arenaRadius  = this.arenaRadius;
         c.arenaCenter  = this.arenaCenter;
+        // [SRV-1]:
+        c.editPermission = this.editPermission;
+        c.editGroup      = this.editGroup;
+        c.creatorUUID    = this.creatorUUID;
+        // [SRV-2]:
+        c.regionLock = this.regionLock;
+        // [SRV-3]:
+        c.ignoreBannedPlayers     = this.ignoreBannedPlayers;
+        c.minReputationToInteract = this.minReputationToInteract;
         // [WLD-2]:
         c.farmerData = this.farmerData != null ? this.farmerData.copy() : new FarmerData();
         // [WLD-3]:
