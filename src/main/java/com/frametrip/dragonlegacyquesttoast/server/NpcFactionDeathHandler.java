@@ -5,6 +5,7 @@ import com.frametrip.dragonlegacyquesttoast.entity.NpcEntity;
 import com.frametrip.dragonlegacyquesttoast.entity.NpcEntityData;
 import com.frametrip.dragonlegacyquesttoast.network.ModNetwork;
 import com.frametrip.dragonlegacyquesttoast.network.SyncReputationPacket;
+import com.frametrip.dragonlegacyquesttoast.server.integration.DiscordWebhook;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
@@ -25,6 +26,15 @@ public class NpcFactionDeathHandler {
         if (npcData.stats != null) {
             npcData.stats.timesKilled++;
             npc.setNpcData(npcData);
+        }
+
+        // [INT-API-4]: Discord notification for NPC/boss death
+        String killerName = player.getGameProfile().getName();
+        boolean isBoss = npcData.bossPhases != null && !npcData.bossPhases.isEmpty();
+        if (isBoss) {
+            DiscordWebhook.notifyBossKill(npcData.displayName, killerName);
+        } else {
+            DiscordWebhook.notifyNpcDeath(npcData.displayName, killerName);
         }
 
         String factionId = npcData.factionId;

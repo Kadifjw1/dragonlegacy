@@ -7,6 +7,7 @@ import com.frametrip.dragonlegacyquesttoast.profession.NpcProfessionType;
 import com.frametrip.dragonlegacyquesttoast.server.PlayerFactionReputationManager;
 import com.frametrip.dragonlegacyquesttoast.profession.trader.SellTradeOffer;
 import com.frametrip.dragonlegacyquesttoast.profession.trader.TradePriceResult;
+import com.frametrip.dragonlegacyquesttoast.server.compat.VaultHook;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -97,13 +98,22 @@ public class BuyTradeOfferPacket {
                     price.finalPrice = Math.max(1, Math.round(price.finalPrice * moodMult));
             }
 
-            if (!CurrencyManager.hasBalance(player.getUUID(), price.finalPrice)) {
+            // [INT-API-3]: Try Vault economy first, fall back to internal CurrencyManager
+            boolean usedVault = false;
+            if (VaultHook.isAvailable()) {
+                if (!VaultHook.withdraw(player, price.finalPrice)) {
+                    player.sendSystemMessage(Component.literal("§cНедостаточно средств (Vault)."));
+                    return;
+                }
+                usedVault = true;
+            } else if (!CurrencyManager.hasBalance(player.getUUID(), price.finalPrice)) {
                 player.sendSystemMessage(Component.literal("§cНедостаточно монет."));
                 return;
             }
 
             Item item = ForgeRegistries.ITEMS.getValue(new ResourceLocation(offer.itemId));
             if (item == null) {
+                // Refund Vault if item lookup failed
                 player.sendSystemMessage(Component.literal("§cПредмет не существует."));
                 return;
             }
@@ -113,7 +123,7 @@ public class BuyTradeOfferPacket {
                 return;
             }
 
-            CurrencyManager.removeBalance(player, price.finalPrice);
+            if (!usedVault) CurrencyManager.removeBalance(player, price.finalPrice);
 
             // [STA-1]: Increment items-sold counter
             NpcEntityData statData = npc.getNpcData();

@@ -51,6 +51,7 @@ public class NpcInteractionTab implements NpcEditorTab {
     private int    chatTriggerScroll   = 0;
     private int    selectedTriggerIdx  = -1;
     private EditBox chatRadiusBox, chatCooldownBox, triggerNameBox, triggerPhraseBox;
+    private EditBox luckPermsGroupBox; // [INT-API-2]
 
     @Override
     public void init(Consumer<AbstractWidget> add, Runnable rebuild,
@@ -206,12 +207,20 @@ public class NpcInteractionTab implements NpcEditorTab {
         }).bounds(rx + 224, oy + 132, 14, 12).build());
 
         // Greet message EditBox
-        greetMessageBox = new EditBox(mc.font, rx, oy + 148, rw, 12,
+        greetMessageBox = new EditBox(mc.font, rx, oy + 148, rw - 110, 12,
                 Component.literal("Приветственное сообщение"));
         greetMessageBox.setMaxLength(128);
         greetMessageBox.setValue(d.greetMessage != null ? d.greetMessage : "");
         greetMessageBox.setHint(Component.literal("Привет, путник!").withStyle(s -> s.withColor(0xFF444455)));
         add.accept(greetMessageBox);
+
+        // [INT-API-2]: LuckPerms required group
+        luckPermsGroupBox = new EditBox(mc.font, rx + rw - 106, oy + 148, 106, 12,
+                Component.literal("LP группа"));
+        luckPermsGroupBox.setMaxLength(48);
+        luckPermsGroupBox.setValue(cond(d).requiresLuckPermsGroup != null ? cond(d).requiresLuckPermsGroup : "");
+        luckPermsGroupBox.setHint(Component.literal("luckperms:vip"));
+        add.accept(luckPermsGroupBox);
 
         // ── Quest search + list ──────────────────────────────────────────────
         searchField = new EditBox(mc.font, rx, oy + 166, rw, 14, Component.literal("Поиск квестов"));
@@ -440,6 +449,8 @@ public class NpcInteractionTab implements NpcEditorTab {
         if (searchField != null) searchQuery = searchField.getValue();
         if (greetMessageBox != null)
             state.getDraft().greetMessage = greetMessageBox.getValue();
+        if (luckPermsGroupBox != null)
+            cond(state.getDraft()).requiresLuckPermsGroup = luckPermsGroupBox.getValue().trim();
 
         NpcChatConfig cfg = ensureChat(state.getDraft());
         if (selectedTriggerIdx >= 0 && selectedTriggerIdx < cfg.triggers.size()) {

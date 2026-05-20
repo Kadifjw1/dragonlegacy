@@ -6,6 +6,7 @@ import com.frametrip.dragonlegacyquesttoast.client.NpcHologramRenderer;
 import com.frametrip.dragonlegacyquesttoast.client.cutscene.CutscenePlayer;
 import com.frametrip.dragonlegacyquesttoast.client.vfx.DynamicSkinTickHandler;
 import com.frametrip.dragonlegacyquesttoast.server.cutscene.CutsceneManager;
+import com.frametrip.dragonlegacyquesttoast.server.integration.IntegrationConfigManager;
 import com.frametrip.dragonlegacyquesttoast.client.NpcAppearancePresetManager;
 import com.frametrip.dragonlegacyquesttoast.client.NpcGeckoPresetManager;
 import com.frametrip.dragonlegacyquesttoast.client.NpcLayeredSkinManager;
@@ -102,6 +103,7 @@ public class DragonLegacyQuestToastMod {
         QuestChainController.load();      // [QST-1]
         BranchingDialogManager.load();    // [QST-2]
         CutsceneManager.load();           // [VFX-3]
+        IntegrationConfigManager.load();  // [INT-API-1..4]
 
         MinecraftForge.EVENT_BUS.addListener(this::registerCommands);
         MinecraftForge.EVENT_BUS.addListener(this::onPlayerLogin);

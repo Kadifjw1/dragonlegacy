@@ -308,9 +308,11 @@ public class NpcEntity extends PathfinderMob implements GeoEntity {
             // [INT-1]: cooldown check
             if (!checkInteractCooldown(player)) return InteractionResult.FAIL;
             NpcEntityData data = getNpcData();
-            // [INT-2]: dialog conditions check
-            if (data.dialogConditions != null && !data.dialogConditions.check(level())) {
-                return InteractionResult.PASS;
+            // [INT-2]: dialog conditions check (world + player-specific)
+            if (data.dialogConditions != null) {
+                if (!data.dialogConditions.check(level())) return InteractionResult.PASS;
+                if (player instanceof ServerPlayer sp2
+                        && !data.dialogConditions.checkPlayer(sp2)) return InteractionResult.PASS;
             }
             // [SRV-3]: banned player check
             if (data.ignoreBannedPlayers && player instanceof ServerPlayer sp) {
@@ -391,7 +393,9 @@ public class NpcEntity extends PathfinderMob implements GeoEntity {
                 } else if (!data.dialogueId.isEmpty()) {
                     DialogueDefinition dlg = DialogueManager.get(data.dialogueId);
                     if (dlg != null && !dlg.lines.isEmpty()) {
-                        String text = String.join("\n", dlg.lines);
+                        // [INT-API-1]: resolve placeholders in dialogue text
+                        String raw  = String.join("\n", dlg.lines);
+                        String text = com.frametrip.dragonlegacyquesttoast.server.compat.PlaceholderApiHook.resolve(sp, raw);
                         ModNetwork.CHANNEL.send(
                                 PacketDistributor.PLAYER.with(() -> sp),
                                 new NpcDialoguePacket(data.displayName, text)
