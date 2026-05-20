@@ -55,6 +55,7 @@ import com.frametrip.dragonlegacyquesttoast.network.SyncQuestDeadlinesPacket;
 import com.frametrip.dragonlegacyquesttoast.server.quest.BranchingDialogManager;
 import com.frametrip.dragonlegacyquesttoast.server.quest.QuestChainController;
 import com.frametrip.dragonlegacyquesttoast.server.quest.QuestTimerHandler;
+import com.frametrip.dragonlegacyquesttoast.server.combat.NpcCombatHandler;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RegisterGuiOverlaysEvent;
@@ -126,6 +127,9 @@ public class DragonLegacyQuestToastMod {
 
         // [QST-3]: Timed quest expiry handler.
         QuestTimerHandler.register();
+
+        // [CMB-2/3/4]: NPC combat — boss phases, reinforcement, unique abilities.
+        NpcCombatHandler.register();
 
         if (FMLEnvironment.dist == Dist.CLIENT) {
             modBus.addListener(this::onClientSetup);

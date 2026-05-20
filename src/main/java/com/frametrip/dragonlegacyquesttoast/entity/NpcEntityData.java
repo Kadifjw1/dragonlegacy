@@ -16,6 +16,8 @@ import com.frametrip.dragonlegacyquesttoast.currency.NpcEconomyData;
 import com.frametrip.dragonlegacyquesttoast.server.immersion.NpcImmersionData;
 import com.frametrip.dragonlegacyquesttoast.server.script.ScriptGraph;
 import com.frametrip.dragonlegacyquesttoast.server.stats.NpcStatisticsData;
+import com.frametrip.dragonlegacyquesttoast.server.combat.BossPhase;
+import com.frametrip.dragonlegacyquesttoast.server.combat.NpcAbility;
 
 import java.util.*;
  
@@ -142,6 +144,29 @@ public class NpcEntityData {
     // [IMM-1..6]: Immersion and living-world data
     public NpcImmersionData immersionData = new NpcImmersionData();
 
+    // [CMB-1]: Formation membership
+    public String formationId   = "";    // empty = not in a formation
+    public int    formationSlot = 0;     // 0 = leader
+    public String formationType = "LINE"; // FormationType name
+
+    // [CMB-2]: Boss phase thresholds (sorted descending by hpThreshold at runtime)
+    public List<BossPhase> bossPhases = new ArrayList<>();
+
+    // [CMB-3]: Reinforcement summoning
+    public boolean reinforcementEnabled       = false;
+    public int     reinforcementHpThreshold   = 30;   // percent
+    public String  reinforcementType          = "";   // entity resource location
+    public int     reinforcementCount         = 2;
+    public int     reinforcementCooldownSec   = 60;
+
+    // [CMB-4]: Unique combat abilities
+    public List<NpcAbility> combatAbilities = new ArrayList<>();
+
+    // [CMB-5]: Arena (restricted combat zone)
+    public boolean arenaEnabled = false;
+    public float   arenaRadius  = 20.0f;
+    public String  arenaCenter  = ""; // "x,y,z" — set to NPC's current position on enable
+
     // [APP-1]: Particle effect type (0=None 1=Fire 2=Water 3=Magic 4=Smoke 5=Stars)
     public byte particleEffect = 0;
     // [APP-2]: Colored glow outline (0=disabled, otherwise ARGB int)
@@ -266,6 +291,26 @@ public class NpcEntityData {
         c.stats = this.stats != null ? this.stats.copy() : new NpcStatisticsData();
         // [IMM-1..6]:
         c.immersionData = this.immersionData != null ? this.immersionData.copy() : new NpcImmersionData();
+        // [CMB-1]:
+        c.formationId   = this.formationId;
+        c.formationSlot = this.formationSlot;
+        c.formationType = this.formationType;
+        // [CMB-2]:
+        c.bossPhases = new ArrayList<>();
+        if (this.bossPhases != null) for (BossPhase p : this.bossPhases) c.bossPhases.add(p.copy());
+        // [CMB-3]:
+        c.reinforcementEnabled     = this.reinforcementEnabled;
+        c.reinforcementHpThreshold = this.reinforcementHpThreshold;
+        c.reinforcementType        = this.reinforcementType;
+        c.reinforcementCount       = this.reinforcementCount;
+        c.reinforcementCooldownSec = this.reinforcementCooldownSec;
+        // [CMB-4]:
+        c.combatAbilities = new ArrayList<>();
+        if (this.combatAbilities != null) for (NpcAbility a : this.combatAbilities) c.combatAbilities.add(a.copy());
+        // [CMB-5]:
+        c.arenaEnabled = this.arenaEnabled;
+        c.arenaRadius  = this.arenaRadius;
+        c.arenaCenter  = this.arenaCenter;
         // [APP-1..3]:
         c.particleEffect = this.particleEffect;
         c.glowColor      = this.glowColor;

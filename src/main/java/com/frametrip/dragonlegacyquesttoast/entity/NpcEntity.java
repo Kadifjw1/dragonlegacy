@@ -96,6 +96,7 @@ public class NpcEntity extends PathfinderMob implements GeoEntity {
         goalSelector.addGoal(1, new NpcGreetGoal(this)); // [INT-3]
         goalSelector.addGoal(2, new CompanionGoal(this));
         goalSelector.addGoal(2, new com.frametrip.dragonlegacyquesttoast.server.companion.CompanionGuardGoal(this));
+        goalSelector.addGoal(2, new com.frametrip.dragonlegacyquesttoast.entity.goal.NpcFormationGoal(this)); // [CMB-1]
         goalSelector.addGoal(3, new NpcWorkPatrolGoal(this));        // [JOB-2]
         goalSelector.addGoal(3, new com.frametrip.dragonlegacyquesttoast.entity.goal.NpcConversationGoal(this)); // [IMM-3]
         goalSelector.addGoal(4, new NpcLookAtPlayerGoal());
@@ -119,6 +120,17 @@ public class NpcEntity extends PathfinderMob implements GeoEntity {
     }
 
     public void setNpcData(NpcEntityData data) {
+        // [CMB-1]: Update formation membership when formationId changes.
+        if (cachedNpcData != null && !level().isClientSide) {
+            String oldFid = cachedNpcData.formationId;
+            String newFid = data.formationId;
+            if (!oldFid.equals(newFid)) {
+                if (!oldFid.isEmpty())
+                    com.frametrip.dragonlegacyquesttoast.server.combat.FormationController.leave(oldFid, getUUID());
+                if (!newFid.isEmpty())
+                    com.frametrip.dragonlegacyquesttoast.server.combat.FormationController.join(newFid, getUUID());
+            }
+        }
         cachedNpcData = data;
         entityData.set(DATA_NPC_JSON, GSON.toJson(data));
         applyDataEffects(data);
@@ -161,6 +173,9 @@ public class NpcEntity extends PathfinderMob implements GeoEntity {
     public void die(DamageSource cause) {
         NpcEntityData data = getNpcData();
         byte behavior = data != null ? data.deathBehavior : 0;
+        // [CMB-1]: Leave formation on death.
+        if (data != null && !data.formationId.isEmpty() && !level().isClientSide)
+            com.frametrip.dragonlegacyquesttoast.server.combat.FormationController.leave(data.formationId, getUUID());
         super.die(cause);
         if (behavior == 1) {
             // Vanish: remove entity immediately

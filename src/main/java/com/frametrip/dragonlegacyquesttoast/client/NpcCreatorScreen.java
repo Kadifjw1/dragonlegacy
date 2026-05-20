@@ -50,6 +50,7 @@ public class NpcCreatorScreen extends Screen {
             "  Статистика",     // [STA-1]
             "  Внешний вид+",   // [APP-1..3]
             "  Иммерсия",       // [IMM-1..6]
+            "  Боёвка",         // [CMB-1..5]
             "  Строительство", "  Модель", "  Стелс"
     };
     private static final int[] TAB_ACCENT = {
@@ -63,6 +64,7 @@ public class NpcCreatorScreen extends Screen {
             NpcStatsTab.ACCENT,              // [STA-1]
             NpcAppearancePlusTab.ACCENT,     // [APP-1..3]
             NpcImmersionTab.ACCENT,          // [IMM-1..6]
+            NpcCombatTab.ACCENT,             // [CMB-1..5]
             NpcBuildingTab.ACCENT,
             NpcModelTab.ACCENT,
             NpcStealthTab.ACCENT
@@ -78,6 +80,7 @@ public class NpcCreatorScreen extends Screen {
             new NpcStatsTab(),               // [STA-1]
             new NpcAppearancePlusTab(),      // [APP-1..3]
             new NpcImmersionTab(),           // [IMM-1..6]
+            new NpcCombatTab(),              // [CMB-1..5]
             new NpcBuildingTab(),
             new NpcModelTab(),
             new NpcStealthTab()
