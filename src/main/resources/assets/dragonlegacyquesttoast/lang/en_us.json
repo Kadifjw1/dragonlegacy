@@ -374,5 +374,26 @@
   "gui.dragonlegacyquesttoast.app.acc_back":            "Back",
   "gui.dragonlegacyquesttoast.app.acc_belt":            "Belt",
   "gui.dragonlegacyquesttoast.app.acc_left":            "Left Hand",
-  "gui.dragonlegacyquesttoast.app.acc_right":           "Right Hand"
+  "gui.dragonlegacyquesttoast.app.acc_right":           "Right Hand",
+
+  "gui.dragonlegacyquesttoast.imm.tab":                 "Immersion",
+  "gui.dragonlegacyquesttoast.imm.remember_players":    "Remember Players",
+  "gui.dragonlegacyquesttoast.imm.first_visit":         "First visit dialog",
+  "gui.dragonlegacyquesttoast.imm.returning":           "Returning dialog",
+  "gui.dragonlegacyquesttoast.imm.regular":             "Regular dialog",
+  "gui.dragonlegacyquesttoast.imm.mood_enabled":        "Mood System",
+  "gui.dragonlegacyquesttoast.imm.show_icon":           "Show Icon",
+  "gui.dragonlegacyquesttoast.imm.mood_gift":           "Gift item ID",
+  "gui.dragonlegacyquesttoast.imm.conv_enabled":        "NPC Conversations",
+  "gui.dragonlegacyquesttoast.imm.conv_phrase":         "Conversation phrase",
+  "gui.dragonlegacyquesttoast.imm.schedule_hour":       "Hour",
+  "gui.dragonlegacyquesttoast.imm.schedule_action":     "Action",
+  "gui.dragonlegacyquesttoast.imm.schedule_target":     "Target",
+  "gui.dragonlegacyquesttoast.imm.schedule_dialog":     "Dialog",
+  "gui.dragonlegacyquesttoast.imm.react_item":          "Item ID",
+  "gui.dragonlegacyquesttoast.imm.react_type":          "Reaction type",
+  "gui.dragonlegacyquesttoast.imm.react_dialog":        "Dialog",
+  "gui.dragonlegacyquesttoast.imm.react_mood":          "Mood Δ",
+  "gui.dragonlegacyquesttoast.imm.remember_death":      "Remember Death",
+  "gui.dragonlegacyquesttoast.imm.death_dialog":        "Vengeance dialog"
 }

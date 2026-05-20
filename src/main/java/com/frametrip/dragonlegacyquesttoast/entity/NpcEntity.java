@@ -96,7 +96,8 @@ public class NpcEntity extends PathfinderMob implements GeoEntity {
         goalSelector.addGoal(1, new NpcGreetGoal(this)); // [INT-3]
         goalSelector.addGoal(2, new CompanionGoal(this));
         goalSelector.addGoal(2, new com.frametrip.dragonlegacyquesttoast.server.companion.CompanionGuardGoal(this));
-        goalSelector.addGoal(3, new NpcWorkPatrolGoal(this)); // [JOB-2]
+        goalSelector.addGoal(3, new NpcWorkPatrolGoal(this));        // [JOB-2]
+        goalSelector.addGoal(3, new com.frametrip.dragonlegacyquesttoast.entity.goal.NpcConversationGoal(this)); // [IMM-3]
         goalSelector.addGoal(4, new NpcLookAtPlayerGoal());
         goalSelector.addGoal(5, new RandomLookAroundGoal(this));
         goalSelector.addGoal(6, new WaterAvoidingRandomStrollGoal(this, 0.4));
@@ -287,6 +288,23 @@ public class NpcEntity extends PathfinderMob implements GeoEntity {
                 return InteractionResult.PASS;
             }
         if (player instanceof ServerPlayer sp) {
+                // [IMM-6]: Check if this player previously killed the NPC → vengeance dialog
+                String deathDlg = com.frametrip.dragonlegacyquesttoast.server.immersion.NpcImmersionHandler
+                        .resolveDeathDialog(data, sp);
+                if (deathDlg != null) {
+                    ModNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> sp),
+                            new NpcDialoguePacket(data.displayName, deathDlg));
+                    return InteractionResult.CONSUME;
+                }
+                // [IMM-1]: Player memory — select dialog by visit count
+                String memDlg = com.frametrip.dragonlegacyquesttoast.server.immersion.NpcImmersionHandler
+                        .resolveMemoryDialog(this, data, sp);
+                if (memDlg != null) {
+                    ModNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> sp),
+                            new NpcDialoguePacket(data.displayName, memDlg));
+                    return InteractionResult.CONSUME;
+                }
+
                 // Profession: Trader → open shop window
                 if (data.professionData != null
                         && data.professionData.type == NpcProfessionType.TRADER

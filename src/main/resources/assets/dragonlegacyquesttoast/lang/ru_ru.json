@@ -374,5 +374,26 @@
   "gui.dragonlegacyquesttoast.app.acc_back":            "Спина",
   "gui.dragonlegacyquesttoast.app.acc_belt":            "Пояс",
   "gui.dragonlegacyquesttoast.app.acc_left":            "Лев.рука",
-  "gui.dragonlegacyquesttoast.app.acc_right":           "Прав.рука"
+  "gui.dragonlegacyquesttoast.app.acc_right":           "Прав.рука",
+
+  "gui.dragonlegacyquesttoast.imm.tab":                 "Иммерсия",
+  "gui.dragonlegacyquesttoast.imm.remember_players":    "Помнить игроков",
+  "gui.dragonlegacyquesttoast.imm.first_visit":         "Диалог первого визита",
+  "gui.dragonlegacyquesttoast.imm.returning":           "Диалог возвращения",
+  "gui.dragonlegacyquesttoast.imm.regular":             "Обычный диалог",
+  "gui.dragonlegacyquesttoast.imm.mood_enabled":        "Настроение",
+  "gui.dragonlegacyquesttoast.imm.show_icon":           "Иконка",
+  "gui.dragonlegacyquesttoast.imm.mood_gift":           "ID предмета-подарка",
+  "gui.dragonlegacyquesttoast.imm.conv_enabled":        "Разговоры NPC",
+  "gui.dragonlegacyquesttoast.imm.conv_phrase":         "Фраза разговора",
+  "gui.dragonlegacyquesttoast.imm.schedule_hour":       "Час",
+  "gui.dragonlegacyquesttoast.imm.schedule_action":     "Действие",
+  "gui.dragonlegacyquesttoast.imm.schedule_target":     "Цель",
+  "gui.dragonlegacyquesttoast.imm.schedule_dialog":     "Диалог",
+  "gui.dragonlegacyquesttoast.imm.react_item":          "ID предмета",
+  "gui.dragonlegacyquesttoast.imm.react_type":          "Тип реакции",
+  "gui.dragonlegacyquesttoast.imm.react_dialog":        "Диалог",
+  "gui.dragonlegacyquesttoast.imm.react_mood":          "Настр. Δ",
+  "gui.dragonlegacyquesttoast.imm.remember_death":      "Помнить убийство",
+  "gui.dragonlegacyquesttoast.imm.death_dialog":        "Диалог при виде убийцы"
 }

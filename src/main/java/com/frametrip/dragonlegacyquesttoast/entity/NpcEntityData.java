@@ -13,6 +13,7 @@ import com.frametrip.dragonlegacyquesttoast.server.stealth.StealthConfig;
 import com.frametrip.dragonlegacyquesttoast.server.animation.AnimationTrigger;
 import com.frametrip.dragonlegacyquesttoast.server.interaction.DialogConditions;
 import com.frametrip.dragonlegacyquesttoast.currency.NpcEconomyData;
+import com.frametrip.dragonlegacyquesttoast.server.immersion.NpcImmersionData;
 import com.frametrip.dragonlegacyquesttoast.server.script.ScriptGraph;
 import com.frametrip.dragonlegacyquesttoast.server.stats.NpcStatisticsData;
 
@@ -138,6 +139,9 @@ public class NpcEntityData {
     // [STA-1]: Per-NPC aggregate statistics (server-side tracking)
     public NpcStatisticsData stats = new NpcStatisticsData();
 
+    // [IMM-1..6]: Immersion and living-world data
+    public NpcImmersionData immersionData = new NpcImmersionData();
+
     // [APP-1]: Particle effect type (0=None 1=Fire 2=Water 3=Magic 4=Smoke 5=Stars)
     public byte particleEffect = 0;
     // [APP-2]: Colored glow outline (0=disabled, otherwise ARGB int)
@@ -260,6 +264,8 @@ public class NpcEntityData {
             for (ScriptGraph g : this.scriptGraphs) c.scriptGraphs.add(g.copy());
         // [STA-1]:
         c.stats = this.stats != null ? this.stats.copy() : new NpcStatisticsData();
+        // [IMM-1..6]:
+        c.immersionData = this.immersionData != null ? this.immersionData.copy() : new NpcImmersionData();
         // [APP-1..3]:
         c.particleEffect = this.particleEffect;
         c.glowColor      = this.glowColor;

@@ -90,6 +90,13 @@ public class BuyTradeOfferPacket {
             if (repMultiplier != 1.0f)
                 price.finalPrice = Math.max(1, Math.round(price.finalPrice * repMultiplier));
 
+            // [IMM-2]: Mood affects trade price
+            if (npcData.immersionData != null && npcData.immersionData.moodEnabled) {
+                float moodMult = npcData.immersionData.moodPriceMultiplier();
+                if (moodMult != 1.0f)
+                    price.finalPrice = Math.max(1, Math.round(price.finalPrice * moodMult));
+            }
+
             if (!CurrencyManager.hasBalance(player.getUUID(), price.finalPrice)) {
                 player.sendSystemMessage(Component.literal("§cНедостаточно монет."));
                 return;
