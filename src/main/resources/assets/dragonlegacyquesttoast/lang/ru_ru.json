@@ -358,5 +358,21 @@
   "gui.dragonlegacyquesttoast.sta.interactions":        "Взаимодействий:",
   "gui.dragonlegacyquesttoast.sta.created":             "Создан:",
   "gui.dragonlegacyquesttoast.sta.author":              "Автор:",
-  "gui.dragonlegacyquesttoast.sta.reset":               "↺ Сбросить статистику"
+  "gui.dragonlegacyquesttoast.sta.reset":               "↺ Сбросить статистику",
+
+  "gui.dragonlegacyquesttoast.app.tab":                 "Внешний вид+",
+  "gui.dragonlegacyquesttoast.app.particles":           "Частицы",
+  "gui.dragonlegacyquesttoast.app.particle.none":       "Нет",
+  "gui.dragonlegacyquesttoast.app.particle.fire":       "Огонь",
+  "gui.dragonlegacyquesttoast.app.particle.water":      "Вода",
+  "gui.dragonlegacyquesttoast.app.particle.magic":      "Магия",
+  "gui.dragonlegacyquesttoast.app.particle.smoke":      "Дым",
+  "gui.dragonlegacyquesttoast.app.particle.stars":      "Звёзды",
+  "gui.dragonlegacyquesttoast.app.glow":                "Свечение R G B",
+  "gui.dragonlegacyquesttoast.app.glow_off":            "✕ Откл.",
+  "gui.dragonlegacyquesttoast.app.acc_head":            "Голова",
+  "gui.dragonlegacyquesttoast.app.acc_back":            "Спина",
+  "gui.dragonlegacyquesttoast.app.acc_belt":            "Пояс",
+  "gui.dragonlegacyquesttoast.app.acc_left":            "Лев.рука",
+  "gui.dragonlegacyquesttoast.app.acc_right":           "Прав.рука"
 }

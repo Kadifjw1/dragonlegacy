@@ -358,5 +358,21 @@
   "gui.dragonlegacyquesttoast.sta.interactions":        "Interactions:",
   "gui.dragonlegacyquesttoast.sta.created":             "Created:",
   "gui.dragonlegacyquesttoast.sta.author":              "Author:",
-  "gui.dragonlegacyquesttoast.sta.reset":               "↺ Reset Statistics"
+  "gui.dragonlegacyquesttoast.sta.reset":               "↺ Reset Statistics",
+
+  "gui.dragonlegacyquesttoast.app.tab":                 "Appearance+",
+  "gui.dragonlegacyquesttoast.app.particles":           "Particles",
+  "gui.dragonlegacyquesttoast.app.particle.none":       "None",
+  "gui.dragonlegacyquesttoast.app.particle.fire":       "Fire",
+  "gui.dragonlegacyquesttoast.app.particle.water":      "Water",
+  "gui.dragonlegacyquesttoast.app.particle.magic":      "Magic",
+  "gui.dragonlegacyquesttoast.app.particle.smoke":      "Smoke",
+  "gui.dragonlegacyquesttoast.app.particle.stars":      "Stars",
+  "gui.dragonlegacyquesttoast.app.glow":                "Glow R G B",
+  "gui.dragonlegacyquesttoast.app.glow_off":            "✕ Off",
+  "gui.dragonlegacyquesttoast.app.acc_head":            "Head",
+  "gui.dragonlegacyquesttoast.app.acc_back":            "Back",
+  "gui.dragonlegacyquesttoast.app.acc_belt":            "Belt",
+  "gui.dragonlegacyquesttoast.app.acc_left":            "Left Hand",
+  "gui.dragonlegacyquesttoast.app.acc_right":           "Right Hand"
 }

@@ -458,6 +458,18 @@ public class NpcEntity extends PathfinderMob implements GeoEntity {
     protected void playStepSound(net.minecraft.core.BlockPos pos, BlockState block) {
     }
 
+    // [APP-2]: Glow outline — enabled and colored when glowColor is set in NpcEntityData.
+    @Override
+    public boolean isCurrentlyGlowing() {
+        return getNpcData().glowColor != 0 || super.isCurrentlyGlowing();
+    }
+
+    @Override
+    public int getTeamColor() {
+        int gc = getNpcData().glowColor;
+        return gc != 0 ? (gc & 0xFFFFFF) : super.getTeamColor();
+    }
+
     private class NpcLookAtPlayerGoal extends LookAtPlayerGoal {
         NpcLookAtPlayerGoal() {
             super(NpcEntity.this, Player.class, 8.0f);

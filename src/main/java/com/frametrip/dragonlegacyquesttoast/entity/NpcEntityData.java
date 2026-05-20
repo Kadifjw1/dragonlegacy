@@ -138,6 +138,13 @@ public class NpcEntityData {
     // [STA-1]: Per-NPC aggregate statistics (server-side tracking)
     public NpcStatisticsData stats = new NpcStatisticsData();
 
+    // [APP-1]: Particle effect type (0=None 1=Fire 2=Water 3=Magic 4=Smoke 5=Stars)
+    public byte particleEffect = 0;
+    // [APP-2]: Colored glow outline (0=disabled, otherwise ARGB int)
+    public int glowColor = 0;
+    // [APP-3]: Accessory items by slot name ("HEAD","BACK","BELT","LEFT_HAND","RIGHT_HAND") → itemId
+    public java.util.Map<String, String> accessories = new java.util.LinkedHashMap<>();
+
     // [ANI-1]: GeckoLib bone names and labels for the pose editor
     public static final String[] POSE_BONE_IDS    = {"head","body","rightArm","leftArm","rightLeg","leftLeg"};
     public static final String[] POSE_BONE_LABELS = {"Голова","Тело","Прав.рука","Лев.рука","Прав.нога","Лев.нога"};
@@ -253,6 +260,10 @@ public class NpcEntityData {
             for (ScriptGraph g : this.scriptGraphs) c.scriptGraphs.add(g.copy());
         // [STA-1]:
         c.stats = this.stats != null ? this.stats.copy() : new NpcStatisticsData();
+        // [APP-1..3]:
+        c.particleEffect = this.particleEffect;
+        c.glowColor      = this.glowColor;
+        c.accessories    = this.accessories != null ? new java.util.LinkedHashMap<>(this.accessories) : new java.util.LinkedHashMap<>();
 
         return c;
     }

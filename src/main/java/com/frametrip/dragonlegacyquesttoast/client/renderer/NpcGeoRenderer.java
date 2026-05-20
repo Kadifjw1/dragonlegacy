@@ -28,6 +28,7 @@ public class NpcGeoRenderer extends GeoEntityRenderer<NpcEntity> {
 
     public NpcGeoRenderer(EntityRendererProvider.Context ctx) {
         super(ctx, new NpcGeoModel());
+        addRenderLayer(new NpcAccessoryLayer(this)); // [APP-3]
     }
 
     @Override
