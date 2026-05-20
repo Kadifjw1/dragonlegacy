@@ -2,6 +2,10 @@
 package com.frametrip.dragonlegacyquesttoast;
 
 import com.frametrip.dragonlegacyquesttoast.client.NpcDialogueOverlay;
+import com.frametrip.dragonlegacyquesttoast.client.NpcHologramRenderer;
+import com.frametrip.dragonlegacyquesttoast.client.cutscene.CutscenePlayer;
+import com.frametrip.dragonlegacyquesttoast.client.vfx.DynamicSkinTickHandler;
+import com.frametrip.dragonlegacyquesttoast.server.cutscene.CutsceneManager;
 import com.frametrip.dragonlegacyquesttoast.client.NpcAppearancePresetManager;
 import com.frametrip.dragonlegacyquesttoast.client.NpcGeckoPresetManager;
 import com.frametrip.dragonlegacyquesttoast.client.NpcLayeredSkinManager;
@@ -97,6 +101,7 @@ public class DragonLegacyQuestToastMod {
         CurrencyConfigManager.load(); // [ECO-1]
         QuestChainController.load();      // [QST-1]
         BranchingDialogManager.load();    // [QST-2]
+        CutsceneManager.load();           // [VFX-3]
 
         MinecraftForge.EVENT_BUS.addListener(this::registerCommands);
         MinecraftForge.EVENT_BUS.addListener(this::onPlayerLogin);
@@ -138,9 +143,15 @@ public class DragonLegacyQuestToastMod {
             // Register client tick for scene controller deferred processing
             MinecraftForge.EVENT_BUS.addListener(
                     (net.minecraftforge.event.TickEvent.ClientTickEvent e) -> {
-                        if (e.phase == net.minecraftforge.event.TickEvent.Phase.END)
+                        if (e.phase == net.minecraftforge.event.TickEvent.Phase.END) {
                             NpcSceneTickHandler.tick();
+                            CutscenePlayer.tick(); // [VFX-3]
+                        }
                     });
+            // [VFX-2]: Hologram billboard renderer
+            MinecraftForge.EVENT_BUS.register(new NpcHologramRenderer());
+            // [VFX-4]: Dynamic skin condition evaluator
+            MinecraftForge.EVENT_BUS.register(new DynamicSkinTickHandler());
         }
     }
 

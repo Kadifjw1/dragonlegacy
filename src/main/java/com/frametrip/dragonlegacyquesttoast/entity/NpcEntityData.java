@@ -19,6 +19,7 @@ import com.frametrip.dragonlegacyquesttoast.server.stats.NpcStatisticsData;
 import com.frametrip.dragonlegacyquesttoast.server.combat.BossPhase;
 import com.frametrip.dragonlegacyquesttoast.server.combat.NpcAbility;
 import com.frametrip.dragonlegacyquesttoast.server.world.FarmerData;
+import com.frametrip.dragonlegacyquesttoast.server.vfx.DynamicSkin;
 
 import java.util.*;
  
@@ -191,6 +192,24 @@ public class NpcEntityData {
     public float   guardRadius           = 15.0f;
     public boolean guardWarnFirst        = true;
 
+    // [VFX-1]: Custom nameplate styling
+    public int     nameplateColor    = 0xFFFFFFFF; // ARGB text color
+    public float   nameplateScale    = 1.0f;
+    public boolean nameplateBackground   = false;
+    public int     nameplateBgColor  = 0x55000000; // ARGB background color
+
+    // [VFX-2]: Hologram above NPC
+    public boolean hologramEnabled = false;
+    public String  hologramText    = "{name}";    // supports {name},{hp},{mood},{level}
+    public float   hologramHeight  = 2.5f;        // blocks above foot
+    public float   hologramScale   = 0.5f;
+
+    // [VFX-3]: Cutscene triggered when player interacts
+    public String  cutsceneId      = "";
+
+    // [VFX-4]: Condition-driven skin overrides (evaluated client-side every 20 ticks)
+    public List<DynamicSkin> dynamicSkins = new ArrayList<>();
+
     // [APP-1]: Particle effect type (0=None 1=Fire 2=Water 3=Magic 4=Smoke 5=Stars)
     public byte particleEffect = 0;
     // [APP-2]: Colored glow outline (0=disabled, otherwise ARGB int)
@@ -352,6 +371,18 @@ public class NpcEntityData {
         c.guardTerritoryEnabled = this.guardTerritoryEnabled;
         c.guardRadius           = this.guardRadius;
         c.guardWarnFirst        = this.guardWarnFirst;
+        // [VFX-1..4]:
+        c.nameplateColor      = this.nameplateColor;
+        c.nameplateScale      = this.nameplateScale;
+        c.nameplateBackground = this.nameplateBackground;
+        c.nameplateBgColor    = this.nameplateBgColor;
+        c.hologramEnabled     = this.hologramEnabled;
+        c.hologramText        = this.hologramText;
+        c.hologramHeight      = this.hologramHeight;
+        c.hologramScale       = this.hologramScale;
+        c.cutsceneId          = this.cutsceneId;
+        c.dynamicSkins = new ArrayList<>();
+        if (this.dynamicSkins != null) for (DynamicSkin ds : this.dynamicSkins) c.dynamicSkins.add(ds.copy());
         // [APP-1..3]:
         c.particleEffect = this.particleEffect;
         c.glowColor      = this.glowColor;

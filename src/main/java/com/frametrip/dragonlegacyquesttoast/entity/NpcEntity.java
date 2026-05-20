@@ -70,6 +70,12 @@ public class NpcEntity extends PathfinderMob implements GeoEntity {
     // [INT-1]: per-player interact cooldown tracker (not persisted)
     private final Map<UUID, Long> interactCooldowns = new HashMap<>();
 
+    // [VFX-4]: Client-side skin override from dynamic skin evaluation (not persisted)
+    private String currentSkinOverride = null;
+
+    public String getCurrentSkinOverride() { return currentSkinOverride; }
+    public void setCurrentSkinOverride(String skin) { this.currentSkinOverride = skin; }
+
     private static final Gson GSON = new Gson();
 
     public static final EntityDataAccessor<String> DATA_NPC_JSON =
@@ -362,6 +368,18 @@ public class NpcEntity extends PathfinderMob implements GeoEntity {
                     return InteractionResult.CONSUME;
                 }
             
+                // [VFX-3]: Trigger cutscene if configured (takes priority over dialogue)
+                if (!data.cutsceneId.isEmpty()) {
+                    com.frametrip.dragonlegacyquesttoast.server.cutscene.CutsceneDefinition cut =
+                            com.frametrip.dragonlegacyquesttoast.server.cutscene.CutsceneManager.get(data.cutsceneId);
+                    if (cut != null) {
+                        ModNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> sp),
+                                new com.frametrip.dragonlegacyquesttoast.network.StartCutscenePacket(cut));
+                        NpcInteractionLogger.log(sp, data.displayName, this.getUUID(), "CUTSCENE_START");
+                        return InteractionResult.CONSUME;
+                    }
+                }
+
                 // Prefer scene-based dialogue, fall back to legacy dialogue
                 if (!data.sceneId.isEmpty()) {
                     NpcScene scene = NpcSceneManager.get(data.sceneId);

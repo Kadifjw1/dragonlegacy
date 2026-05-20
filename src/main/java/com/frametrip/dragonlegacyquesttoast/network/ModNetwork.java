@@ -91,5 +91,7 @@ public class ModNetwork {
         CHANNEL.registerMessage(packetId++, SyncRemoteNpcListPacket.class,    SyncRemoteNpcListPacket::encode,    SyncRemoteNpcListPacket::decode,    SyncRemoteNpcListPacket::handle);
         // [EDT-5]:
         CHANNEL.registerMessage(packetId++, PreviewNpcDataPacket.class, PreviewNpcDataPacket::encode, PreviewNpcDataPacket::decode, PreviewNpcDataPacket::handle);
+        // [VFX-3]:
+        CHANNEL.registerMessage(packetId++, StartCutscenePacket.class, StartCutscenePacket::encode, StartCutscenePacket::decode, StartCutscenePacket::handle);
     }
 }

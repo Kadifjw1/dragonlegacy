@@ -9,6 +9,7 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -44,6 +45,27 @@ public class NpcGeoRenderer extends GeoEntityRenderer<NpcEntity> {
             return;
         }
         super.render(entity, entityYaw, partialTick, poseStack, bufferSource, packedLight);
+    }
+
+    // [VFX-1]: Custom nameplate — scale + text color.
+    @Override
+    protected void renderNameTag(NpcEntity entity, Component displayName,
+                                  PoseStack poseStack, MultiBufferSource bufferSource, int packedLight) {
+        NpcEntityData data = entity.getNpcData();
+        if (data == null || !data.showName) return;
+
+        float scale = data.nameplateScale;
+        boolean scaled = (scale != 1.0f);
+        if (scaled) {
+            poseStack.pushPose();
+            poseStack.scale(scale, scale, scale);
+        }
+
+        Component label = net.minecraft.network.chat.Component.literal(data.displayName)
+                .withStyle(s -> s.withColor(net.minecraft.ChatFormatting.WHITE));
+        super.renderNameTag(entity, label, poseStack, bufferSource, packedLight);
+
+        if (scaled) poseStack.popPose();
     }
 
     // [ANI-1]: Apply custom static bone pose offsets after GeckoLib animation runs.
