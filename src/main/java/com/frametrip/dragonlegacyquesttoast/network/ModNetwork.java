@@ -66,6 +66,9 @@ public class ModNetwork {
         CHANNEL.registerMessage(packetId++, SyncDataPresetsPacket.class, SyncDataPresetsPacket::encode, SyncDataPresetsPacket::decode, SyncDataPresetsPacket::handle);
         CHANNEL.registerMessage(packetId++, NpcAnimStatePacket.class,    NpcAnimStatePacket::encode,    NpcAnimStatePacket::decode,    NpcAnimStatePacket::handle);
         // [REL-2]:
-        CHANNEL.registerMessage(packetId++, SyncReputationPacket.class,  SyncReputationPacket::encode,  SyncReputationPacket::decode,  SyncReputationPacket::handle);
+        CHANNEL.registerMessage(packetId++, SyncReputationPacket.class,      SyncReputationPacket::encode,      SyncReputationPacket::decode,      SyncReputationPacket::handle);
+        // [ECO-1]:
+        CHANNEL.registerMessage(packetId++, SyncCurrencyConfigPacket.class,  SyncCurrencyConfigPacket::encode,  SyncCurrencyConfigPacket::decode,  SyncCurrencyConfigPacket::handle);
+        CHANNEL.registerMessage(packetId++, SaveCurrencyConfigPacket.class,  SaveCurrencyConfigPacket::encode,  SaveCurrencyConfigPacket::decode,  SaveCurrencyConfigPacket::handle);
     }
 }

@@ -321,5 +321,18 @@
   "gui.dragonlegacyquesttoast.model.category.golem":    "Големы",
   "gui.dragonlegacyquesttoast.model.gecko_presets":     "GeckoLib Пресеты",
   "gui.dragonlegacyquesttoast.model.preset_save":       "Сохранить пресет",
-  "gui.dragonlegacyquesttoast.model.preset_name":       "Имя пресета..."
+  "gui.dragonlegacyquesttoast.model.preset_name":       "Имя пресета...",
+
+  "gui.dragonlegacyquesttoast.eco.currency_global":     "Глобальная валюта",
+  "gui.dragonlegacyquesttoast.eco.name":                "Название",
+  "gui.dragonlegacyquesttoast.eco.symbol":              "Символ",
+  "gui.dragonlegacyquesttoast.eco.item_id":             "ID предмета",
+  "gui.dragonlegacyquesttoast.eco.save_global":         "Сохранить глобально",
+  "gui.dragonlegacyquesttoast.eco.npc_wallet":          "Экономика NPC",
+  "gui.dragonlegacyquesttoast.eco.wallet":              "Кошелёк",
+  "gui.dragonlegacyquesttoast.eco.rep_affects_price":   "Цена от репутации",
+  "gui.dragonlegacyquesttoast.eco.high_rep_bonus":      "Бонус высокой реп. %",
+  "gui.dragonlegacyquesttoast.eco.low_rep_penalty":     "Штраф низкой реп. %",
+  "gui.dragonlegacyquesttoast.eco.min_rep":             "Мин. реп. для торговли",
+  "npc.trade.rep_too_low":                              "Ваша репутация слишком низкая для торговли."
 }

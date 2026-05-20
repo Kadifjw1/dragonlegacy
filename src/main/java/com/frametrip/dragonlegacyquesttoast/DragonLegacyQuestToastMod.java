@@ -9,6 +9,7 @@ import com.frametrip.dragonlegacyquesttoast.client.NpcSkinManager;
 import com.frametrip.dragonlegacyquesttoast.client.QuestToastOverlay;
 import com.frametrip.dragonlegacyquesttoast.client.dialogue.NpcSceneTickHandler;
 import com.frametrip.dragonlegacyquesttoast.command.ModCommands;
+import com.frametrip.dragonlegacyquesttoast.currency.CurrencyConfigManager;
 import com.frametrip.dragonlegacyquesttoast.currency.CurrencyEvents;
 import com.frametrip.dragonlegacyquesttoast.currency.CurrencyManager;
 import com.frametrip.dragonlegacyquesttoast.profession.trader.TraderManager;
@@ -19,6 +20,7 @@ import com.frametrip.dragonlegacyquesttoast.network.SyncFactionsPacket;
 import com.frametrip.dragonlegacyquesttoast.network.SyncDataPresetsPacket;
 import com.frametrip.dragonlegacyquesttoast.network.SyncNpcProfilesPacket;
 import com.frametrip.dragonlegacyquesttoast.network.SyncNpcScenesPacket;
+import com.frametrip.dragonlegacyquesttoast.network.SyncCurrencyConfigPacket;
 import com.frametrip.dragonlegacyquesttoast.network.SyncPlayerCurrencyPacket;
 import com.frametrip.dragonlegacyquesttoast.network.SyncQuestProgressPacket;
 import com.frametrip.dragonlegacyquesttoast.network.SyncQuestsPacket;
@@ -83,6 +85,7 @@ public class DragonLegacyQuestToastMod {
         PlayerFactionReputationManager.init();
         NpcSceneManager.load();
         BuildingTemplateManager.load();
+        CurrencyConfigManager.load(); // [ECO-1]
 
         MinecraftForge.EVENT_BUS.addListener(this::registerCommands);
         MinecraftForge.EVENT_BUS.addListener(this::onPlayerLogin);
@@ -179,6 +182,8 @@ public class DragonLegacyQuestToastMod {
                 new SyncPlayerCurrencyPacket(CurrencyManager.getBalance(player.getUUID())));
         ModNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player),
                 new SyncDataPresetsPacket(DataPackManager.animationPresets, DataPackManager.guiPresets));
+        // [ECO-1]: sync global currency config
+        CurrencyConfigManager.syncToPlayer(player);
     }
 
     private void onAddReloadListeners(AddReloadListenerEvent event) {

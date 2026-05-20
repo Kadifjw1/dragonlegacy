@@ -1,8 +1,10 @@
 package com.frametrip.dragonlegacyquesttoast.network;
 
 import com.frametrip.dragonlegacyquesttoast.currency.CurrencyManager;
+import com.frametrip.dragonlegacyquesttoast.currency.NpcEconomyData;
 import com.frametrip.dragonlegacyquesttoast.entity.NpcEntity;
 import com.frametrip.dragonlegacyquesttoast.profession.NpcProfessionType;
+import com.frametrip.dragonlegacyquesttoast.server.PlayerFactionReputationManager;
 import com.frametrip.dragonlegacyquesttoast.profession.trader.SellTradeOffer;
 import com.frametrip.dragonlegacyquesttoast.profession.trader.TradePriceResult;
 import net.minecraft.network.FriendlyByteBuf;
@@ -69,9 +71,24 @@ public class BuyTradeOfferPacket {
                 return;
             }
 
-            // Apply discount (server-side authoritative)
+            // [ECO-2]: Check minimum reputation to trade
+            NpcEntityData npcData = npc.getNpcData();
+            NpcEconomyData eco = npcData.economyData;
+            if (eco == null) eco = new NpcEconomyData();
+            String factionId = npcData.factionId;
+            int playerRep = (factionId != null && !factionId.isEmpty())
+                    ? PlayerFactionReputationManager.get(player.getUUID(), factionId) : 0;
+            if (!eco.canTrade(playerRep)) {
+                player.sendSystemMessage(Component.literal("§cВаша репутация слишком низкая для торговли."));
+                return;
+            }
+
+            // Apply discount + [ECO-2] reputation price multiplier (server-side authoritative)
             int discPct = pd.traderData.getOrCreateDiscounts().effectiveBuyDiscount(offer.discountPercent);
             TradePriceResult price = TradePriceResult.calculate(offer.price, offer.amount, discPct);
+            float repMultiplier = eco.getPriceMultiplier(playerRep);
+            if (repMultiplier != 1.0f)
+                price.finalPrice = Math.max(1, Math.round(price.finalPrice * repMultiplier));
 
             if (!CurrencyManager.hasBalance(player.getUUID(), price.finalPrice)) {
                 player.sendSystemMessage(Component.literal("§cНедостаточно монет."));

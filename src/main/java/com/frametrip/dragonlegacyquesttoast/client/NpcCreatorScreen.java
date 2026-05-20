@@ -45,8 +45,8 @@ public class NpcCreatorScreen extends Screen {
     // ── Tab definitions ───────────────────────────────────────────────────────
     private static final String[] TAB_LABELS = {
             "  Информация", "  Взаимодействие", "  Анимация ▸",
-            "  Отношения", "  Профессия", "  Строительство",
-            "  Модель", "  Стелс"
+            "  Отношения", "  Профессия", "  Экономика",
+            "  Строительство", "  Модель", "  Стелс"
     };
     private static final int[] TAB_ACCENT = {
             NpcInfoTab.ACCENT,
@@ -54,9 +54,10 @@ public class NpcCreatorScreen extends Screen {
             NpcAnimationEditorTab.ACCENT,
             NpcRelationsTab.ACCENT,
             NpcProfessionTab.ACCENT,
+            NpcEconomyTab.ACCENT,       // [ECO-1..2]
             NpcBuildingTab.ACCENT,
             NpcModelTab.ACCENT,
-            NpcStealthTab.ACCENT    
+            NpcStealthTab.ACCENT
     };
     private static final NpcEditorTab[] TAB_INSTANCES = {
             new NpcInfoTab(),
@@ -64,6 +65,7 @@ public class NpcCreatorScreen extends Screen {
             new NpcAnimationEditorTab(),
             new NpcRelationsTab(),
             new NpcProfessionTab(),
+            new NpcEconomyTab(),         // [ECO-1..2]
             new NpcBuildingTab(),
             new NpcModelTab(),
             new NpcStealthTab()

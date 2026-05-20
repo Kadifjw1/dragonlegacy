@@ -12,6 +12,7 @@ import com.frametrip.dragonlegacyquesttoast.server.model.NpcModelConfig;
 import com.frametrip.dragonlegacyquesttoast.server.stealth.StealthConfig;
 import com.frametrip.dragonlegacyquesttoast.server.animation.AnimationTrigger;
 import com.frametrip.dragonlegacyquesttoast.server.interaction.DialogConditions;
+import com.frametrip.dragonlegacyquesttoast.currency.NpcEconomyData;
 
 import java.util.*;
  
@@ -125,7 +126,10 @@ public class NpcEntityData {
 
     // [INFO-NEW-11]: Group / Squad identifier (max 32 chars)
     public String npcGroup = "";
- 
+
+    // [ECO-2]: Per-NPC economy settings (wallet + reputation-based pricing)
+    public NpcEconomyData economyData = new NpcEconomyData();
+
     // [ANI-1]: GeckoLib bone names and labels for the pose editor
     public static final String[] POSE_BONE_IDS    = {"head","body","rightArm","leftArm","rightLeg","leftLeg"};
     public static final String[] POSE_BONE_LABELS = {"Голова","Тело","Прав.рука","Лев.рука","Прав.нога","Лев.нога"};
@@ -233,6 +237,8 @@ public class NpcEntityData {
         c.rainBehavior     = this.rainBehavior;
         c.nameplateIcon    = this.nameplateIcon;
         c.npcGroup         = this.npcGroup;
+        // [ECO-2]:
+        c.economyData      = this.economyData != null ? this.economyData.copy() : new NpcEconomyData();
 
         return c;
     }

@@ -321,5 +321,18 @@
   "gui.dragonlegacyquesttoast.model.category.golem":    "Golems",
   "gui.dragonlegacyquesttoast.model.gecko_presets":     "GeckoLib Presets",
   "gui.dragonlegacyquesttoast.model.preset_save":       "Save Preset",
-  "gui.dragonlegacyquesttoast.model.preset_name":       "Preset name..."
+  "gui.dragonlegacyquesttoast.model.preset_name":       "Preset name...",
+
+  "gui.dragonlegacyquesttoast.eco.currency_global":     "Global Currency",
+  "gui.dragonlegacyquesttoast.eco.name":                "Name",
+  "gui.dragonlegacyquesttoast.eco.symbol":              "Symbol",
+  "gui.dragonlegacyquesttoast.eco.item_id":             "Item ID",
+  "gui.dragonlegacyquesttoast.eco.save_global":         "Save Globally",
+  "gui.dragonlegacyquesttoast.eco.npc_wallet":          "NPC Economy",
+  "gui.dragonlegacyquesttoast.eco.wallet":              "Wallet",
+  "gui.dragonlegacyquesttoast.eco.rep_affects_price":   "Price by reputation",
+  "gui.dragonlegacyquesttoast.eco.high_rep_bonus":      "High rep bonus %",
+  "gui.dragonlegacyquesttoast.eco.low_rep_penalty":     "Low rep penalty %",
+  "gui.dragonlegacyquesttoast.eco.min_rep":             "Min rep to trade",
+  "npc.trade.rep_too_low":                              "Your reputation is too low to trade."
 }
