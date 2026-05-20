@@ -97,6 +97,8 @@ public class NpcEntity extends PathfinderMob implements GeoEntity {
         goalSelector.addGoal(2, new CompanionGoal(this));
         goalSelector.addGoal(2, new com.frametrip.dragonlegacyquesttoast.server.companion.CompanionGuardGoal(this));
         goalSelector.addGoal(2, new com.frametrip.dragonlegacyquesttoast.entity.goal.NpcFormationGoal(this)); // [CMB-1]
+        goalSelector.addGoal(2, new com.frametrip.dragonlegacyquesttoast.entity.goal.NpcTerritoryGuardGoal(this)); // [WLD-3]
+        goalSelector.addGoal(3, new com.frametrip.dragonlegacyquesttoast.entity.goal.NpcFarmerGoal(this)); // [WLD-2]
         goalSelector.addGoal(3, new NpcWorkPatrolGoal(this));        // [JOB-2]
         goalSelector.addGoal(3, new com.frametrip.dragonlegacyquesttoast.entity.goal.NpcConversationGoal(this)); // [IMM-3]
         goalSelector.addGoal(4, new NpcLookAtPlayerGoal());

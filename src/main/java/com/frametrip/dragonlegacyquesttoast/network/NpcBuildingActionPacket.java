@@ -72,6 +72,8 @@ public class NpcBuildingActionPacket {
                     }
                     NpcBuildingManager.startBuilding(msg.npcId, msg.templateId, ox, oy, oz);
                 }
+                case "schematic" -> NpcBuildingManager.startBuildingFromSchematic(
+                        msg.npcId, msg.templateId, msg.ox, msg.oy, msg.oz);
                 case "pause"  -> NpcBuildingManager.pause(msg.npcId);
                 case "resume" -> NpcBuildingManager.resume(msg.npcId);
                 case "cancel" -> NpcBuildingManager.cancel(msg.npcId);

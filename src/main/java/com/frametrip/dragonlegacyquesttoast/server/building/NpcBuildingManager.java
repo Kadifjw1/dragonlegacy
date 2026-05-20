@@ -3,6 +3,8 @@ package com.frametrip.dragonlegacyquesttoast.server.building;
 import com.frametrip.dragonlegacyquesttoast.network.ModNetwork;
 import com.frametrip.dragonlegacyquesttoast.network.SyncNpcBuildingStatePacket;
 import net.minecraft.core.BlockPos;
+import java.io.File;
+import java.util.Queue;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -46,6 +48,25 @@ public class NpcBuildingManager {
         ACTIVE.put(npcId, state);
         LOG.info("[NpcBuildingManager] NPC {} начал строить '{}' ({} блоков).",
                 npcId, tmpl.name, state.totalBlocks);
+        return state;
+    }
+
+    // [WLD-1]: Start a build from a .nbt schematic file path (relative to world folder).
+    public static NpcBuildingState startBuildingFromSchematic(UUID npcId, String schematicPath,
+                                                               int ox, int oy, int oz) {
+        MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
+        if (server == null) return null;
+        File worldDir = server.getWorldPath(net.minecraft.world.level.storage.LevelResource.ROOT).toFile();
+        File file = new File(worldDir, schematicPath);
+        var queue = NpcSchematicLoader.load(file);
+        if (queue.isEmpty()) {
+            LOG.warn("[WLD-1] Schematic queue empty for '{}'.", schematicPath);
+            return null;
+        }
+        NpcBuildingState state = new NpcBuildingState(npcId, schematicPath, ox, oy, oz, queue);
+        ACTIVE.put(npcId, state);
+        LOG.info("[WLD-1] NPC {} starting schematic build '{}' ({} blocks).",
+                npcId, schematicPath, state.totalBlocks);
         return state;
     }
 

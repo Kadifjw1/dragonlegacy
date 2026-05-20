@@ -18,6 +18,7 @@ import com.frametrip.dragonlegacyquesttoast.server.script.ScriptGraph;
 import com.frametrip.dragonlegacyquesttoast.server.stats.NpcStatisticsData;
 import com.frametrip.dragonlegacyquesttoast.server.combat.BossPhase;
 import com.frametrip.dragonlegacyquesttoast.server.combat.NpcAbility;
+import com.frametrip.dragonlegacyquesttoast.server.world.FarmerData;
 
 import java.util.*;
  
@@ -167,6 +168,14 @@ public class NpcEntityData {
     public float   arenaRadius  = 20.0f;
     public String  arenaCenter  = ""; // "x,y,z" — set to NPC's current position on enable
 
+    // [WLD-2]: Farmer role configuration
+    public FarmerData farmerData = new FarmerData();
+
+    // [WLD-3]: Territory guard
+    public boolean guardTerritoryEnabled = false;
+    public float   guardRadius           = 15.0f;
+    public boolean guardWarnFirst        = true;
+
     // [APP-1]: Particle effect type (0=None 1=Fire 2=Water 3=Magic 4=Smoke 5=Stars)
     public byte particleEffect = 0;
     // [APP-2]: Colored glow outline (0=disabled, otherwise ARGB int)
@@ -311,6 +320,12 @@ public class NpcEntityData {
         c.arenaEnabled = this.arenaEnabled;
         c.arenaRadius  = this.arenaRadius;
         c.arenaCenter  = this.arenaCenter;
+        // [WLD-2]:
+        c.farmerData = this.farmerData != null ? this.farmerData.copy() : new FarmerData();
+        // [WLD-3]:
+        c.guardTerritoryEnabled = this.guardTerritoryEnabled;
+        c.guardRadius           = this.guardRadius;
+        c.guardWarnFirst        = this.guardWarnFirst;
         // [APP-1..3]:
         c.particleEffect = this.particleEffect;
         c.glowColor      = this.glowColor;

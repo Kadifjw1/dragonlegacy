@@ -1,5 +1,6 @@
 package com.frametrip.dragonlegacyquesttoast.client.npceditor;
 
+import com.frametrip.dragonlegacyquesttoast.client.VillageCreatorScreen;
 import com.frametrip.dragonlegacyquesttoast.entity.NpcEntityData;
 import com.frametrip.dragonlegacyquesttoast.network.ModNetwork;
 import com.frametrip.dragonlegacyquesttoast.network.NpcBuildingActionPacket;
@@ -7,6 +8,7 @@ import com.frametrip.dragonlegacyquesttoast.server.building.BuildingTemplate;
 import com.frametrip.dragonlegacyquesttoast.server.building.BuildingTemplateManager;
 import com.frametrip.dragonlegacyquesttoast.server.building.NpcBuildingData;
 import com.frametrip.dragonlegacyquesttoast.client.building.ClientBuildingState;
+import com.frametrip.dragonlegacyquesttoast.server.world.FarmerData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -36,6 +38,10 @@ public class NpcBuildingTab implements NpcEditorTab {
 
     // work-zone editboxes
     private EditBox zoneXBox, zoneYBox, zoneZBox, zoneRadiusBox, speedBox;
+    // [WLD-1]: schematic path field
+    private EditBox schematicPathBox;
+    // [WLD-2]: farmer fields
+    private EditBox farmerCropBox, farmerRadiusBox, farmerStorageBox;
 
     @Override
     public void init(Consumer<AbstractWidget> add, Runnable rebuild,
@@ -167,6 +173,71 @@ public class NpcBuildingTab implements NpcEditorTab {
                 rebuild.run();
             }
         }).bounds(rx + rw - 110, y, 108, 16).build());
+        y += 22;
+
+        // ── [WLD-1] Schematic ─────────────────────────────────────────────────
+        schematicPathBox = new EditBox(font, rx, y, rw - 100, 14,
+                Component.literal("Путь к .nbt (относит. папки мира)"));
+        schematicPathBox.setValue(bd.schematicPath);
+        add.accept(schematicPathBox);
+        add.accept(Button.builder(Component.literal("Стройка по схему"), b -> {
+            int[] pos = getPlayerPos();
+            String path = schematicPathBox.getValue().trim();
+            if (!path.isEmpty()) {
+                bd.schematicPath = path;
+                state.markDirty();
+                ModNetwork.CHANNEL.sendToServer(
+                        new NpcBuildingActionPacket(state.getEntity().getUUID(),
+                                "schematic", path, pos[0], pos[1], pos[2]));
+            }
+        }).bounds(rx + rw - 96, y, 94, 14).build());
+        y += 20;
+
+        // ── [WLD-2] Farmer ────────────────────────────────────────────────────
+        FarmerData fd = d.farmerData != null ? d.farmerData : new FarmerData();
+        add.accept(Button.builder(
+                Component.literal(fd.farmerEnabled ? "§a◉ Фермер" : "§8○ Фермер"),
+                b -> { fd.farmerEnabled = !fd.farmerEnabled; d.farmerData = fd;
+                       state.markDirty(); rebuild.run(); }
+        ).bounds(rx, y, 90, 14).build());
+        String[] crops = {"wheat", "carrot", "potato", "beetroot"};
+        add.accept(Button.builder(
+                Component.literal("Культура: §e" + fd.cropType),
+                b -> {
+                    int idx = 0;
+                    for (int i = 0; i < crops.length; i++) if (crops[i].equals(fd.cropType)) { idx = i; break; }
+                    fd.cropType = crops[(idx + 1) % crops.length];
+                    d.farmerData = fd; state.markDirty(); rebuild.run();
+                }
+        ).bounds(rx + 94, y, 100, 14).build());
+        farmerRadiusBox = new EditBox(font, rx + 198, y, 40, 14, Component.literal("Радиус"));
+        farmerRadiusBox.setValue(String.valueOf(fd.plotRadius));
+        add.accept(farmerRadiusBox);
+        y += 16;
+        farmerStorageBox = new EditBox(font, rx, y, rw - 4, 14,
+                Component.literal("Хранилище x,y,z (пусто = дроп)"));
+        farmerStorageBox.setValue(fd.storagePos);
+        add.accept(farmerStorageBox);
+        y += 18;
+
+        // ── [WLD-3] Territory Guard ───────────────────────────────────────────
+        add.accept(Button.builder(
+                Component.literal(d.guardTerritoryEnabled ? "§a◉ Охрана тер." : "§8○ Охрана тер."),
+                b -> { d.guardTerritoryEnabled = !d.guardTerritoryEnabled;
+                       state.markDirty(); rebuild.run(); }
+        ).bounds(rx, y, 120, 14).build());
+        add.accept(Button.builder(
+                Component.literal(d.guardWarnFirst ? "§e⚠ Предупред." : "§c⚔ Сразу атак."),
+                b -> { d.guardWarnFirst = !d.guardWarnFirst;
+                       state.markDirty(); rebuild.run(); }
+        ).bounds(rx + 124, y, 100, 14).build());
+        y += 18;
+
+        // ── [WLD-4] Village Preset ────────────────────────────────────────────
+        add.accept(Button.builder(
+                Component.literal("§e🏘 Создать деревню..."),
+                b -> Minecraft.getInstance().setScreen(new VillageCreatorScreen())
+        ).bounds(rx, y, rw - 4, 16).build());
     }
 
     @Override
@@ -271,6 +342,11 @@ public class NpcBuildingTab implements NpcEditorTab {
         if (zoneYBox != null)      try { bd.workZoneY = Integer.parseInt(zoneYBox.getValue()); } catch (Exception ignored) {}
         if (zoneZBox != null)      try { bd.workZoneZ = Integer.parseInt(zoneZBox.getValue()); } catch (Exception ignored) {}
         if (zoneRadiusBox != null) try { bd.workZoneRadius = Integer.parseInt(zoneRadiusBox.getValue()); } catch (Exception ignored) {}
+        if (schematicPathBox != null) bd.schematicPath = schematicPathBox.getValue().trim();
+        // [WLD-2]:
+        if (d.farmerData == null) d.farmerData = new FarmerData();
+        if (farmerRadiusBox != null) try { d.farmerData.plotRadius = Integer.parseInt(farmerRadiusBox.getValue()); } catch (Exception ignored) {}
+        if (farmerStorageBox != null) d.farmerData.storagePos = farmerStorageBox.getValue().trim();
     }
 
     @Override

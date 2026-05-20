@@ -82,5 +82,7 @@ public class ModNetwork {
         CHANNEL.registerMessage(packetId++, SyncQuestDeadlinesPacket.class, SyncQuestDeadlinesPacket::encode, SyncQuestDeadlinesPacket::decode, SyncQuestDeadlinesPacket::handle);
         // [QST-4]:
         CHANNEL.registerMessage(packetId++, AcceptGroupQuestPacket.class, AcceptGroupQuestPacket::encode, AcceptGroupQuestPacket::decode, AcceptGroupQuestPacket::handle);
+        // [WLD-4]:
+        CHANNEL.registerMessage(packetId++, SpawnVillagePacket.class, SpawnVillagePacket::encode, SpawnVillagePacket::decode, SpawnVillagePacket::handle);
     }
 }

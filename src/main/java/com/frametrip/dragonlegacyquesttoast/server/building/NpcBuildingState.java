@@ -40,6 +40,19 @@ public class NpcBuildingState {
         this.status = Status.BUILDING;
     }
 
+    // [WLD-1]: Constructor for schematic-based builds.
+    public NpcBuildingState(UUID npcId, String label, int ox, int oy, int oz,
+                             java.util.Queue<BuildingTemplate.BlockEntry> schematicBlocks) {
+        this.npcId      = npcId;
+        this.templateId = label;
+        this.originX    = ox;
+        this.originY    = oy;
+        this.originZ    = oz;
+        queue.addAll(schematicBlocks);
+        this.totalBlocks = queue.size();
+        this.status = Status.BUILDING;
+    }
+
     public float progress() {
         if (totalBlocks == 0) return 1f;
         return placedBlocks / (float) totalBlocks;
