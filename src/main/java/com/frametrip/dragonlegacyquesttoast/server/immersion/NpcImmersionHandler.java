@@ -116,8 +116,8 @@ public class NpcImmersionHandler {
             case "SAY" -> {
                 if (!ev.dialog.isEmpty()) {
                     level.players().forEach(p -> {
-                        if (p instanceof ServerPlayer sp && npc.distanceTo(sp) <= 16) {
-                            sp.sendSystemMessage(Component.literal(
+                        if (npc.distanceTo(p) <= 16) {
+                            p.sendSystemMessage(Component.literal(
                                     "§e" + data.displayName + "§7: §f" + ev.dialog));
                         }
                     });

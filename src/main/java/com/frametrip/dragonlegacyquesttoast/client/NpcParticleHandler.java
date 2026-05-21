@@ -2,8 +2,8 @@ package com.frametrip.dragonlegacyquesttoast.client;
 
 import com.frametrip.dragonlegacyquesttoast.entity.NpcEntity;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -21,7 +21,7 @@ public class NpcParticleHandler {
     public static void onClientTick(TickEvent.ClientTickEvent event) {
         if (event.phase != TickEvent.Phase.END) return;
         Minecraft mc = Minecraft.getInstance();
-        Level level = mc.level;
+        ClientLevel level = mc.level;
         if (level == null || mc.isPaused()) return;
 
         // Spawn every other tick to reduce visual noise

@@ -532,9 +532,4 @@ public class NpcInteractionTab implements NpcEditorTab {
         return null;
     }
 
-    // [INT-2]: Null-safe accessor for dialog conditions
-    private static DialogConditions cond(NpcEntityData d) {
-        if (d.dialogConditions == null) d.dialogConditions = new DialogConditions();
-        return d.dialogConditions;
-    }
 }

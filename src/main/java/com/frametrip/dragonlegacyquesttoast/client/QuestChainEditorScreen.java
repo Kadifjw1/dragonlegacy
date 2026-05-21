@@ -48,7 +48,8 @@ public class QuestChainEditorScreen extends Screen {
         rebuildWidgets();
     }
 
-    private void rebuildWidgets() {
+    @Override
+    protected void rebuildWidgets() {
         clearWidgets();
         int ox = ox(), oy = oy();
 

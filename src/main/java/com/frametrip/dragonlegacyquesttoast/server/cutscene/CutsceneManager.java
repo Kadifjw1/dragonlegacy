@@ -21,7 +21,7 @@ public class CutsceneManager {
     private static final Map<String, CutsceneDefinition> CUTSCENES = new LinkedHashMap<>();
 
     private static File cutsceneDir() {
-        File dir = FMLPaths.CONFIGPATH.get()
+        File dir = FMLPaths.CONFIGDIR.get()
                 .resolve(DragonLegacyQuestToastMod.MODID)
                 .resolve("cutscenes")
                 .toFile();

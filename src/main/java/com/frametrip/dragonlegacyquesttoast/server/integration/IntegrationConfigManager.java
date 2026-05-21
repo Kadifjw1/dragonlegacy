@@ -20,7 +20,7 @@ public class IntegrationConfigManager {
     private static IntegrationConfig config = new IntegrationConfig();
 
     private static File configFile() {
-        File dir = FMLPaths.CONFIGPATH.get()
+        File dir = FMLPaths.CONFIGDIR.get()
                 .resolve(DragonLegacyQuestToastMod.MODID)
                 .toFile();
         dir.mkdirs();

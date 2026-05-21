@@ -30,8 +30,8 @@ public class RequestRemoteNpcListPacket {
 
             List<SyncRemoteNpcListPacket.NpcEntry> entries = new ArrayList<>();
             for (ServerLevel level : server.getAllLevels()) {
-                for (NpcEntity npc : level.getEntitiesOfClass(NpcEntity.class,
-                        npc -> !npc.isDeadOrDying())) {
+                for (net.minecraft.world.entity.Entity e : level.getAllEntities()) {
+                    if (!(e instanceof NpcEntity npc) || npc.isDeadOrDying()) continue;
                     entries.add(new SyncRemoteNpcListPacket.NpcEntry(
                             npc.getUUID(),
                             npc.getNpcData().displayName,

@@ -3,6 +3,7 @@ package com.frametrip.dragonlegacyquesttoast.network;
 import com.frametrip.dragonlegacyquesttoast.currency.CurrencyManager;
 import com.frametrip.dragonlegacyquesttoast.currency.NpcEconomyData;
 import com.frametrip.dragonlegacyquesttoast.entity.NpcEntity;
+import com.frametrip.dragonlegacyquesttoast.entity.NpcEntityData;
 import com.frametrip.dragonlegacyquesttoast.profession.NpcProfessionType;
 import com.frametrip.dragonlegacyquesttoast.server.PlayerFactionReputationManager;
 import com.frametrip.dragonlegacyquesttoast.profession.trader.SellTradeOffer;

@@ -59,7 +59,8 @@ public class NpcAiDebugOverlay {
 
     private static String[] buildDebugLines(NpcEntity npc, NpcEntityData data) {
         String target = "—";
-        if (npc.getTarget() instanceof LivingEntity t) {
+        LivingEntity t = npc.getTarget();
+        if (t != null) {
             target = t.getClass().getSimpleName() + " @" +
                     String.format("%.0f,%.0f,%.0f", t.getX(), t.getY(), t.getZ());
         }

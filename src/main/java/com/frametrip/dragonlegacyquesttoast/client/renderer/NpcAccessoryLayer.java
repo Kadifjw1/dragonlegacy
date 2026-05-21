@@ -28,7 +28,7 @@ public class NpcAccessoryLayer extends GeoRenderLayer<NpcEntity> {
     @Override
     public void render(PoseStack poseStack, NpcEntity entity, BakedGeoModel bakedModel,
                        net.minecraft.client.renderer.RenderType renderType,
-                       MultiBufferSource bufferSource, net.minecraft.client.renderer.VertexConsumer buffer,
+                       MultiBufferSource bufferSource, com.mojang.blaze3d.vertex.VertexConsumer buffer,
                        float partialTick, int packedLight, int packedOverlay) {
         NpcEntityData data = entity.getNpcData();
         if (data.accessories == null || data.accessories.isEmpty()) return;
