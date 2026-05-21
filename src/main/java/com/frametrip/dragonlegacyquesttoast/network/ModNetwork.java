@@ -65,5 +65,33 @@ public class ModNetwork {
         CHANNEL.registerMessage(packetId++, OpenCompanionScreenPacket.class, OpenCompanionScreenPacket::encode, OpenCompanionScreenPacket::decode, OpenCompanionScreenPacket::handle);
         CHANNEL.registerMessage(packetId++, SyncDataPresetsPacket.class, SyncDataPresetsPacket::encode, SyncDataPresetsPacket::decode, SyncDataPresetsPacket::handle);
         CHANNEL.registerMessage(packetId++, NpcAnimStatePacket.class,    NpcAnimStatePacket::encode,    NpcAnimStatePacket::decode,    NpcAnimStatePacket::handle);
+        // [REL-2]:
+        CHANNEL.registerMessage(packetId++, SyncReputationPacket.class,      SyncReputationPacket::encode,      SyncReputationPacket::decode,      SyncReputationPacket::handle);
+        // [ECO-1]:
+        CHANNEL.registerMessage(packetId++, SyncCurrencyConfigPacket.class,  SyncCurrencyConfigPacket::encode,  SyncCurrencyConfigPacket::decode,  SyncCurrencyConfigPacket::handle);
+        CHANNEL.registerMessage(packetId++, SaveCurrencyConfigPacket.class,  SaveCurrencyConfigPacket::encode,  SaveCurrencyConfigPacket::decode,  SaveCurrencyConfigPacket::handle);
+        // [STA-1]:
+        CHANNEL.registerMessage(packetId++, ResetNpcStatsPacket.class, ResetNpcStatsPacket::encode, ResetNpcStatsPacket::decode, ResetNpcStatsPacket::handle);
+        // [QST-1]:
+        CHANNEL.registerMessage(packetId++, SaveQuestChainPacket.class,   SaveQuestChainPacket::encode,   SaveQuestChainPacket::decode,   SaveQuestChainPacket::handle);
+        CHANNEL.registerMessage(packetId++, SyncQuestChainsPacket.class,  SyncQuestChainsPacket::encode,  SyncQuestChainsPacket::decode,  SyncQuestChainsPacket::handle);
+        // [QST-2]:
+        CHANNEL.registerMessage(packetId++, SaveBranchingDialogPacket.class,  SaveBranchingDialogPacket::encode,  SaveBranchingDialogPacket::decode,  SaveBranchingDialogPacket::handle);
+        CHANNEL.registerMessage(packetId++, SyncBranchingDialogsPacket.class, SyncBranchingDialogsPacket::encode, SyncBranchingDialogsPacket::decode, SyncBranchingDialogsPacket::handle);
+        // [QST-3]:
+        CHANNEL.registerMessage(packetId++, SyncQuestDeadlinesPacket.class, SyncQuestDeadlinesPacket::encode, SyncQuestDeadlinesPacket::decode, SyncQuestDeadlinesPacket::handle);
+        // [QST-4]:
+        CHANNEL.registerMessage(packetId++, AcceptGroupQuestPacket.class, AcceptGroupQuestPacket::encode, AcceptGroupQuestPacket::decode, AcceptGroupQuestPacket::handle);
+        // [WLD-4]:
+        CHANNEL.registerMessage(packetId++, SpawnVillagePacket.class, SpawnVillagePacket::encode, SpawnVillagePacket::decode, SpawnVillagePacket::handle);
+        // [EDT-1]:
+        CHANNEL.registerMessage(packetId++, DuplicateNpcPacket.class, DuplicateNpcPacket::encode, DuplicateNpcPacket::decode, DuplicateNpcPacket::handle);
+        // [EDT-4]:
+        CHANNEL.registerMessage(packetId++, RequestRemoteNpcListPacket.class, RequestRemoteNpcListPacket::encode, RequestRemoteNpcListPacket::decode, RequestRemoteNpcListPacket::handle);
+        CHANNEL.registerMessage(packetId++, SyncRemoteNpcListPacket.class,    SyncRemoteNpcListPacket::encode,    SyncRemoteNpcListPacket::decode,    SyncRemoteNpcListPacket::handle);
+        // [EDT-5]:
+        CHANNEL.registerMessage(packetId++, PreviewNpcDataPacket.class, PreviewNpcDataPacket::encode, PreviewNpcDataPacket::decode, PreviewNpcDataPacket::handle);
+        // [VFX-3]:
+        CHANNEL.registerMessage(packetId++, StartCutscenePacket.class, StartCutscenePacket::encode, StartCutscenePacket::decode, StartCutscenePacket::handle);
     }
 }

@@ -6,6 +6,7 @@ import com.frametrip.dragonlegacyquesttoast.network.SyncQuestProgressPacket;
 import com.frametrip.dragonlegacyquesttoast.server.QuestDefinition;
 import com.frametrip.dragonlegacyquesttoast.server.QuestManager;
 import com.frametrip.dragonlegacyquesttoast.server.QuestProgressManager;
+import com.frametrip.dragonlegacyquesttoast.server.quest.QuestTimerHandler;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -226,7 +227,11 @@ public class QuestLogicHandler {
     private static boolean tryComplete(ServerPlayer player, QuestDefinition quest, int amount) {
         boolean justCompleted = QuestProgressManager.increment(player.getUUID(), quest.id, amount);
         syncProgress(player);
-        if (justCompleted) sendCompletion(player, quest);
+        if (justCompleted) {
+            sendCompletion(player, quest);
+            // [QST-3]: Sync updated deadlines after completion clears the deadline entry.
+            QuestTimerHandler.syncDeadlines(player);
+        }
         return justCompleted;
     }
  

@@ -1,6 +1,8 @@
 package com.frametrip.dragonlegacyquesttoast.network;
 
+import com.frametrip.dragonlegacyquesttoast.server.QuestManager;
 import com.frametrip.dragonlegacyquesttoast.server.QuestProgressManager;
+import com.frametrip.dragonlegacyquesttoast.server.integration.DiscordWebhook;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.NetworkEvent;
@@ -40,9 +42,18 @@ public class QuestStateActionPacket {
 
             boolean changed;
             switch (msg.action) {
-                case ACTION_ACCEPT -> changed = QuestProgressManager.accept(sender.getUUID(), msg.questId);
+                case ACTION_ACCEPT -> {
+                    changed = QuestProgressManager.accept(sender.getUUID(), msg.questId);
+                    // [INT-API-4]: Discord notification for quest accepted
+                    if (changed) {
+                        var quest = QuestManager.get(msg.questId);
+                        String questName = quest != null ? quest.title : msg.questId;
+                        DiscordWebhook.notifyQuestGiven(
+                                sender.getGameProfile().getName(), "NPC", questName);
+                    }
+                }
                 case ACTION_COMPLETE -> changed = QuestProgressManager.complete(sender.getUUID(), msg.questId);
-                case ACTION_FAIL -> changed = QuestProgressManager.fail(sender.getUUID(), msg.questId);
+                case ACTION_FAIL    -> changed = QuestProgressManager.fail(sender.getUUID(), msg.questId);
                 default -> {
                     return;
                 }

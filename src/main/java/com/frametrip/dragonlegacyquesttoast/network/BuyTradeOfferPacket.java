@@ -1,10 +1,13 @@
 package com.frametrip.dragonlegacyquesttoast.network;
 
 import com.frametrip.dragonlegacyquesttoast.currency.CurrencyManager;
+import com.frametrip.dragonlegacyquesttoast.currency.NpcEconomyData;
 import com.frametrip.dragonlegacyquesttoast.entity.NpcEntity;
 import com.frametrip.dragonlegacyquesttoast.profession.NpcProfessionType;
+import com.frametrip.dragonlegacyquesttoast.server.PlayerFactionReputationManager;
 import com.frametrip.dragonlegacyquesttoast.profession.trader.SellTradeOffer;
 import com.frametrip.dragonlegacyquesttoast.profession.trader.TradePriceResult;
+import com.frametrip.dragonlegacyquesttoast.server.compat.VaultHook;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -69,17 +72,48 @@ public class BuyTradeOfferPacket {
                 return;
             }
 
-            // Apply discount (server-side authoritative)
+            // [ECO-2]: Check minimum reputation to trade
+            NpcEntityData npcData = npc.getNpcData();
+            NpcEconomyData eco = npcData.economyData;
+            if (eco == null) eco = new NpcEconomyData();
+            String factionId = npcData.factionId;
+            int playerRep = (factionId != null && !factionId.isEmpty())
+                    ? PlayerFactionReputationManager.get(player.getUUID(), factionId) : 0;
+            if (!eco.canTrade(playerRep)) {
+                player.sendSystemMessage(Component.literal("§cВаша репутация слишком низкая для торговли."));
+                return;
+            }
+
+            // Apply discount + [ECO-2] reputation price multiplier (server-side authoritative)
             int discPct = pd.traderData.getOrCreateDiscounts().effectiveBuyDiscount(offer.discountPercent);
             TradePriceResult price = TradePriceResult.calculate(offer.price, offer.amount, discPct);
+            float repMultiplier = eco.getPriceMultiplier(playerRep);
+            if (repMultiplier != 1.0f)
+                price.finalPrice = Math.max(1, Math.round(price.finalPrice * repMultiplier));
 
-            if (!CurrencyManager.hasBalance(player.getUUID(), price.finalPrice)) {
+            // [IMM-2]: Mood affects trade price
+            if (npcData.immersionData != null && npcData.immersionData.moodEnabled) {
+                float moodMult = npcData.immersionData.moodPriceMultiplier();
+                if (moodMult != 1.0f)
+                    price.finalPrice = Math.max(1, Math.round(price.finalPrice * moodMult));
+            }
+
+            // [INT-API-3]: Try Vault economy first, fall back to internal CurrencyManager
+            boolean usedVault = false;
+            if (VaultHook.isAvailable()) {
+                if (!VaultHook.withdraw(player, price.finalPrice)) {
+                    player.sendSystemMessage(Component.literal("§cНедостаточно средств (Vault)."));
+                    return;
+                }
+                usedVault = true;
+            } else if (!CurrencyManager.hasBalance(player.getUUID(), price.finalPrice)) {
                 player.sendSystemMessage(Component.literal("§cНедостаточно монет."));
                 return;
             }
 
             Item item = ForgeRegistries.ITEMS.getValue(new ResourceLocation(offer.itemId));
             if (item == null) {
+                // Refund Vault if item lookup failed
                 player.sendSystemMessage(Component.literal("§cПредмет не существует."));
                 return;
             }
@@ -89,7 +123,11 @@ public class BuyTradeOfferPacket {
                 return;
             }
 
-            CurrencyManager.removeBalance(player, price.finalPrice);
+            if (!usedVault) CurrencyManager.removeBalance(player, price.finalPrice);
+
+            // [STA-1]: Increment items-sold counter
+            NpcEntityData statData = npc.getNpcData();
+            if (statData.stats != null) { statData.stats.itemsSold++; npc.setNpcData(statData); }
 
             if (!offer.infiniteStock) {
                 offer.stock = Math.max(0, offer.stock - 1);

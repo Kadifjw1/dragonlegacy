@@ -45,8 +45,14 @@ public class NpcCreatorScreen extends Screen {
     // ── Tab definitions ───────────────────────────────────────────────────────
     private static final String[] TAB_LABELS = {
             "  Информация", "  Взаимодействие", "  Анимация ▸",
-            "  Отношения", "  Профессия", "  Строительство",
-            "  Модель", "  Стелс"
+            "  Отношения", "  Профессия", "  Экономика",
+            "  Скрипты",        // [SCR-1..3]
+            "  Статистика",     // [STA-1]
+            "  Внешний вид+",   // [APP-1..3]
+            "  Иммерсия",       // [IMM-1..6]
+            "  Боёвка",         // [CMB-1..5]
+            "  Строительство", "  Модель", "  Стелс", "  Сервер",    // [SRV-1..4]
+            "  Визуал"         // [VFX-1..4]
     };
     private static final int[] TAB_ACCENT = {
             NpcInfoTab.ACCENT,
@@ -54,9 +60,17 @@ public class NpcCreatorScreen extends Screen {
             NpcAnimationEditorTab.ACCENT,
             NpcRelationsTab.ACCENT,
             NpcProfessionTab.ACCENT,
+            NpcEconomyTab.ACCENT,
+            NpcScriptTab.ACCENT,             // [SCR-1..3]
+            NpcStatsTab.ACCENT,              // [STA-1]
+            NpcAppearancePlusTab.ACCENT,     // [APP-1..3]
+            NpcImmersionTab.ACCENT,          // [IMM-1..6]
+            NpcCombatTab.ACCENT,             // [CMB-1..5]
             NpcBuildingTab.ACCENT,
             NpcModelTab.ACCENT,
-            NpcStealthTab.ACCENT    
+            NpcStealthTab.ACCENT,
+            NpcServerTab.ACCENT,             // [SRV-1..4]
+            NpcVisualTab.ACCENT              // [VFX-1..4]
     };
     private static final NpcEditorTab[] TAB_INSTANCES = {
             new NpcInfoTab(),
@@ -64,9 +78,17 @@ public class NpcCreatorScreen extends Screen {
             new NpcAnimationEditorTab(),
             new NpcRelationsTab(),
             new NpcProfessionTab(),
+            new NpcEconomyTab(),
+            new NpcScriptTab(),              // [SCR-1..3]
+            new NpcStatsTab(),               // [STA-1]
+            new NpcAppearancePlusTab(),      // [APP-1..3]
+            new NpcImmersionTab(),           // [IMM-1..6]
+            new NpcCombatTab(),              // [CMB-1..5]
             new NpcBuildingTab(),
             new NpcModelTab(),
-            new NpcStealthTab()
+            new NpcStealthTab(),
+            new NpcServerTab(),              // [SRV-1..4]
+            new NpcVisualTab()               // [VFX-1..4]
     };
 
     // ── State ─────────────────────────────────────────────────────────────────
@@ -95,27 +117,58 @@ public class NpcCreatorScreen extends Screen {
 
         // Top bar: Delete / Reset / Close (no Save button — autosave handles saving)
         int topBtnY = oy + 5;
+
+        // [EDT-1]: Duplicate NPC
+        addRenderableWidget(Button.builder(Component.literal("📋 Копировать"), b -> {
+                    TAB_INSTANCES[activeTab].pullFields(editorState);
+                    ModNetwork.CHANNEL.sendToServer(
+                            new com.frametrip.dragonlegacyquesttoast.network.DuplicateNpcPacket(
+                                    editorState.getEntity().getUUID()));
+                })
+                .bounds(ox + W - 480, topBtnY, 90, 18).build());
+
+        // [EDT-2]: Templates
+        addRenderableWidget(Button.builder(Component.literal("📚 Шаблоны"), b -> {
+                    TAB_INSTANCES[activeTab].pullFields(editorState);
+                    minecraft.setScreen(new NpcTemplateScreen(template -> {
+                        editorState.setDraft(template);
+                        minecraft.setScreen(this);
+                        rebuildWidgets();
+                    }));
+                })
+                .bounds(ox + W - 386, topBtnY, 82, 18).build());
+
+        // [EDT-4]: Remote editor
+        addRenderableWidget(Button.builder(Component.literal("📡 Все NPC"), b -> {
+                    ModNetwork.CHANNEL.sendToServer(
+                            new com.frametrip.dragonlegacyquesttoast.network.RequestRemoteNpcListPacket());
+                })
+                .bounds(ox + W - 300, topBtnY, 74, 18).build());
+
+        // [EDT-5]: Preview
+        addRenderableWidget(Button.builder(Component.literal("👁 Превью"), b -> {
+                    TAB_INSTANCES[activeTab].pullFields(editorState);
+                    ModNetwork.CHANNEL.sendToServer(
+                            new com.frametrip.dragonlegacyquesttoast.network.PreviewNpcDataPacket(
+                                    editorState.getEntity().getUUID(), editorState.getDraft()));
+                })
+                .bounds(ox + W - 222, topBtnY, 68, 18).build());
+
         addRenderableWidget(Button.builder(Component.literal("📋 Пресеты"), b -> {
                     TAB_INSTANCES[activeTab].pullFields(editorState);
                     activeTab = 0;
                     ((NpcInfoTab) TAB_INSTANCES[0]).setSubPage(4);
                     rebuildWidgets();
                 })
-                .bounds(ox + W - 282, topBtnY, 78, 18).build());
-        addRenderableWidget(Button.builder(Component.literal("§c✕ Удалить NPC"), b -> {
+                .bounds(ox + W - 150, topBtnY, 50, 18).build());
+        addRenderableWidget(Button.builder(Component.literal("§c✕ Удалить"), b -> {
                     ModNetwork.CHANNEL.sendToServer(
                             new DeleteNpcPacket(editorState.getEntity().getUUID()));
                     onClose();
                 })
-                .bounds(ox + W - 200, topBtnY, 80, 18).build());
-        addRenderableWidget(Button.builder(Component.literal("↺ Сбросить"), b -> {
-                    editorState.reset();
-                    dirtyTicks = 0;
-                    rebuildWidgets();
-                })
-                .bounds(ox + W - 116, topBtnY, 70, 18).build());
-        addRenderableWidget(Button.builder(Component.literal("✕ Закрыть"),
-                b -> onClose()).bounds(ox + W - 42, topBtnY, 38, 18).build());
+                .bounds(ox + W - 96, topBtnY, 54, 18).build());
+        addRenderableWidget(Button.builder(Component.literal("✕"),
+                b -> onClose()).bounds(ox + W - 38, topBtnY, 34, 18).build());
 
         // Sidebar: tab buttons
         for (int i = 0; i < TAB_LABELS.length; i++) {
@@ -298,6 +351,13 @@ public class NpcCreatorScreen extends Screen {
             previewPitch  = Mth.clamp(previewPitch + (float)(dy * 0.3f), -89f, 89f);
             return true;
         }
+        // Forward drag to the active tab (e.g. faction graph node dragging)
+        int rx = ox() + SIDEBAR_W + 8;
+        int rw = CONTENT_W - 16;
+        int tabOy = oy() + TOP_H + 18;
+        if (TAB_INSTANCES[activeTab].onMouseDragged(mouseX, mouseY, button, dx, dy, editorState, rx, tabOy, rw)) {
+            return true;
+        }
         return super.mouseDragged(mouseX, mouseY, button, dx, dy);
     }
     
@@ -344,6 +404,15 @@ public class NpcCreatorScreen extends Screen {
             return true;
         }
         return super.mouseClicked(mx, my, btn);
+    }
+
+    @Override
+    public boolean mouseReleased(double mx, double my, int btn) {
+        int rx = ox() + SIDEBAR_W + 8;
+        int rw = CONTENT_W - 16;
+        int tabOy = oy() + TOP_H + 18;
+        TAB_INSTANCES[activeTab].onMouseReleased(mx, my, btn, editorState, rx, tabOy, rw);
+        return super.mouseReleased(mx, my, btn);
     }
 
     // ── Tick / autosave ───────────────────────────────────────────────────────

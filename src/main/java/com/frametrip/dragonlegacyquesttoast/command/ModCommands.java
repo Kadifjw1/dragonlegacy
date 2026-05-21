@@ -14,6 +14,7 @@ import com.frametrip.dragonlegacyquesttoast.network.QuestToastConfigPacket;
 import com.frametrip.dragonlegacyquesttoast.network.QuestToastPacket;
 import com.frametrip.dragonlegacyquesttoast.network.SyncAbilitiesPacket;
 import com.frametrip.dragonlegacyquesttoast.server.AbilityRegistry;
+import com.frametrip.dragonlegacyquesttoast.server.NpcInteractionLogger;
 import com.frametrip.dragonlegacyquesttoast.server.PlayerAbilityManager;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
@@ -41,6 +42,7 @@ public class ModCommands {
         registerAbilityScreenCommand(dispatcher);
         registerAbilityCommand(dispatcher);
         registerAbilityPointsCommand(dispatcher);
+        registerNpcLogsCommand(dispatcher); // [SRV-4]
     }
 
         private static void registerMainHubCommand(CommandDispatcher<CommandSourceStack> dispatcher) {
@@ -631,5 +633,35 @@ public class ModCommands {
                                                     return 1;
                                                 }))))
         );
+    }
+
+    // [SRV-4]: /npclogs <npcName> [count]
+    private static void registerNpcLogsCommand(CommandDispatcher<CommandSourceStack> dispatcher) {
+        dispatcher.register(Commands.literal("npclogs")
+            .requires(src -> src.hasPermission(2))
+            .then(Commands.argument("npcName", StringArgumentType.word())
+                .executes(ctx -> {
+                    String name = StringArgumentType.getString(ctx, "npcName");
+                    return showLogs(ctx.getSource(), name, 10);
+                })
+                .then(Commands.argument("count", IntegerArgumentType.integer(1, 100))
+                    .executes(ctx -> {
+                        String name  = StringArgumentType.getString(ctx, "npcName");
+                        int    count = IntegerArgumentType.getInteger(ctx, "count");
+                        return showLogs(ctx.getSource(), name, count);
+                    }))));
+    }
+
+    private static int showLogs(CommandSourceStack src, String npcName, int count) {
+        var logs = NpcInteractionLogger.getLogs(npcName, count);
+        if (logs.isEmpty()) {
+            src.sendSuccess(() -> Component.literal("§7Нет логов для «" + npcName + "»"), false);
+        } else {
+            src.sendSuccess(() -> Component.literal("§9=== Логи NPC «" + npcName + "» (последние " + logs.size() + ") ==="), false);
+            for (String line : logs) {
+                src.sendSuccess(() -> Component.literal("§8" + line), false);
+            }
+        }
+        return logs.size();
     }
 }

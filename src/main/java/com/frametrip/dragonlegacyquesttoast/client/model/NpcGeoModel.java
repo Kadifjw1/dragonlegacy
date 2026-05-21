@@ -26,7 +26,11 @@ public class NpcGeoModel extends GeoModel<NpcEntity> {
     public ResourceLocation getTextureResource(NpcEntity entity) {
         NpcEntityData data = entity.getNpcData();
         ResourceLocation override = tryLocation(data.geckoTexture);
-        return override != null ? override : NpcSkinManager.getTexture(data.skinId);
+        if (override != null) return override;
+        // [VFX-4]: Use dynamic skin override if one is active
+        String skinOverride = entity.getCurrentSkinOverride();
+        String skinId = (skinOverride != null && !skinOverride.isEmpty()) ? skinOverride : data.skinId;
+        return NpcSkinManager.getTexture(skinId);
     }
 
     @Override

@@ -9,6 +9,8 @@ public class FactionData {
     public int    color;       // packed ARGB
     public String description;
     public Map<String, String> relations; // factionId -> FRIENDLY / NEUTRAL / HOSTILE
+    // [REL-3]: Reputation change when a player kills an NPC from this faction (negative = penalty)
+    public int killReputationPenalty = -50;
  
     public static final int[] PRESET_COLORS = {
         0xFF4488FF, 0xFFFF4444, 0xFF44CC44,
@@ -26,11 +28,12 @@ public class FactionData {
  
     public FactionData copy() {
         FactionData c = new FactionData();
-        c.id          = this.id;
-        c.name        = this.name;
-        c.color       = this.color;
-        c.description = this.description;
-        c.relations   = new LinkedHashMap<>(this.relations);
+        c.id                    = this.id;
+        c.name                  = this.name;
+        c.color                 = this.color;
+        c.description           = this.description;
+        c.relations             = new LinkedHashMap<>(this.relations);
+        c.killReputationPenalty = this.killReputationPenalty;
         return c;
     }
  

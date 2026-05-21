@@ -9,20 +9,27 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.util.Mth;
 import software.bernie.geckolib.cache.object.BakedGeoModel;
 import software.bernie.geckolib.renderer.GeoEntityRenderer;
 
 import java.util.Map;
+import java.util.WeakHashMap;
 
 public class NpcGeoRenderer extends GeoEntityRenderer<NpcEntity> {
 
+    // [MOD-4]: Per-entity smoothed limb-swing amount for vanilla-profile NPCs.
+    private static final WeakHashMap<NpcEntity, Float> LIMB_SMOOTH = new WeakHashMap<>();
+
     public NpcGeoRenderer(EntityRendererProvider.Context ctx) {
         super(ctx, new NpcGeoModel());
+        addRenderLayer(new NpcAccessoryLayer(this)); // [APP-3]
     }
 
     @Override
@@ -38,6 +45,27 @@ public class NpcGeoRenderer extends GeoEntityRenderer<NpcEntity> {
             return;
         }
         super.render(entity, entityYaw, partialTick, poseStack, bufferSource, packedLight);
+    }
+
+    // [VFX-1]: Custom nameplate — scale + text color.
+    @Override
+    protected void renderNameTag(NpcEntity entity, Component displayName,
+                                  PoseStack poseStack, MultiBufferSource bufferSource, int packedLight) {
+        NpcEntityData data = entity.getNpcData();
+        if (data == null || !data.showName) return;
+
+        float scale = data.nameplateScale;
+        boolean scaled = (scale != 1.0f);
+        if (scaled) {
+            poseStack.pushPose();
+            poseStack.scale(scale, scale, scale);
+        }
+
+        Component label = net.minecraft.network.chat.Component.literal(data.displayName)
+                .withStyle(s -> s.withColor(net.minecraft.ChatFormatting.WHITE));
+        super.renderNameTag(entity, label, poseStack, bufferSource, packedLight);
+
+        if (scaled) poseStack.popPose();
     }
 
     // [ANI-1]: Apply custom static bone pose offsets after GeckoLib animation runs.
@@ -75,7 +103,13 @@ public class NpcGeoRenderer extends GeoEntityRenderer<NpcEntity> {
         Entity tmp = type.create(mc.level);
         if (!(tmp instanceof LivingEntity living)) return;
 
-        living.walkAnimation.update(npc.walkAnimation.speed(partialTick), 1.0f);
+        // [MOD-4]: Smooth limb-swing amount — prevents vanilla models always animating
+        // as if walking even when the NPC is standing still.
+        boolean isMoving = npc.getDeltaMovement().horizontalDistanceSqr() > 0.0004;
+        float prevAmt = LIMB_SMOOTH.getOrDefault(npc, 0f);
+        float smoothed = Mth.lerp(0.35f, prevAmt, isMoving ? 1.0f : 0.0f);
+        LIMB_SMOOTH.put(npc, smoothed);
+        living.walkAnimation.update(npc.walkAnimation.speed(partialTick), smoothed);
 
         float scale = (npc.getNpcData().modelConfig != null)
                 ? npc.getNpcData().modelConfig.scale : 1.0f;

@@ -55,6 +55,12 @@ public class PlayerFactionReputationManager {
         return "NEUTRAL";
     }
 
+    // [REL-2]: Returns all faction→reputation entries for a player.
+    public static Map<String, Integer> getAllForPlayer(UUID playerId) {
+        Map<String, Integer> map = data.get(playerId.toString());
+        return map != null ? new java.util.HashMap<>(map) : new java.util.HashMap<>();
+    }
+
     /** No-op — called only to trigger class initialisation and load data from disk. */
     public static void init() {}
 

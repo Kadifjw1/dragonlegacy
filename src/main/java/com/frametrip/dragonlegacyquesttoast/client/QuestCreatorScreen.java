@@ -57,11 +57,14 @@ public class QuestCreatorScreen extends Screen {
     private QuestDefinition editing = null;
  
     private boolean tabBasic         = true;
+    private boolean tabAdvanced      = false; // [QST-3/4/5]
     private boolean npcDropdownOpen  = false;
     private boolean logicDropdownOpen= false;
- 
+
     private EditBox fTitle, fDesc, fReward;
     private final Map<String, EditBox> logicBoxes = new LinkedHashMap<>();
+    // [QST-3/4/5]: Advanced tab fields.
+    private EditBox fTimeLimitSec, fGroupMinPlayers, fHiddenCondition;
  
     public QuestCreatorScreen(Screen parent) {
         super(Component.literal("Редактор квестов"));
@@ -75,23 +78,24 @@ public class QuestCreatorScreen extends Screen {
         quests = ClientQuestState.getAll();
         logicBoxes.clear();
         fTitle = fDesc = fReward = null;
- 
+        fTimeLimitSec = fGroupMinPlayers = fHiddenCondition = null;
+
         int ox = ox(), oy = oy(), rx = rx(), rw = rw();
- 
+
         btn("+ Новый",    ox + 4,       oy + H - 28, LW - 8, 20, this::createNew);
         btn("Сохранить",  rx,           oy + H - 28, 96,     20, this::save);
         btn("Удалить",    rx + 100,     oy + H - 28, 80,     20, this::delete);
         btn("Назад",      ox + W - 66,  oy + H - 28, 60,     20,
             () -> { if (minecraft != null) minecraft.setScreen(parent); });
- 
+
         if (editing == null) return;
- 
-        if (tabBasic) {
+
+        if (tabBasic && !tabAdvanced) {
             int fw = rw - 68;
             fTitle  = eb(rx,      oy + TY_TTL_EDIT, fw,  "Название квеста");
             fDesc   = eb(rx,      oy + TY_DSC_EDIT, fw,  "Описание квеста");
             fReward = eb(rx,      oy + TY_RWD_EDIT, rw,  "Текст награды");
-        } else {
+        } else if (!tabAdvanced) {
             String[][] fields = QuestDefinition.LOGIC_FIELDS
                 .getOrDefault(editing.questLogicType, new String[0][]);
             int fy = oy + TL_FIELD_Y0;
@@ -99,6 +103,12 @@ public class QuestCreatorScreen extends Screen {
                 logicBoxes.put(f[0], eb(rx + TL_LABEL_W + 4, fy, rw - TL_LABEL_W - 4, f[1]));
                 fy += TL_FIELD_H;
             }
+        } else {
+            // [QST-3/4/5]: Advanced tab.
+            int y = oy + 50;
+            fTimeLimitSec    = eb(rx + 140, y,      rw - 144, "0 = без ограничения"); y += 22;
+            fGroupMinPlayers = eb(rx + 140, y,      60,       "2");                   y += 22;
+            fHiddenCondition = eb(rx + 140, y,      rw - 144, "questDone:id / hasItem:id:count / always"); y += 22;
         }
         loadFields();
     }
@@ -118,8 +128,13 @@ public class QuestCreatorScreen extends Screen {
  
     // ── Field I/O ─────────────────────────────────────────────────────────────
     private void loadFields() {
-         if (editing == null) return;
-        if (tabBasic) {
+        if (editing == null) return;
+        if (tabAdvanced) {
+            if (fTimeLimitSec    != null) fTimeLimitSec.setValue(String.valueOf(editing.timeLimitSec));
+            if (fGroupMinPlayers != null) fGroupMinPlayers.setValue(String.valueOf(editing.groupQuestMinPlayers));
+            if (fHiddenCondition != null) fHiddenCondition.setValue(
+                editing.hiddenUnlockCondition != null ? editing.hiddenUnlockCondition : "");
+        } else if (tabBasic) {
             if (fTitle  != null) fTitle .setValue(editing.title       != null ? editing.title       : "");
             if (fDesc   != null) fDesc  .setValue(editing.description != null ? editing.description : "");
             if (fReward != null) fReward.setValue(editing.rewardText  != null ? editing.rewardText  : "");
@@ -127,10 +142,14 @@ public class QuestCreatorScreen extends Screen {
             logicBoxes.forEach((k, v) -> v.setValue(editing.logicData.getOrDefault(k, "")));
         }
     }
- 
+
     private void pullFields() {
         if (editing == null) return;
-         if (tabBasic) {
+        if (tabAdvanced) {
+            try { if (fTimeLimitSec    != null) editing.timeLimitSec     = Integer.parseInt(fTimeLimitSec.getValue().trim()); } catch (NumberFormatException e) {}
+            try { if (fGroupMinPlayers != null) editing.groupQuestMinPlayers = Integer.parseInt(fGroupMinPlayers.getValue().trim()); } catch (NumberFormatException e) {}
+            if (fHiddenCondition != null) editing.hiddenUnlockCondition = fHiddenCondition.getValue();
+        } else if (tabBasic) {
             if (fTitle  != null) editing.title       = fTitle .getValue();
             if (fDesc   != null) editing.description = fDesc  .getValue();
             if (fReward != null) editing.rewardText  = fReward.getValue();
@@ -213,11 +232,13 @@ public class QuestCreatorScreen extends Screen {
             ox + LW + (W - LW) / 2, oy + H / 2, 0xFF555566);
         } else {
             // Tab buttons
-            tabBtn(g, mx, my, rx,       oy + 22, 90,  18, "Основное",      tabBasic);
-            tabBtn(g, mx, my, rx + 94,  oy + 22, 120, 18, "Логика квеста", !tabBasic);
- 
-            if (tabBasic) renderBasic(g, mx, my, oy, rx, rw);
-            else          renderLogic(g, mx, my, oy, rx, rw);
+            tabBtn(g, mx, my, rx,        oy + 22, 90,  18, "Основное",      tabBasic && !tabAdvanced);
+            tabBtn(g, mx, my, rx + 94,   oy + 22, 120, 18, "Логика квеста", !tabBasic && !tabAdvanced);
+            tabBtn(g, mx, my, rx + 218,  oy + 22, 110, 18, "Дополнительно", tabAdvanced);
+
+            if (tabAdvanced)             renderAdvanced(g, mx, my, oy, rx, rw);
+            else if (tabBasic)           renderBasic(g, mx, my, oy, rx, rw);
+            else                         renderLogic(g, mx, my, oy, rx, rw);
         }
  
         super.render(g, mx, my, pt); // widgets
@@ -278,6 +299,22 @@ public class QuestCreatorScreen extends Screen {
         }
     }
  
+    // [QST-3/4/5]: Advanced tab rendering.
+    private void renderAdvanced(GuiGraphics g, int mx, int my, int oy, int rx, int rw) {
+        int y = oy + 46;
+        g.drawString(font, "§7Лимит времени (сек):", rx, y + 4, 0xFF888888, false); y += 22;
+        g.drawString(font, "§7Группа: мин. игроков:", rx, y + 4, 0xFF888888, false);
+        // Group enabled toggle indicator.
+        String grpLabel = editing.groupQuestEnabled ? "§a✔ Групповой" : "§7☐ Групповой";
+        g.drawString(font, grpLabel, rx + 210, y + 4, 0xFFAAAAAA, false);
+        y += 22;
+        g.drawString(font, "§7Скрытый квест:", rx, y + 4, 0xFF888888, false);
+        String hidLabel = editing.hiddenQuest ? "§a✔ Скрытый" : "§7☐ Скрытый";
+        g.drawString(font, hidLabel, rx + 210, y + 4, 0xFFAAAAAA, false);
+        y += 22;
+        g.drawString(font, "§7Условие разблокировки:", rx, y, 0xFF888888, false);
+    }
+
     // B / I / U toggle buttons
     private void drawBIU(GuiGraphics g, int mx, int my,
                           int x, int y, boolean b, boolean i, boolean u) {
@@ -407,11 +444,23 @@ public class QuestCreatorScreen extends Screen {
  
         if (editing != null) {
             // Tab buttons
-            if (tabBasic  && in(mx, my, rx + 94, oy + 22, 120, 18)) { pullFields(); tabBasic = false; rebuildScreen(); return true; }
-            if (!tabBasic && in(mx, my, rx,       oy + 22, 90,  18)) { pullFields(); tabBasic = true;  rebuildScreen(); return true; }
- 
-            if (tabBasic) clickBasic(mx, my, oy, rx, rw);
-            else          clickLogic(mx, my, oy, rx, rw);
+            if (!tabAdvanced && (tabBasic ? in(mx, my, rx + 94, oy + 22, 120, 18)
+                                          : in(mx, my, rx, oy + 22, 90, 18))) {
+                pullFields(); tabBasic = !tabBasic; tabAdvanced = false; rebuildScreen(); return true;
+            }
+            if (!tabAdvanced && in(mx, my, rx + 218, oy + 22, 110, 18)) {
+                pullFields(); tabAdvanced = true; rebuildScreen(); return true;
+            }
+            if (tabAdvanced && in(mx, my, rx, oy + 22, 90, 18)) {
+                pullFields(); tabAdvanced = false; tabBasic = true; rebuildScreen(); return true;
+            }
+            if (tabAdvanced && in(mx, my, rx + 94, oy + 22, 120, 18)) {
+                pullFields(); tabAdvanced = false; tabBasic = false; rebuildScreen(); return true;
+            }
+
+            if (tabAdvanced)   clickAdvanced(mx, my, oy, rx, rw);
+            else if (tabBasic) clickBasic(mx, my, oy, rx, rw);
+            else               clickLogic(mx, my, oy, rx, rw);
         }
  
         return super.mouseClicked(mxd, myd, btn);
@@ -470,6 +519,18 @@ public class QuestCreatorScreen extends Screen {
  
     private void clickLogic(int mx, int my, int oy, int rx, int rw) {
         if (in(mx, my, rx + 106, oy + TL_TYPE_ROW, rw - 106, 18)) logicDropdownOpen = true;
+    }
+
+    // [QST-3/4/5]: Toggle buttons in the advanced tab.
+    private void clickAdvanced(int mx, int my, int oy, int rx, int rw) {
+        int y = oy + 50 + 22; // second row (group)
+        if (in(mx, my, rx + 210, y + 2, 90, 12)) {
+            pullFields(); editing.groupQuestEnabled = !editing.groupQuestEnabled; return;
+        }
+        y += 22; // third row (hidden)
+        if (in(mx, my, rx + 210, y + 2, 80, 12)) {
+            pullFields(); editing.hiddenQuest = !editing.hiddenQuest; return;
+        }
     }
  
     private void cycleType() {

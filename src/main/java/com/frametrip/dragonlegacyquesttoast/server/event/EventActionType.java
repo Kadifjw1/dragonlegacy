@@ -12,7 +12,8 @@ public enum EventActionType {
     OPEN_GUI        ("Открыть GUI"),
     TELEPORT        ("Телепортировать"),
     START_PATROL    ("Начать патруль"),
-    START_BUILD_SCENE ("Начать сцену строительства");
+    START_BUILD_SCENE ("Начать сцену строительства"),
+    DELAY             ("Задержка"); // [SCR-1]: reserved — no-op at runtime, compiled from DELAY graph node
 
     private final String label;
 

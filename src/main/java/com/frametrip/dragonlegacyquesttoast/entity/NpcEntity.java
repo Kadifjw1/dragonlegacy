@@ -54,6 +54,9 @@ import java.util.Objects;
 import java.util.HashMap;
 import java.util.UUID;
 import com.frametrip.dragonlegacyquesttoast.entity.goal.NpcGreetGoal;
+import com.frametrip.dragonlegacyquesttoast.entity.goal.NpcWorkPatrolGoal;
+import com.frametrip.dragonlegacyquesttoast.server.PlayerFactionReputationManager;
+import com.frametrip.dragonlegacyquesttoast.server.NpcInteractionLogger;
 
 public class NpcEntity extends PathfinderMob implements GeoEntity {
 
@@ -66,6 +69,12 @@ public class NpcEntity extends PathfinderMob implements GeoEntity {
 
     // [INT-1]: per-player interact cooldown tracker (not persisted)
     private final Map<UUID, Long> interactCooldowns = new HashMap<>();
+
+    // [VFX-4]: Client-side skin override from dynamic skin evaluation (not persisted)
+    private String currentSkinOverride = null;
+
+    public String getCurrentSkinOverride() { return currentSkinOverride; }
+    public void setCurrentSkinOverride(String skin) { this.currentSkinOverride = skin; }
 
     private static final Gson GSON = new Gson();
 
@@ -95,9 +104,14 @@ public class NpcEntity extends PathfinderMob implements GeoEntity {
         goalSelector.addGoal(1, new NpcGreetGoal(this)); // [INT-3]
         goalSelector.addGoal(2, new CompanionGoal(this));
         goalSelector.addGoal(2, new com.frametrip.dragonlegacyquesttoast.server.companion.CompanionGuardGoal(this));
-        goalSelector.addGoal(3, new NpcLookAtPlayerGoal());
-        goalSelector.addGoal(4, new RandomLookAroundGoal(this));
-        goalSelector.addGoal(5, new WaterAvoidingRandomStrollGoal(this, 0.4));
+        goalSelector.addGoal(2, new com.frametrip.dragonlegacyquesttoast.entity.goal.NpcFormationGoal(this)); // [CMB-1]
+        goalSelector.addGoal(2, new com.frametrip.dragonlegacyquesttoast.entity.goal.NpcTerritoryGuardGoal(this)); // [WLD-3]
+        goalSelector.addGoal(3, new com.frametrip.dragonlegacyquesttoast.entity.goal.NpcFarmerGoal(this)); // [WLD-2]
+        goalSelector.addGoal(3, new NpcWorkPatrolGoal(this));        // [JOB-2]
+        goalSelector.addGoal(3, new com.frametrip.dragonlegacyquesttoast.entity.goal.NpcConversationGoal(this)); // [IMM-3]
+        goalSelector.addGoal(4, new NpcLookAtPlayerGoal());
+        goalSelector.addGoal(5, new RandomLookAroundGoal(this));
+        goalSelector.addGoal(6, new WaterAvoidingRandomStrollGoal(this, 0.4));
     }
 
     public static AttributeSupplier.Builder createAttributes() {
@@ -116,6 +130,17 @@ public class NpcEntity extends PathfinderMob implements GeoEntity {
     }
 
     public void setNpcData(NpcEntityData data) {
+        // [CMB-1]: Update formation membership when formationId changes.
+        if (cachedNpcData != null && !level().isClientSide) {
+            String oldFid = cachedNpcData.formationId;
+            String newFid = data.formationId;
+            if (!oldFid.equals(newFid)) {
+                if (!oldFid.isEmpty())
+                    com.frametrip.dragonlegacyquesttoast.server.combat.FormationController.leave(oldFid, getUUID());
+                if (!newFid.isEmpty())
+                    com.frametrip.dragonlegacyquesttoast.server.combat.FormationController.join(newFid, getUUID());
+            }
+        }
         cachedNpcData = data;
         entityData.set(DATA_NPC_JSON, GSON.toJson(data));
         applyDataEffects(data);
@@ -158,6 +183,9 @@ public class NpcEntity extends PathfinderMob implements GeoEntity {
     public void die(DamageSource cause) {
         NpcEntityData data = getNpcData();
         byte behavior = data != null ? data.deathBehavior : 0;
+        // [CMB-1]: Leave formation on death.
+        if (data != null && !data.formationId.isEmpty() && !level().isClientSide)
+            com.frametrip.dragonlegacyquesttoast.server.combat.FormationController.leave(data.formationId, getUUID());
         super.die(cause);
         if (behavior == 1) {
             // Vanish: remove entity immediately
@@ -280,11 +308,47 @@ public class NpcEntity extends PathfinderMob implements GeoEntity {
             // [INT-1]: cooldown check
             if (!checkInteractCooldown(player)) return InteractionResult.FAIL;
             NpcEntityData data = getNpcData();
-            // [INT-2]: dialog conditions check
-            if (data.dialogConditions != null && !data.dialogConditions.check(level())) {
-                return InteractionResult.PASS;
+            // [INT-2]: dialog conditions check (world + player-specific)
+            if (data.dialogConditions != null) {
+                if (!data.dialogConditions.check(level())) return InteractionResult.PASS;
+                if (player instanceof ServerPlayer sp2
+                        && !data.dialogConditions.checkPlayer(sp2)) return InteractionResult.PASS;
+            }
+            // [SRV-3]: banned player check
+            if (data.ignoreBannedPlayers && player instanceof ServerPlayer sp) {
+                if (sp.getServer() != null && sp.getServer().getPlayerList()
+                        .getBans().isBanned(sp.getGameProfile())) {
+                    return InteractionResult.FAIL;
+                }
+            }
+            // [SRV-3]: minimum reputation check
+            if (data.minReputationToInteract > -1000 && player instanceof ServerPlayer sp) {
+                if (!data.factionId.isEmpty()) {
+                    int rep = PlayerFactionReputationManager.get(sp.getUUID(), data.factionId);
+                    if (rep < data.minReputationToInteract) {
+                        sp.sendSystemMessage(Component.literal("§c[" + data.displayName + "] §fНедостаточно репутации."));
+                        return InteractionResult.FAIL;
+                    }
+                }
             }
         if (player instanceof ServerPlayer sp) {
+                // [IMM-6]: Check if this player previously killed the NPC → vengeance dialog
+                String deathDlg = com.frametrip.dragonlegacyquesttoast.server.immersion.NpcImmersionHandler
+                        .resolveDeathDialog(data, sp);
+                if (deathDlg != null) {
+                    ModNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> sp),
+                            new NpcDialoguePacket(data.displayName, deathDlg));
+                    return InteractionResult.CONSUME;
+                }
+                // [IMM-1]: Player memory — select dialog by visit count
+                String memDlg = com.frametrip.dragonlegacyquesttoast.server.immersion.NpcImmersionHandler
+                        .resolveMemoryDialog(this, data, sp);
+                if (memDlg != null) {
+                    ModNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> sp),
+                            new NpcDialoguePacket(data.displayName, memDlg));
+                    return InteractionResult.CONSUME;
+                }
+
                 // Profession: Trader → open shop window
                 if (data.professionData != null
                         && data.professionData.type == NpcProfessionType.TRADER
@@ -306,6 +370,18 @@ public class NpcEntity extends PathfinderMob implements GeoEntity {
                     return InteractionResult.CONSUME;
                 }
             
+                // [VFX-3]: Trigger cutscene if configured (takes priority over dialogue)
+                if (!data.cutsceneId.isEmpty()) {
+                    com.frametrip.dragonlegacyquesttoast.server.cutscene.CutsceneDefinition cut =
+                            com.frametrip.dragonlegacyquesttoast.server.cutscene.CutsceneManager.get(data.cutsceneId);
+                    if (cut != null) {
+                        ModNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> sp),
+                                new com.frametrip.dragonlegacyquesttoast.network.StartCutscenePacket(cut));
+                        NpcInteractionLogger.log(sp, data.displayName, this.getUUID(), "CUTSCENE_START");
+                        return InteractionResult.CONSUME;
+                    }
+                }
+
                 // Prefer scene-based dialogue, fall back to legacy dialogue
                 if (!data.sceneId.isEmpty()) {
                     NpcScene scene = NpcSceneManager.get(data.sceneId);
@@ -317,13 +393,17 @@ public class NpcEntity extends PathfinderMob implements GeoEntity {
                 } else if (!data.dialogueId.isEmpty()) {
                     DialogueDefinition dlg = DialogueManager.get(data.dialogueId);
                     if (dlg != null && !dlg.lines.isEmpty()) {
-                        String text = String.join("\n", dlg.lines);
+                        // [INT-API-1]: resolve placeholders in dialogue text
+                        String raw  = String.join("\n", dlg.lines);
+                        String text = com.frametrip.dragonlegacyquesttoast.server.compat.PlaceholderApiHook.resolve(sp, raw);
                         ModNetwork.CHANNEL.send(
                                 PacketDistributor.PLAYER.with(() -> sp),
                                 new NpcDialoguePacket(data.displayName, text)
                         );
                     }
                 }
+                // [SRV-4]: log dialog start
+                NpcInteractionLogger.log(sp, data.displayName, this.getUUID(), "DIALOG_START");
             }
             return InteractionResult.CONSUME;
         }
@@ -454,6 +534,18 @@ public class NpcEntity extends PathfinderMob implements GeoEntity {
 
     @Override
     protected void playStepSound(net.minecraft.core.BlockPos pos, BlockState block) {
+    }
+
+    // [APP-2]: Glow outline — enabled and colored when glowColor is set in NpcEntityData.
+    @Override
+    public boolean isCurrentlyGlowing() {
+        return getNpcData().glowColor != 0 || super.isCurrentlyGlowing();
+    }
+
+    @Override
+    public int getTeamColor() {
+        int gc = getNpcData().glowColor;
+        return gc != 0 ? (gc & 0xFFFFFF) : super.getTeamColor();
     }
 
     private class NpcLookAtPlayerGoal extends LookAtPlayerGoal {

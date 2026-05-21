@@ -1,5 +1,6 @@
 package com.frametrip.dragonlegacyquesttoast.server;
  
+import com.frametrip.dragonlegacyquesttoast.server.quest.QuestChainController;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
@@ -24,6 +25,8 @@ public class QuestProgressManager {
         Set<String>          active    = new HashSet<>();
         Set<String>          completed = new HashSet<>();
         Set<String>          failed    = new HashSet<>();
+        // [QST-3]: questId -> System.currentTimeMillis() deadline (0 = no limit)
+        Map<String, Long>    deadlines = new HashMap<>();
     }
  
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
@@ -99,6 +102,7 @@ public class QuestProgressManager {
             pp.active.remove(questId);
             pp.completed.add(questId);
             pp.progress.put(questId, required);
+            if (pp.deadlines != null) pp.deadlines.remove(questId); // [QST-3]
             save();
             return true;
         }
@@ -114,6 +118,7 @@ public class QuestProgressManager {
         pp.failed.remove(questId);
         pp.active.remove(questId);
         pp.completed.add(questId);
+        if (pp.deadlines != null) pp.deadlines.remove(questId);
         save();
         return true;
     }
@@ -121,10 +126,50 @@ public class QuestProgressManager {
 public static boolean accept(UUID playerId, String questId) {
         if (questId == null || questId.isBlank()) return false;
         if (isCompleted(playerId, questId) || isFailed(playerId, questId)) return false;
+        // [QST-1]: Chain prerequisite check.
+        if (!QuestChainController.canStart(playerId, questId)) return false;
         PlayerProgress pp = data.computeIfAbsent(playerId.toString(), k -> new PlayerProgress());
         boolean changed = pp.active.add(questId);
-        if (changed) save();
+        // [QST-3]: Record deadline if quest has a time limit.
+        if (changed) {
+            QuestDefinition def = QuestManager.get(questId);
+            if (def != null && def.timeLimitSec > 0) {
+                if (pp.deadlines == null) pp.deadlines = new HashMap<>();
+                pp.deadlines.put(questId, System.currentTimeMillis() + def.timeLimitSec * 1000L);
+            }
+            save();
+        }
         return changed;
+    }
+
+    // [QST-3]: Returns millis until deadline (positive), or 0 if no deadline.
+    public static long getDeadlineMillis(UUID playerId, String questId) {
+        PlayerProgress pp = data.get(playerId.toString());
+        if (pp == null || pp.deadlines == null) return 0;
+        Long dl = pp.deadlines.get(questId);
+        return dl != null ? dl : 0;
+    }
+
+    // [QST-3]: Returns remaining seconds, or -1 if no deadline, or 0 if expired.
+    public static int getRemainingSeconds(UUID playerId, String questId) {
+        long dl = getDeadlineMillis(playerId, questId);
+        if (dl == 0) return -1;
+        long remaining = dl - System.currentTimeMillis();
+        return (int) Math.max(0, remaining / 1000);
+    }
+
+    // [QST-3]: Returns all quests for this player that have passed their deadline.
+    public static java.util.List<String> getExpiredQuests(UUID playerId) {
+        PlayerProgress pp = data.get(playerId.toString());
+        if (pp == null || pp.deadlines == null) return java.util.Collections.emptyList();
+        long now = System.currentTimeMillis();
+        java.util.List<String> expired = new java.util.ArrayList<>();
+        for (Map.Entry<String, Long> e : pp.deadlines.entrySet()) {
+            if (pp.active.contains(e.getKey()) && e.getValue() > 0 && now > e.getValue()) {
+                expired.add(e.getKey());
+            }
+        }
+        return expired;
     }
 
     public static boolean fail(UUID playerId, String questId) {
@@ -132,10 +177,11 @@ public static boolean accept(UUID playerId, String questId) {
         PlayerProgress pp = data.computeIfAbsent(playerId.toString(), k -> new PlayerProgress());
         boolean changed = pp.active.remove(questId);
         changed = pp.failed.add(questId) || changed;
+        if (pp.deadlines != null) pp.deadlines.remove(questId);
         if (changed) save();
         return changed;
     }
- 
+
     public static void reset(UUID playerId, String questId) {
         PlayerProgress pp = data.get(playerId.toString());
         if (pp != null) {
@@ -143,6 +189,7 @@ public static boolean accept(UUID playerId, String questId) {
             pp.active.remove(questId);
             pp.completed.remove(questId);
             pp.failed.remove(questId);
+            if (pp.deadlines != null) pp.deadlines.remove(questId);
             save();
         }
     }

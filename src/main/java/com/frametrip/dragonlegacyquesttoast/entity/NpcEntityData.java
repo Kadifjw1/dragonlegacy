@@ -12,6 +12,14 @@ import com.frametrip.dragonlegacyquesttoast.server.model.NpcModelConfig;
 import com.frametrip.dragonlegacyquesttoast.server.stealth.StealthConfig;
 import com.frametrip.dragonlegacyquesttoast.server.animation.AnimationTrigger;
 import com.frametrip.dragonlegacyquesttoast.server.interaction.DialogConditions;
+import com.frametrip.dragonlegacyquesttoast.currency.NpcEconomyData;
+import com.frametrip.dragonlegacyquesttoast.server.immersion.NpcImmersionData;
+import com.frametrip.dragonlegacyquesttoast.server.script.ScriptGraph;
+import com.frametrip.dragonlegacyquesttoast.server.stats.NpcStatisticsData;
+import com.frametrip.dragonlegacyquesttoast.server.combat.BossPhase;
+import com.frametrip.dragonlegacyquesttoast.server.combat.NpcAbility;
+import com.frametrip.dragonlegacyquesttoast.server.world.FarmerData;
+import com.frametrip.dragonlegacyquesttoast.server.vfx.DynamicSkin;
 
 import java.util.*;
  
@@ -125,7 +133,90 @@ public class NpcEntityData {
 
     // [INFO-NEW-11]: Group / Squad identifier (max 32 chars)
     public String npcGroup = "";
- 
+
+    // [ECO-2]: Per-NPC economy settings (wallet + reputation-based pricing)
+    public NpcEconomyData economyData = new NpcEconomyData();
+
+    // [SCR-1]: Visual script graphs for this NPC (each compiles to one EventChain on save)
+    public List<ScriptGraph> scriptGraphs = new ArrayList<>();
+
+    // [STA-1]: Per-NPC aggregate statistics (server-side tracking)
+    public NpcStatisticsData stats = new NpcStatisticsData();
+
+    // [IMM-1..6]: Immersion and living-world data
+    public NpcImmersionData immersionData = new NpcImmersionData();
+
+    // [CMB-1]: Formation membership
+    public String formationId   = "";    // empty = not in a formation
+    public int    formationSlot = 0;     // 0 = leader
+    public String formationType = "LINE"; // FormationType name
+
+    // [CMB-2]: Boss phase thresholds (sorted descending by hpThreshold at runtime)
+    public List<BossPhase> bossPhases = new ArrayList<>();
+
+    // [CMB-3]: Reinforcement summoning
+    public boolean reinforcementEnabled       = false;
+    public int     reinforcementHpThreshold   = 30;   // percent
+    public String  reinforcementType          = "";   // entity resource location
+    public int     reinforcementCount         = 2;
+    public int     reinforcementCooldownSec   = 60;
+
+    // [CMB-4]: Unique combat abilities
+    public List<NpcAbility> combatAbilities = new ArrayList<>();
+
+    // [CMB-5]: Arena (restricted combat zone)
+    public boolean arenaEnabled = false;
+    public float   arenaRadius  = 20.0f;
+    public String  arenaCenter  = ""; // "x,y,z" — set to NPC's current position on enable
+
+    // [EDT-3]: AI debug mode — shows live debug panel above NPC on the HUD
+    public boolean debugAi = false;
+
+    // [SRV-1]: Edit permissions
+    public byte   editPermission = 0;  // 0=AllOP, 1=CreatorOnly, 2=Group
+    public String editGroup      = ""; // group name
+    public String creatorUUID    = ""; // set on first save
+
+    // [SRV-2]: WorldGuard region lock (no hard WG dependency — stores region name only)
+    public String regionLock = ""; // WorldGuard region name; empty = no lock
+
+    // [SRV-3]: Anti-spam interaction guards
+    public boolean ignoreBannedPlayers     = true;
+    public int     minReputationToInteract = -1000; // -1000 = disabled
+
+    // [WLD-2]: Farmer role configuration
+    public FarmerData farmerData = new FarmerData();
+
+    // [WLD-3]: Territory guard
+    public boolean guardTerritoryEnabled = false;
+    public float   guardRadius           = 15.0f;
+    public boolean guardWarnFirst        = true;
+
+    // [VFX-1]: Custom nameplate styling
+    public int     nameplateColor    = 0xFFFFFFFF; // ARGB text color
+    public float   nameplateScale    = 1.0f;
+    public boolean nameplateBackground   = false;
+    public int     nameplateBgColor  = 0x55000000; // ARGB background color
+
+    // [VFX-2]: Hologram above NPC
+    public boolean hologramEnabled = false;
+    public String  hologramText    = "{name}";    // supports {name},{hp},{mood},{level}
+    public float   hologramHeight  = 2.5f;        // blocks above foot
+    public float   hologramScale   = 0.5f;
+
+    // [VFX-3]: Cutscene triggered when player interacts
+    public String  cutsceneId      = "";
+
+    // [VFX-4]: Condition-driven skin overrides (evaluated client-side every 20 ticks)
+    public List<DynamicSkin> dynamicSkins = new ArrayList<>();
+
+    // [APP-1]: Particle effect type (0=None 1=Fire 2=Water 3=Magic 4=Smoke 5=Stars)
+    public byte particleEffect = 0;
+    // [APP-2]: Colored glow outline (0=disabled, otherwise ARGB int)
+    public int glowColor = 0;
+    // [APP-3]: Accessory items by slot name ("HEAD","BACK","BELT","LEFT_HAND","RIGHT_HAND") → itemId
+    public java.util.Map<String, String> accessories = new java.util.LinkedHashMap<>();
+
     // [ANI-1]: GeckoLib bone names and labels for the pose editor
     public static final String[] POSE_BONE_IDS    = {"head","body","rightArm","leftArm","rightLeg","leftLeg"};
     public static final String[] POSE_BONE_LABELS = {"Голова","Тело","Прав.рука","Лев.рука","Прав.нога","Лев.нога"};
@@ -233,6 +324,69 @@ public class NpcEntityData {
         c.rainBehavior     = this.rainBehavior;
         c.nameplateIcon    = this.nameplateIcon;
         c.npcGroup         = this.npcGroup;
+        // [ECO-2]:
+        c.economyData      = this.economyData != null ? this.economyData.copy() : new NpcEconomyData();
+        // [SCR-1]:
+        c.scriptGraphs = new ArrayList<>();
+        if (this.scriptGraphs != null)
+            for (ScriptGraph g : this.scriptGraphs) c.scriptGraphs.add(g.copy());
+        // [STA-1]:
+        c.stats = this.stats != null ? this.stats.copy() : new NpcStatisticsData();
+        // [IMM-1..6]:
+        c.immersionData = this.immersionData != null ? this.immersionData.copy() : new NpcImmersionData();
+        // [CMB-1]:
+        c.formationId   = this.formationId;
+        c.formationSlot = this.formationSlot;
+        c.formationType = this.formationType;
+        // [CMB-2]:
+        c.bossPhases = new ArrayList<>();
+        if (this.bossPhases != null) for (BossPhase p : this.bossPhases) c.bossPhases.add(p.copy());
+        // [CMB-3]:
+        c.reinforcementEnabled     = this.reinforcementEnabled;
+        c.reinforcementHpThreshold = this.reinforcementHpThreshold;
+        c.reinforcementType        = this.reinforcementType;
+        c.reinforcementCount       = this.reinforcementCount;
+        c.reinforcementCooldownSec = this.reinforcementCooldownSec;
+        // [CMB-4]:
+        c.combatAbilities = new ArrayList<>();
+        if (this.combatAbilities != null) for (NpcAbility a : this.combatAbilities) c.combatAbilities.add(a.copy());
+        // [CMB-5]:
+        c.arenaEnabled = this.arenaEnabled;
+        c.arenaRadius  = this.arenaRadius;
+        c.arenaCenter  = this.arenaCenter;
+        // [EDT-3]:
+        c.debugAi = this.debugAi;
+        // [SRV-1]:
+        c.editPermission = this.editPermission;
+        c.editGroup      = this.editGroup;
+        c.creatorUUID    = this.creatorUUID;
+        // [SRV-2]:
+        c.regionLock = this.regionLock;
+        // [SRV-3]:
+        c.ignoreBannedPlayers     = this.ignoreBannedPlayers;
+        c.minReputationToInteract = this.minReputationToInteract;
+        // [WLD-2]:
+        c.farmerData = this.farmerData != null ? this.farmerData.copy() : new FarmerData();
+        // [WLD-3]:
+        c.guardTerritoryEnabled = this.guardTerritoryEnabled;
+        c.guardRadius           = this.guardRadius;
+        c.guardWarnFirst        = this.guardWarnFirst;
+        // [VFX-1..4]:
+        c.nameplateColor      = this.nameplateColor;
+        c.nameplateScale      = this.nameplateScale;
+        c.nameplateBackground = this.nameplateBackground;
+        c.nameplateBgColor    = this.nameplateBgColor;
+        c.hologramEnabled     = this.hologramEnabled;
+        c.hologramText        = this.hologramText;
+        c.hologramHeight      = this.hologramHeight;
+        c.hologramScale       = this.hologramScale;
+        c.cutsceneId          = this.cutsceneId;
+        c.dynamicSkins = new ArrayList<>();
+        if (this.dynamicSkins != null) for (DynamicSkin ds : this.dynamicSkins) c.dynamicSkins.add(ds.copy());
+        // [APP-1..3]:
+        c.particleEffect = this.particleEffect;
+        c.glowColor      = this.glowColor;
+        c.accessories    = this.accessories != null ? new java.util.LinkedHashMap<>(this.accessories) : new java.util.LinkedHashMap<>();
 
         return c;
     }

@@ -21,6 +21,9 @@ public class NpcBuildingData {
     /** Скорость строительства (блоков за тик). */
     public int blocksPerTick = 1;
 
+    // [WLD-1]: Path to .nbt schematic file relative to the world folder.
+    public String schematicPath = "";
+
     public NpcBuildingData copy() {
         NpcBuildingData c = new NpcBuildingData();
         c.isBuilder           = this.isBuilder;
@@ -30,6 +33,7 @@ public class NpcBuildingData {
         c.workZoneZ           = this.workZoneZ;
         c.workZoneRadius      = this.workZoneRadius;
         c.blocksPerTick       = this.blocksPerTick;
+        c.schematicPath       = this.schematicPath;
         return c;
     }
 }

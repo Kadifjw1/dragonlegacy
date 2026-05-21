@@ -1,5 +1,7 @@
 package com.frametrip.dragonlegacyquesttoast.server.interaction;
 
+import com.frametrip.dragonlegacyquesttoast.server.compat.LuckPermsHook;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 
 // [INT-2]: Dialog access conditions — checked before starting any dialogue/scene
@@ -8,6 +10,9 @@ public class DialogConditions {
     public boolean onlyNight = false;
     public boolean onlyRain  = false;
     public boolean onlyClear = false;
+
+    // [INT-API-2]: LuckPerms group required (empty = no restriction)
+    public String requiresLuckPermsGroup = "";
 
     public boolean check(Level level) {
         long time = level.getDayTime() % 24000;
@@ -18,12 +23,21 @@ public class DialogConditions {
         return true;
     }
 
+    /** Extended check including player-specific conditions (LuckPerms, etc.). */
+    public boolean checkPlayer(ServerPlayer player) {
+        if (requiresLuckPermsGroup != null && !requiresLuckPermsGroup.isBlank()) {
+            if (!LuckPermsHook.playerInGroup(player, requiresLuckPermsGroup)) return false;
+        }
+        return true;
+    }
+
     public DialogConditions copy() {
         DialogConditions c = new DialogConditions();
         c.onlyDay   = this.onlyDay;
         c.onlyNight = this.onlyNight;
         c.onlyRain  = this.onlyRain;
         c.onlyClear = this.onlyClear;
+        c.requiresLuckPermsGroup = this.requiresLuckPermsGroup;
         return c;
     }
 }
