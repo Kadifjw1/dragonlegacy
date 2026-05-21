@@ -108,7 +108,6 @@ public class NpcCombatHandler {
         for (ServerLevel level : server.getAllLevels()) {
             for (net.minecraft.world.entity.Entity e : level.getAllEntities()) {
                 if (!(e instanceof NpcEntity npc)) continue;
-                {
                 if (npc.isDeadOrDying()) continue;
                 NpcEntityData data = npc.getNpcData();
                 long now = System.currentTimeMillis();
